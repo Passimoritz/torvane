@@ -338,13 +338,24 @@ async function runAudit(targets, config, onProgress = () => {}) {
     } catch (e) { return { findings: list, errors: ['KI-Gegencheck: ' + e.message], reviewed: 0, doubted: 0 }; }
   };
 
+  // Nachfilter: Ausnahmen im Code, Projektdatei, Fremdcode, Trefferquote je Regel, Beleg-Pruefung
+  const postNotes = [];
+  const postSuppressed = [];
+  const post = (list) => {
+    const p = require('./postfilter').applyPostFilters(list, ing.units, { project: ing.project, qualityRules: config.qualityRules, ruleQuality: config.ruleQuality });
+    postNotes.push(...p.notes); postSuppressed.push(...p.suppressed);
+    return p.findings;
+  };
+  if (ing.project) extraMeta.project = { files: ing.project.files, failOn: ing.project.failOn || undefined };
+
   if (!aiUnits.length || !usesAi) {
     const rv = await review(dedupeFindings(staticFindings));
-    const findings = finalize(enrich(rv.findings), targets, config);
+    const findings = finalize(post(enrich(rv.findings, ing.units)), targets, config, ing.units);
+    if (postSuppressed.length) extraMeta.suppressedByException = postSuppressed;
     const empty = {
       findings,
       summary: summarize(findings),
-      errors: [...(webTargets.length || targets.some((t) => t.type === 'image' || t.type === 'system') ? [] : ['Kein lesbares Pruefmaterial gefunden.']), ...webNotes, ...cveNotes, ...moduleNotes, ...ing.notes, ...rv.errors],
+      errors: [...(webTargets.length || targets.some((t) => t.type === 'image' || t.type === 'system') ? [] : ['Kein lesbares Pruefmaterial gefunden.']), ...webNotes, ...cveNotes, ...moduleNotes, ...ing.notes, ...rv.errors, ...postNotes],
       meta: { provider: config.provider, model: config.model, at: new Date().toISOString(), units: 0, batches: 0, ...extraMeta, aiReview: { reviewed: rv.reviewed, doubted: rv.doubted } },
     };
     empty.meta.runSummary = await runSummaryOf(empty, config);
@@ -360,9 +371,10 @@ async function runAudit(targets, config, onProgress = () => {}) {
     onProgress,
   });
   const rv = await review(result.findings);
-  result.findings = finalize(rv.findings, targets, config, ing.units);
+  result.findings = finalize(post(rv.findings), targets, config, ing.units);
+  if (postSuppressed.length) extraMeta.suppressedByException = postSuppressed;
   result.summary = summarize(result.findings);
-  result.errors = [...result.errors, ...webNotes, ...cveNotes, ...moduleNotes, ...ing.notes, ...rv.errors];
+  result.errors = [...result.errors, ...webNotes, ...cveNotes, ...moduleNotes, ...ing.notes, ...rv.errors, ...postNotes];
   Object.assign(result.meta, extraMeta, { aiReview: { reviewed: rv.reviewed, doubted: rv.doubted } });
   result.meta.runSummary = await runSummaryOf(result, config);
   onProgress({ phase: 'done', message: `Fertig: ${result.summary.total} Befund(e).` });

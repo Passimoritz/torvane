@@ -10,6 +10,7 @@ const https = require('https');
 const http = require('http');
 const AdmZip = require('adm-zip');
 const { makeMatcher, loadIgnore } = require('./ignore');
+const { loadProjectConfig, mergeConfigs, classifyUnit, NAMES: PROJECT_FILES } = require('./projectconfig');
 const { analyzeBinary } = require('./binaryaudit');
 
 // --- Grenzen, damit nichts ausufert -------------------------------------
@@ -181,7 +182,7 @@ function walkDir(col, dir, root, matcher) {
     if (col.atCapacity()) { col.notes.push('Limit erreicht - weitere Dateien übersprungen.'); return; }
     const full = path.join(dir, ent.name);
     const rel = path.relative(root, full).replace(/\\/g, '/');
-    if (ent.name === '.vigilignore') continue;                 // Steuerdatei selbst nicht pruefen
+    if (ent.name === '.vigilignore' || PROJECT_FILES.includes(ent.name)) continue; // Steuerdateien selbst nicht pruefen
     if (matcher && matcher(rel, ent.name)) continue;           // per .vigilignore ausgeschlossen
     if (ent.isDirectory()) {
       if (SKIP_DIR.has(ent.name)) continue;
@@ -457,6 +458,7 @@ async function ingestEndpoint(col, rawTarget, authorized) {
 // targets: [{ type: 'path'|'url'|'endpoint'|'image', value, authorized? }]
 async function ingestTargets(targets, onProgress = () => {}) {
   const col = new Collector();
+  const projects = []; // geladene Projektdateien (torvane.yml/vigil.yml)
   for (const t of targets) {
     if (col.atCapacity()) break;
     if (t.type === 'image' || t.type === 'system') continue; // Container-Images prueft trivy direkt (kein Quelltext zum Einlesen)
@@ -470,10 +472,14 @@ async function ingestTargets(targets, onProgress = () => {}) {
         try { stat = fs.statSync(t.value); }
         catch { col.notes.push(`Pfad nicht gefunden: ${t.value}`); continue; }
         if (stat.isDirectory()) {
-          const patterns = loadIgnore(t.value);
+          const proj = loadProjectConfig(t.value);
+          if (proj) { projects.push(proj); col.notes.push(proj.error || `${proj.file}: Projekteinstellungen aktiv in ${path.basename(t.value)}.`); }
+          const patterns = [...loadIgnore(t.value), ...(proj ? proj.ignore : [])];
           if (patterns.length) col.notes.push(`.vigilignore: ${patterns.length} Muster aktiv in ${path.basename(t.value)}.`);
+          const before = col.units.length;
           walkDir(col, t.value, t.value, makeMatcher(patterns));
-        } else ingestFile(col, t.value, null);
+          for (const u of col.units.slice(before)) classifyUnit(u, proj, path.basename(t.value));
+        } else { const before = col.units.length; ingestFile(col, t.value, null); for (const u of col.units.slice(before)) classifyUnit(u, null, ''); }
       }
     } catch (e) {
       col.notes.push(`Fehler bei ${t.value}: ${e.message}`);
@@ -484,7 +490,7 @@ async function ingestTargets(targets, onProgress = () => {}) {
       try { await col.pending.shift()(); } catch (e) { col.notes.push(`Archiv: ${e.message}`); }
     }
   }
-  return { units: col.units, notes: col.notes, findings: col.findings, links: col.links, bundledDeps: col.bundledDeps, stats: { files: col.fileCount, bytes: col.totalBytes } };
+  return { units: col.units, notes: col.notes, findings: col.findings, links: col.links, bundledDeps: col.bundledDeps, stats: { files: col.fileCount, bytes: col.totalBytes }, project: projects.length ? mergeConfigs(projects) : null };
 }
 
 module.exports = { ingestTargets, extractStrings, TEXT_EXT, tmpDir: os.tmpdir() };

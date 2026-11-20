@@ -73,6 +73,8 @@ function createOrchestrator({ storeFile, runAudit, buildConfig, runState = null 
       const targets = job.targets.map((t) => { const rec = db.targets[store.targetIdOf(t)]; return { ...t, verified: !!(rec && rec.ownershipVerified) }; });
       // Aus Fehlalarmen lernen: bestaetigte Fehlalarme dieser Ziele gehen als Hinweis an die KI
       cfg.knownFalsePositives = store.falsePositivesFor(db, job.targets.map((t) => store.targetIdOf(t)));
+      // Trefferquote je Regel: oft als Fehlalarm markierte Regeln werden eine Stufe herabgestuft
+      cfg.ruleQuality = store.ruleStats(db);
       // Aenderungs-Waechter: Skripte/Formularziele des letzten Laufs zum Vergleich
       cfg.webWatch = store.webWatchFor(db, job.targets);
       const { result } = await runAudit(targets, cfg, (p) => { try { if (job.onProgress) job.onProgress(p); } catch { /* Fenster weg */ } });

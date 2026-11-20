@@ -12,7 +12,7 @@ const base = (u) => String(u.label || u.path || '').replace(/\\/g, '/');
 const fileName = (u) => base(u).split('/').pop().toLowerCase();
 const extOf = (u) => (base(u).match(/\.[\w]+$/) || [''])[0].toLowerCase();
 const lineOf = (text, idx) => String(text).slice(0, idx).split('\n').length;
-const isTestFile = (u) => /(^|\/)(test|tests|__tests__|spec|specs|e2e|fixtures?|mocks?|examples?|samples?|demo|seeds?|testdata|test-data|testdaten|beispiel\w*)(\/|$)|\.(test|spec)\.[cm]?[jt]sx?$|_test\.(py|go|rb)$|(^|\/)test_[^/]+\.py$|(^|\/)(seed|demo)[\w-]*\.[cm]?[jt]s$|testdaten[\w.-]*$/i.test(base(u));
+const isTestFile = (u) => !!(u && (u.devData || u.generated)) || /(^|\/)(test|tests|__tests__|spec|specs|e2e|fixtures?|mocks?|examples?|samples?|demo|seeds?|testdata|test-data|testdaten|beispiel\w*)(\/|$)|\.(test|spec)\.[cm]?[jt]sx?$|_test\.(py|go|rb)$|(^|\/)test_[^/]+\.py$|(^|\/)(seed|demo)[\w-]*\.[cm]?[jt]s$|testdaten[\w.-]*$/i.test(base(u));
 const isText = (u) => u && u.kind !== 'binary-strings' && typeof u.content === 'string';
 const oneLine = (s, n = 160) => String(s).replace(/\s+/g, ' ').trim().slice(0, n);
 

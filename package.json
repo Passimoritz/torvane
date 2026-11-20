@@ -12,6 +12,7 @@
     "dist": "electron-builder --win --config electron-builder.config.js",
     "dist:portable": "electron-builder --win portable --config electron-builder.config.js",
     "bench": "node tools/bench.js",
+    "fp": "node tools/fpmeasure.js",
     "e2e": "node test/e2e.js",
     "visual": "node test/visual.js --update",
     "visual:check": "node test/visual.js",

@@ -110,6 +110,8 @@ function keyFor(provider) {
   }
 
   // --fail-on <severity>: Exit-Code 2, wenn Befunde mit diesem Schweregrad oder hoeher existieren (fuer CI).
+  // Ohne Angabe gilt failOn aus der Projektdatei (torvane.yml).
+  if (!o.failOn && result.meta && result.meta.project && result.meta.project.failOn) o.failOn = result.meta.project.failOn;
   if (o.failOn) {
     const n = atOrAbove(result.summary.counts, o.failOn);
     if (n > 0) {

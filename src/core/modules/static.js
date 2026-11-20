@@ -62,7 +62,7 @@ function supplyChain(units) {
       let pj; try { pj = JSON.parse(c); } catch { continue; }
       const deps = { ...(pj.dependencies || {}), ...(pj.devDependencies || {}) };
       for (const name of Object.keys(deps)) {
-        const twin = !NOT_TYPO.has(name) && name.length >= 4 && TOP_PACKAGES.find((t) => t !== name && lev1(name, t));
+        const twin = !NOT_TYPO.has(name) && !TOP_PACKAGES.includes(name) && name.length >= 4 && TOP_PACKAGES.find((t) => t !== name && lev1(name, t));
         if (twin) out.push(mk(M, u, c.indexOf(`"${name}"`), { ruleId: 'typosquat-suspect', severity: 'high', category: 'Dependencies', title: `Möglicher Tippfehler-Paketname: ${name} (gemeint: ${twin}?)`, description: `Das Paket „${name}“ unterscheidet sich nur in einem Zeichen vom beliebten Paket „${twin}“. Solche Namen werden gezielt für Schadpakete registriert (Typosquatting).`, remediation: `Prüfen, ob wirklich „${name}“ gemeint ist; sonst durch „${twin}“ ersetzen.`, confidence: 'medium' }));
         if (/^(git(\+\w+)?|https?|file):|^github:/.test(String(deps[name]))) out.push(mk(M, u, c.indexOf(`"${name}"`), { ruleId: 'lockfile-custom-registry', severity: 'medium', category: 'Dependencies', title: `Abhängigkeit aus Git/URL statt Registry: ${name}`, description: `„${name}“ wird direkt von ${deps[name]} geladen – ohne Versions-Pinning und Integritätsprüfung der Registry.`, remediation: 'Veröffentlichte Version aus der Registry verwenden oder auf einen festen Commit pinnen.', confidence: 'high' }));
       }
@@ -185,6 +185,9 @@ function timingCompareReal(m, c) {
 }
 // SHA-1/MD5 ohne Sicherheitszweck: WebSocket-Handshake (RFC 6455), TOTP-Standard, Cache-Schluessel, ETag,
 // Pruefsummen von Downloads mit Vorgabe, HIBP-k-Anonymitaet, Git-Objekt-IDs, ausdrueckliche nosec/noqa-Ausnahme
+// Sicherheitsbezug in der Naehe eines schwachen Hashs? Nur dann ist MD5/SHA-1 ein Problem.
+const HASH_SECURITY_USE = /passw|passwort|\bpwd\b|\bpw\b|secret|geheim|token|signatur|signature|\bsign\b|\bauth|credential|session|api[_-]?key|\bnonce\b|\bsalt\b|\botp\b|verify|integrity|tamper|\bmac\b/i;
+function hashSecurityUse(c, i) { return HASH_SECURITY_USE.test(c.slice(Math.max(0, i - 300), i + 300)); }
 function weakHashBenign(c, i, u) {
   if (u && /hibp|pwned|gravatar|cache|thumb|etag|checksum|modpack|modrinth|curseforge/i.test(base(u))) return true;
   const l = lineAround(c, i);
@@ -213,7 +216,7 @@ function redosReal(m, c) {
 // --- Eigene SAST-Regeln -------------------------------------------------
 const SAST_RULES = [
   { id: 'sast-insecure-random', sev: 'high', cat: 'Crypto', re: /\b(token|secret|otp|password|passwd|nonce|salt|session|apikey|api_key|reset\w*|verification\w*)\w*\s*[:=][^;\n]{0,60}Math\.random\(\)/gi, title: 'Math.random() für Token/Code/Geheimnis', desc: 'Math.random() ist nicht kryptografisch sicher – damit erzeugte Werte sind vorhersagbar.' },
-  { id: 'sast-weak-hash', sev: 'medium', cat: 'Crypto', test: (m, c, u) => !weakHashBenign(c, m.index, u), re: /createHash\(\s*['"](md5|sha1)['"]|hashlib\.(md5|sha1)\(/gi, title: 'Schwacher Hash (MD5/SHA-1)', desc: 'MD5 und SHA-1 sind für Sicherheitszwecke gebrochen.' },
+  { id: 'sast-weak-hash', sev: 'medium', cat: 'Crypto', test: (m, c, u) => !weakHashBenign(c, m.index, u) && hashSecurityUse(c, m.index), re: /createHash\(\s*['"](md5|sha1)['"]|hashlib\.(md5|sha1)\(/gi, title: 'Schwacher Hash (MD5/SHA-1)', desc: 'MD5 und SHA-1 sind für Sicherheitszwecke gebrochen.' },
   { id: 'sast-weak-cipher', sev: 'high', cat: 'Crypto', re: /createCipheriv?\(\s*['"](des|des-ede3?|rc4|aes-\d+-ecb|bf)[\w-]*['"]/gi, title: 'Schwache Verschlüsselung (DES/RC4/ECB)', desc: 'Diese Verfahren bzw. der ECB-Modus schützen Daten nicht zuverlässig.' },
   { id: 'sast-timing-compare', sev: 'medium', cat: 'Crypto', re: /\b\w*(signature|hmac|digest|apiKey|api_key|webhookSecret)\w*\s*(===|!==|==|!=)\s*[\w.[\]'"]+/gi, title: 'Geheimnis mit === verglichen (Timing-Angriff)', desc: 'Ein normaler Vergleich ist nicht zeitkonstant und kann den richtigen Wert über Antwortzeiten verraten.', test: (m, c) => !/timingSafeEqual|compare_digest/.test(c.slice(Math.max(0, m.index - 300), m.index + 300)) && timingCompareReal(m, c) },
   { id: 'sast-jwt-decode-no-verify', sev: 'high', cat: 'Auth', re: /jwt\.decode\(/g, title: 'jwt.decode() ohne Signaturprüfung', desc: 'jwt.decode() liest das Token nur – die Signatur wird nicht geprüft.', unless: /jwt\.verify\(/ },

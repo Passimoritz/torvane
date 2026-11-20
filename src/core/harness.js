@@ -213,9 +213,18 @@ async function reviewRuleFindings({ findings, notes = [], config, onProgress = (
   const lang = config.lang === 'de' ? 'Schreibe die Begruendung auf Deutsch.' : 'Write the reason in English.';
   const context = notes.filter(Boolean).slice(0, 40).map((n) => `- ${String(n).slice(0, 400)}`).join('\n');
   const verdictOf = new Map();
+  // Urteile merken: gleicher Befund (Regel, Ort, Beleg, Modell) wird nicht erneut an die KI geschickt
+  const cache = config.incremental !== false && config.aiCache ? config.aiCache : null;
+  const keyOf = (f) => 'review:' + require('crypto').createHash('sha256').update([config.provider, config.model, f.ruleId, f.title, f.location, f.evidence, String(f.description || '').slice(0, 300)].join('|')).digest('hex');
+  const todo = [];
+  let cachedVerdicts = 0;
+  for (const f of candidates) {
+    const hit = cache ? cache.get(keyOf(f)) : null;
+    if (hit && hit[0] && hit[0].verdict) { verdictOf.set(f, hit[0]); cachedVerdicts++; } else todo.push(f);
+  }
   const batches = [];
-  for (let i = 0; i < candidates.length; i += REVIEW_BATCH) batches.push(candidates.slice(i, i + REVIEW_BATCH));
-  onProgress({ phase: 'validate', message: `KI-Gegencheck: ${candidates.length} Regel-Befund(e) werden auf Fehlalarme geprüft …`, total: batches.length, done: 0 });
+  for (let i = 0; i < todo.length; i += REVIEW_BATCH) batches.push(todo.slice(i, i + REVIEW_BATCH));
+  if (batches.length) onProgress({ phase: 'validate', message: `KI-Gegencheck: ${todo.length} Regel-Befund(e) werden auf Fehlalarme geprüft …`, total: batches.length, done: 0 });
   for (let b = 0; b < batches.length; b++) {
     if (config.signal && config.signal.aborted) break;
     const items = batches[b].map((f, i) => `### Befund ${i}\nTitel: ${f.title}\nSchwere: ${f.severity}\nErkannt durch: ${f.source || '-'} (${f.ruleId || '-'})\nOrt: ${f.location || '-'}\nBeschreibung: ${f.description || '-'}\nBeleg: ${String(f.evidence || '-').slice(0, 600)}`);
@@ -226,7 +235,11 @@ async function reviewRuleFindings({ findings, notes = [], config, onProgress = (
       if (u) { usage.inputTokens += u.inputTokens || 0; usage.outputTokens += u.outputTokens || 0; }
       for (const v of parseVerdicts(text)) {
         const f = batches[b][Number(v.id)];
-        if (f && ['plausible', 'doubtful', 'uncertain'].includes(v.verdict)) verdictOf.set(f, { verdict: v.verdict, reason: String(v.reason || '').trim().slice(0, 500) });
+        if (f && ['plausible', 'doubtful', 'uncertain'].includes(v.verdict)) {
+          const verdict = { verdict: v.verdict, reason: String(v.reason || '').trim().slice(0, 500) };
+          verdictOf.set(f, verdict);
+          if (cache && v.verdict !== 'uncertain') cache.set(keyOf(f), [verdict]);
+        }
       }
     } catch (e) {
       if ((config.signal && config.signal.aborted) || e.name === 'AbortError') break;
@@ -245,6 +258,8 @@ async function reviewRuleFindings({ findings, notes = [], config, onProgress = (
     return { ...f, validation: review, severityOriginal: f.severity, severity: SEV_DOWN[f.severity] || f.severity, confidence: 'low' };
   });
   if (doubted) errors.push(`KI-Gegencheck: ${doubted} Regel-Befund(e) als wahrscheinlicher Fehlalarm herabgestuft (nicht gelöscht).`);
+  if (cachedVerdicts) errors.push(`KI-Gegencheck: ${cachedVerdicts} Urteil(e) aus dem Zwischenspeicher übernommen (keine neuen KI-Kosten).`);
+  if (cache && cache.flush) cache.flush();
   return { findings: out, usage, errors, reviewed: verdictOf.size, doubted };
 }
 

@@ -324,6 +324,19 @@ function setNote(store, id, note) {
 
 const normTitle = (t) => String(t || '').toLowerCase().replace(/\d+/g, '#').replace(/\s+/g, ' ').trim().slice(0, 80);
 
+// Trefferquote je Regel ueber alle Ziele: wie oft wurde ein Befund dieser Regel als Fehlalarm markiert?
+// Ergebnis { ruleId: { fp, total } } – postfilter stuft Regeln mit hoher Fehlalarm-Quote eine Stufe herunter.
+function ruleStats(store) {
+  const out = {};
+  for (const r of Object.values((store && store.findings) || {})) {
+    if (!r.ruleId) continue;
+    const s = out[r.ruleId] || (out[r.ruleId] = { fp: 0, total: 0 });
+    s.total++;
+    if (r.status === 'FALSE_POSITIVE') s.fp++;
+  }
+  return out;
+}
+
 // Bestaetigte Fehlalarme der Ziele (neueste zuerst) – Hinweis fuer die KI
 function falsePositivesFor(store, targetIds) {
   const ids = new Set(targetIds);
@@ -473,4 +486,4 @@ function webWatchFor(store, targets) {
   return out;
 }
 
-module.exports = { webWatchFor, emptyStore, load, save, setCipher, targetIdOf, upsertTarget, assignTarget, fingerprintOf, applyRun, falsePositivesFor, deleteFindings, deleteTarget, deleteRun, purgeResolved, setStatus, setBaseline, searchSbom, setTargetMeta, listFindings, stats, addRun, updateRun, HIDDEN, expireAcceptedRisks, DEFAULT_ACCEPT_DAYS, UNDO_MS, softDeleteFindings, softDeleteTarget, softDeleteRun, restoreTrash, purgeTrash, setNote };
+module.exports = { ruleStats, webWatchFor, emptyStore, load, save, setCipher, targetIdOf, upsertTarget, assignTarget, fingerprintOf, applyRun, falsePositivesFor, deleteFindings, deleteTarget, deleteRun, purgeResolved, setStatus, setBaseline, searchSbom, setTargetMeta, listFindings, stats, addRun, updateRun, HIDDEN, expireAcceptedRisks, DEFAULT_ACCEPT_DAYS, UNDO_MS, softDeleteFindings, softDeleteTarget, softDeleteRun, restoreTrash, purgeTrash, setNote };

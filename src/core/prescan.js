@@ -276,7 +276,7 @@ function prescan(units, opts = {}) {
 
   for (const u of units) {
     const content = u.content || '';
-    const devFile = TEST_OR_DOC.test(String(u.label || ''));
+    const devFile = !!(u.devData || u.generated) || TEST_OR_DOC.test(String(u.label || ''));
     // Secrets -> direkte Befunde
     for (const rule of secretRules) {
       rule.re.lastIndex = 0;

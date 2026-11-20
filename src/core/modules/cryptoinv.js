@@ -72,6 +72,8 @@ function runCryptoInventory(units) {
       re.lastIndex = 0; let m, n = 0;
       while ((m = re.exec(c)) && n < 50) {
         if (kind === 'weak' && (isTestFile(u) || weakMention(c, m.index, u))) continue;
+        // MD5/SHA-1 ohne Sicherheitsbezug (Cache-Schluessel, IDs, Pruefsummen) ist kein Krypto-Problem
+        if (kind === 'weak' && (name === 'MD5' || name === 'SHA-1') && !/passw|passwort|\bpwd\b|\bpw\b|secret|token|signatur|signature|\bauth|credential|session|api[_-]?key|\bsalt\b|verify|integrity|\bmac\b/i.test(c.slice(Math.max(0, m.index - 300), m.index + 300))) continue;
         n++;
         const e = inv.get(name) || { kind, count: 0, files: new Set(), first: null };
         e.count++; e.files.add(base(u)); if (!e.first) e.first = { u, idx: m.index };
