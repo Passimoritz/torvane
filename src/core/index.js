@@ -322,6 +322,7 @@ async function runAudit(targets, config, onProgress = () => {}) {
   // Die KI liest Code. Webadressen und Server nur mit der Einstellung aiForWeb, Images und Systeme nie.
   const webAi = !!config.aiForWeb;
   let usesAi = targets.some((t) => t.type === 'path') || (webAi && webTargets.length > 0);
+  if (config.rulesOnly) usesAi = false; // --rules-only, pre-commit, Pruefen beim Speichern: schnell und ohne KI
   const aiUnits = webAi ? ing.units : ing.units.filter((u) => u.kind !== 'endpoint');
   // Ohne die Einstellung bleibt auch in gemischten Pruefungen alles von Web-Zielen bei der KI aussen vor
   const webKeyOf = (f) => `${f.ruleId}|${f.location}`;

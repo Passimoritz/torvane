@@ -3025,6 +3025,56 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     fs.rmSync(dir, { recursive: true, force: true });
   }
 
+  // --- Welle 5: Entwickler-Ablauf und CI ---
+  console.log('Entwickler-Ablauf und CI (Welle 5):');
+  {
+    const flow = require('../src/core/devflow');
+    const F = (o) => ({ ruleId: 'r1', title: 'Befund', severity: 'high', category: 'Injection', location: 'proj/src/a.js:3', description: 'd', remediation: 'fix', ...o });
+    const diff = 'diff --git a/src/a.js b/src/a.js\n--- a/src/a.js\n+++ b/src/a.js\n@@ -2,0 +3,2 @@\n+x\n+y\n--- a/old.js\n+++ /dev/null\n@@ -1 +0,0 @@\n';
+    const ch = flow.changedLines(diff);
+    check('pr: geänderte Zeilen aus dem Diff', ch['src/a.js'].has(3) && ch['src/a.js'].has(4) && !ch['src/a.js'].has(5) && !ch['/dev/null']);
+    const cm = flow.reviewComments([F(), F({ location: 'proj/src/a.js:9' }), F({ severity: 'low', location: 'proj/src/a.js:4' })], ch, { rootName: 'proj', minSeverity: 'medium' });
+    check('pr: Kommentar nur an geänderter Zeile und ab Mindest-Schwere', cm.length === 1 && cm[0].path === 'src/a.js' && cm[0].line === 3 && /So behebst du es/.test(cm[0].body));
+    const pl = flow.issuePayloads([F(), F({ severity: 'medium', ruleId: 'r2' }), F({ suppressed: true, ruleId: 'r3' })], { minSeverity: 'high' });
+    check('issues: nur ab Schwelle, mit Marker und Labels', pl.length === 1 && /torvane:fp=[0-9a-f]{16}/.test(pl[0].body) && pl[0].labels.includes('severity:high'));
+    const posted = [];
+    const fakeFetch = async (url, init) => {
+      if (init.method === 'GET') return { ok: true, text: async () => JSON.stringify([{ body: pl[0].body }]) };
+      posted.push(JSON.parse(init.body)); return { ok: true, text: async () => JSON.stringify({ html_url: 'https://github.com/o/r/issues/1' }) };
+    };
+    const two = flow.issuePayloads([F(), F({ ruleId: 'neu', title: 'Neuer Befund' })], { minSeverity: 'high' });
+    const ci = await flow.createIssues('o/r', two, { token: 't', fetchImpl: fakeFetch });
+    check('issues: vorhandene werden nicht doppelt angelegt', ci.skipped === 1 && posted.length === 1 && posted[0].title === '[Torvane] Neuer Befund');
+    const dry = await flow.createIssues('o/r', two, { token: 't', dryRun: true, fetchImpl: fakeFetch });
+    check('issues: Vorschau legt nichts an', dry.planned.length === 1 && posted.length === 1);
+    const d = flow.diffFindings([F(), F({ ruleId: 'alt' })], [F(), F({ ruleId: 'neu' })]);
+    check('speichern: nur Neues und Behobenes', d.added.length === 1 && d.added[0].ruleId === 'neu' && d.resolved.length === 1 && d.resolved[0].ruleId === 'alt');
+    // pre-commit: gestagte Fassung, nicht die Arbeitskopie
+    const fs = require('fs'); const os = require('os'); const path = require('path'); const { execFileSync } = require('child_process');
+    let gitOk = true; try { execFileSync('git', ['--version'], { windowsHide: true }); } catch { gitOk = false; }
+    if (gitOk) {
+      const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'torvane-git-'));
+      const g = (...a) => execFileSync('git', a, { cwd: repo, windowsHide: true });
+      g('init', '-q'); g('config', 'user.email', 't@t.test'); g('config', 'user.name', 't');
+      fs.writeFileSync(path.join(repo, 'a.js'), 'const a = 1;\n'); g('add', 'a.js');
+      fs.writeFileSync(path.join(repo, 'a.js'), 'const a = 2; // nicht gestagt\n');
+      fs.writeFileSync(path.join(repo, 'torvane.yml'), 'failOn: high\n');
+      const snap = flow.stagedSnapshot(repo);
+      const content = fs.readFileSync(path.join(snap.snapshot, 'a.js'), 'utf8');
+      check('pre-commit: prüft die gestagte Fassung samt Projektdatei', snap.files.join() === 'a.js' && content === 'const a = 1;\n' && fs.existsSync(path.join(snap.snapshot, 'torvane.yml')));
+      const hk = flow.installHook(repo);
+      check('pre-commit: Hook wird eingerichtet', hk.ok && /--staged --fail-on high/.test(fs.readFileSync(hk.file, 'utf8')));
+      fs.rmSync(snap.dir, { recursive: true, force: true }); fs.rmSync(repo, { recursive: true, force: true });
+    }
+    const { runAudit: ra } = require('../src/core');
+    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'torvane-ro-'));
+    fs.writeFileSync(path.join(dir2, 'a.js'), 'eval(x);\n');
+    let aiCalls = 0;
+    const r2 = await ra([{ type: 'path', value: dir2 }], { provider: 'anthropic', model: 'm', apiKey: 'x', baseUrl: 'https://127.0.0.1:9', rulesOnly: true, cveLookup: false, onAiCall: () => { aiCalls++; } }, () => {});
+    check('nur Regeln: kein KI-Aufruf, Ergebnis vorhanden', aiCalls === 0 && Array.isArray(r2.result.findings) && !r2.result.errors.some((e) => /KI|Anthropic|ECONN/i.test(e) && !/Budget/.test(e)));
+    fs.rmSync(dir2, { recursive: true, force: true });
+  }
+
   console.log(`\n${pass} ok, ${fail} fehlgeschlagen`);
   process.exit(fail ? 1 : 0);
 })();

@@ -1,0 +1,13 @@
+# Fuer das pre-commit-Framework (https://pre-commit.com):
+#   repos:
+#     - repo: https://github.com/Passimoritz/vigil
+#       rev: main
+#       hooks: [{ id: torvane }]
+# Ohne Framework: im eigenen Repository "node <pfad>/src/cli.js --install-hook" ausfuehren.
+- id: torvane
+  name: Torvane (gestagte Dateien, nur Regeln)
+  description: Prüft die gestagten Dateien vor jedem Commit auf Geheimnisse und riskante Muster.
+  entry: torvane --staged
+  language: node
+  pass_filenames: false
+  always_run: true

@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 
 // Kleine CLI zum Testen des Kerns ohne GUI.
@@ -33,6 +34,14 @@ function parseArgs(argv) {
     else if (a === '--sbom') opts.sbom = argv[++i];
     else if (a === '--sbom-format') opts.sbomFormat = argv[++i] === 'spdx' ? 'spdx' : 'cyclonedx';
     else if (a === '--live-secrets') opts.secretLive = true;
+    else if (a === '--rules-only') opts.rulesOnly = true;
+    else if (a === '--staged') { opts.staged = true; opts.rulesOnly = true; }
+    else if (a === '--watch') { opts.watch = true; opts.rulesOnly = true; }
+    else if (a === '--install-hook') opts.installHook = true;
+    else if (a === '--issues') opts.issues = argv[++i];
+    else if (a === '--dry-run') opts.dryRun = true;
+    else if (a === '--min-severity') opts.minSeverity = argv[++i];
+    else if (a === '--pr-review') opts.prReview = true;
     else opts.targets.push({ type: 'path', value: path.resolve(a) });
   }
   return opts;
@@ -52,7 +61,23 @@ function keyFor(provider) {
 
 (async () => {
   const o = parseArgs(process.argv.slice(2));
+  const flow = require('./core/devflow');
   if (o.format && !FORMATS.includes(o.format)) { console.error(`Unbekanntes Format: ${o.format} (erlaubt: ${FORMATS.join(', ')})`); process.exit(1); }
+  // --install-hook: pre-commit-Hook im aktuellen Repository einrichten
+  if (o.installHook) {
+    const r = flow.installHook(process.cwd(), { failOn: o.failOn || 'high' });
+    console.log(r.ok ? `pre-commit-Hook eingerichtet: ${r.file}` : r.error);
+    process.exit(r.ok ? 0 : 1);
+  }
+  // --staged: nur die gestagten Dateien pruefen (pre-commit), Standard-Schwelle "high"
+  let staged = null;
+  if (o.staged) {
+    staged = flow.stagedSnapshot(process.cwd());
+    if (!staged.files.length) { console.log('Keine gestagten Dateien.'); process.exit(0); }
+    o.targets = [{ type: 'path', value: staged.snapshot }];
+    if (!o.failOn) o.failOn = 'high';
+    o.cveLookup = false;
+  }
   if (!o.targets.length) {
     console.error('Nutzung: node src/cli.js [--provider ollama|anthropic|openai|gemini|compat] [--model …] [--out report.html] [--format html|md|json|sarif|gitlab|junit|checkstyle|csv] [--sbom sbom.cdx.json|sbom.spdx.json] [--live-secrets] <pfad|--url URL|--endpoint HOST> …');
     process.exit(1);
@@ -70,7 +95,25 @@ function keyFor(provider) {
     redactSecrets: o.redact,
     lang: o.lang,
     secretLiveCheck: !!o.secretLive,
+    rulesOnly: !!o.rulesOnly,
   };
+
+  // --watch: beim Speichern erneut pruefen (nur Regeln) und nur Neues bzw. Behobenes melden
+  if (o.watch) {
+    const t = o.targets.find((x) => x.type === 'path');
+    if (!t) { console.error('--watch braucht einen Ordner.'); process.exit(1); }
+    console.log(`Beobachte ${t.value} – Strg+C beendet.`);
+    flow.watchFolder(t.value, {
+      run: async () => (await runAudit([t], { ...config, cveLookup: false }, () => {})).result.findings.filter((f) => !f.suppressed),
+      onChange: ({ added, resolved, total, initial }) => {
+        const time = new Date().toLocaleTimeString();
+        if (initial) { console.log(`[${time}] ${total} Befund(e) im Ausgangsstand.`); return; }
+        for (const f of added) console.log(`[${time}] NEU     [${f.severity}] ${f.title}  (${f.location})`);
+        for (const f of resolved) console.log(`[${time}] BEHOBEN [${f.severity}] ${f.title}  (${f.location})`);
+      },
+    });
+    return;
+  }
 
   const { result } = await runAudit(o.targets, config, (p) => {
     const d = p.total ? ` [${p.done}/${p.total}]` : '';
@@ -82,6 +125,30 @@ function keyFor(provider) {
     console.log(`  [${f.severity}] ${f.title}  ${f.location ? '(' + f.location + ')' : ''}`);
   }
   if (result.errors?.length) console.log('\nHinweise:\n  ' + result.errors.join('\n  '));
+  if (staged) { try { fs.rmSync(staged.dir, { recursive: true, force: true }); } catch { /* egal */ } }
+
+  // --issues owner/repo: Befunde (Standard ab "high") als GitHub-Issues anlegen, ohne Doppelte; --dry-run zeigt nur an
+  if (o.issues) {
+    const payloads = flow.issuePayloads(result.findings, { minSeverity: o.minSeverity || 'high' });
+    const r = await flow.createIssues(o.issues, payloads, { dryRun: !!o.dryRun });
+    console.log(`\nIssues: ${r.planned.length} neu${o.dryRun ? ' (nur Vorschau)' : ''}, ${r.skipped} schon vorhanden.`);
+    for (const p of r.planned) console.log(`  ${p.title}`);
+    for (const u of r.created) if (u) console.log(`  angelegt: ${u}`);
+  }
+
+  // --pr-review: in GitHub Actions Kommentare an den geaenderten Zeilen des Pull Requests setzen
+  if (o.prReview) {
+    const ev = process.env.GITHUB_EVENT_PATH ? JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) : null;
+    const prq = ev && ev.pull_request;
+    const t = o.targets.find((x) => x.type === 'path');
+    if (!prq || !process.env.GITHUB_REPOSITORY || !t) console.log('\n--pr-review: kein Pull-Request-Ereignis gefunden, übersprungen.');
+    else {
+      const diff = require('child_process').execFileSync('git', ['diff', '-U0', `${prq.base.sha}...${prq.head.sha}`], { cwd: t.value, maxBuffer: 256 * 1024 * 1024 }).toString();
+      const comments = flow.reviewComments(result.findings, flow.changedLines(diff), { rootName: path.basename(t.value), minSeverity: o.minSeverity || 'medium' });
+      const r = await flow.postReview({ repo: process.env.GITHUB_REPOSITORY, pr: prq.number, commitId: prq.head.sha, comments });
+      console.log(`\nPull Request: ${r.posted} Kommentar(e) an geänderten Zeilen gesetzt.`);
+    }
+  }
 
   if (o.out) {
     const fmt = o.format

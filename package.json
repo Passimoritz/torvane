@@ -4,6 +4,7 @@
   "private": true,
   "description": "Vigil – defensives Sicherheits-Audit für eigene Projekte, Webseiten, Server und Container.",
   "main": "electron/main.js",
+  "bin": { "torvane": "src/cli.js" },
   "scripts": {
     "start": "electron .",
     "cli": "node src/cli.js",

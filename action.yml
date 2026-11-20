@@ -1,0 +1,62 @@
+# Torvane als GitHub Action: prueft das Repository mit den Regeln (ohne KI, ohne Internet ausser GitHub)
+# und laedt die Befunde als SARIF in die Code-Scanning-Ansicht. Beispiel:
+#
+#   - uses: actions/checkout@v4
+#     with: { fetch-depth: 0 }          # fuer pr-comments: Vergleich mit dem Basis-Commit
+#   - uses: Passimoritz/vigil@main
+#     with: { fail-on: high, pr-comments: 'true' }
+#
+# Rechte im Workflow: contents: read, security-events: write (SARIF), pull-requests: write (Kommentare).
+name: Torvane Sicherheitsprüfung
+description: Prüft Code, Konfiguration und Abhängigkeiten mit den Regeln von Torvane und meldet Befunde als SARIF und optional im Pull Request.
+author: Passimoritz
+branding:
+  icon: shield
+  color: blue
+inputs:
+  path:
+    description: Zu prüfender Ordner
+    default: '.'
+  fail-on:
+    description: Ab dieser Schwere schlägt der Lauf fehl (critical, high, medium, low, info oder leer)
+    default: 'high'
+  upload-sarif:
+    description: Befunde in die Code-Scanning-Ansicht laden
+    default: 'true'
+  pr-comments:
+    description: Befunde an geänderten Zeilen als Kommentar im Pull Request
+    default: 'false'
+  min-severity:
+    description: Ab dieser Schwere werden Kommentare gesetzt
+    default: 'medium'
+runs:
+  using: composite
+  steps:
+    - name: Torvane installieren
+      shell: bash
+      run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund --prefix "$GITHUB_ACTION_PATH"
+    - name: Prüfen
+      id: scan
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        IN_PATH: ${{ inputs.path }}
+        IN_FAIL: ${{ inputs.fail-on }}
+        IN_PR: ${{ inputs.pr-comments }}
+        IN_MIN: ${{ inputs.min-severity }}
+      run: |
+        set +e
+        args=(--rules-only --no-cve --format sarif --out torvane.sarif --min-severity "$IN_MIN")
+        [ "$IN_PR" = "true" ] && args+=(--pr-review)
+        [ -n "$IN_FAIL" ] && args+=(--fail-on "$IN_FAIL")
+        node "$GITHUB_ACTION_PATH/src/cli.js" "${args[@]}" "$IN_PATH"
+        echo "code=$?" >> "$GITHUB_OUTPUT"
+    - name: SARIF hochladen
+      if: inputs.upload-sarif == 'true'
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: torvane.sarif
+        category: torvane
+    - name: Ergebnis
+      shell: bash
+      run: exit ${{ steps.scan.outputs.code }}
