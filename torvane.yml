@@ -1,0 +1,8 @@
+# Projekteinstellungen fuer die Selbstpruefung von Torvane (npm run selfscan, CI).
+# bench/vulnerable-app ist absichtlich verwundbar (Benchmark) und wird nicht mitgeprueft.
+testDirs: [test, bench]
+ignore:
+  - "bench/vulnerable-app/**"
+  - "bench/results/**"
+  - "docs/images/**"
+failOn: high

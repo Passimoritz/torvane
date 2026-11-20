@@ -42,6 +42,12 @@ function parseArgs(argv) {
     else if (a === '--dry-run') opts.dryRun = true;
     else if (a === '--min-severity') opts.minSeverity = argv[++i];
     else if (a === '--pr-review') opts.prReview = true;
+    else if (a === '--fail-on-tests') opts.failOnTests = true;
+    else if (a === '--keygen') opts.keygen = argv[++i];
+    else if (a === '--sign-rules') opts.signRules = argv[++i];
+    else if (a === '--key') opts.key = argv[++i];
+    else if (a === '--trust-key') opts.trustKey = argv[++i];
+    else if (a === '--install-rules') opts.installRules = argv[++i];
     else opts.targets.push({ type: 'path', value: path.resolve(a) });
   }
   return opts;
@@ -63,6 +69,34 @@ function keyFor(provider) {
   const o = parseArgs(process.argv.slice(2));
   const flow = require('./core/devflow');
   if (o.format && !FORMATS.includes(o.format)) { console.error(`Unbekanntes Format: ${o.format} (erlaubt: ${FORMATS.join(', ')})`); process.exit(1); }
+  // Regelpakete: Schluessel erzeugen, Paket signieren, Schluessel vertrauen, Paket installieren
+  if (o.keygen || o.signRules || o.trustKey || o.installRules) {
+    const rp = require('./core/rulepacks');
+    try {
+      if (o.keygen) {
+        const k = rp.generateKeyPair();
+        fs.mkdirSync(o.keygen, { recursive: true });
+        fs.writeFileSync(path.join(o.keygen, 'rulepack-private.pem'), k.privateKeyPem, { mode: 0o600 });
+        fs.writeFileSync(path.join(o.keygen, 'rulepack-public.pem'), k.publicKeyPem);
+        console.log(`Schlüssel erzeugt in ${o.keygen} (privaten Teil sicher aufbewahren, öffentlichen weitergeben).`);
+      }
+      if (o.signRules) {
+        if (!o.key) throw new Error('--key <privater-schluessel.pem> fehlt.');
+        const priv = fs.readFileSync(o.key, 'utf8');
+        const pub = require('crypto').createPublicKey(priv).export({ type: 'spki', format: 'pem' });
+        const signed = rp.signPack(JSON.parse(fs.readFileSync(o.signRules, 'utf8')), priv, pub);
+        fs.writeFileSync(o.signRules, JSON.stringify(signed, null, 2));
+        console.log(`Regelpaket signiert: ${o.signRules} (Schlüssel ${signed.signature.keyId}).`);
+      }
+      if (o.trustKey) { const t = rp.trustKey(o.trustKey); console.log(`Schlüssel ${t.keyId} ist jetzt vertrauenswürdig.`); }
+      if (o.installRules) {
+        const r = await rp.installPack(o.installRules);
+        if (!r.ok) throw new Error(r.error);
+        console.log(`Regelpaket ${r.name} ${r.version || ''} installiert (${r.rules} Regeln): ${r.file}`);
+      }
+      process.exit(0);
+    } catch (e) { console.error(`Regelpaket: ${e.message}`); process.exit(1); }
+  }
   // --install-hook: pre-commit-Hook im aktuellen Repository einrichten
   if (o.installHook) {
     const r = flow.installHook(process.cwd(), { failOn: o.failOn || 'high' });
@@ -103,6 +137,9 @@ function keyFor(provider) {
     const t = o.targets.find((x) => x.type === 'path');
     if (!t) { console.error('--watch braucht einen Ordner.'); process.exit(1); }
     console.log(`Beobachte ${t.value} – Strg+C beendet.`);
+    // Zwischenspeicher im Speicher: nach dem ersten Lauf werden nur geaenderte Dateien neu geprueft
+    const mem = new Map();
+    config.ruleCache = { get: (k) => mem.get(k), set: (k, v) => { mem.set(k, v); } };
     flow.watchFolder(t.value, {
       run: async () => (await runAudit([t], { ...config, cveLookup: false }, () => {})).result.findings.filter((f) => !f.suppressed),
       onChange: ({ added, resolved, total, initial }) => {
@@ -180,7 +217,11 @@ function keyFor(provider) {
   // Ohne Angabe gilt failOn aus der Projektdatei (torvane.yml).
   if (!o.failOn && result.meta && result.meta.project && result.meta.project.failOn) o.failOn = result.meta.project.failOn;
   if (o.failOn) {
-    const n = atOrAbove(result.summary.counts, o.failOn);
+    // Test-Fixtures und Beispiele (devOnly) sollen keinen Build brechen; --fail-on-tests nimmt sie mit
+    const counted = result.findings.filter((f) => !f.suppressed && (o.failOnTests || !f.devOnly));
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    for (const f of counted) if (counts[f.severity] != null) counts[f.severity]++;
+    const n = atOrAbove(counts, o.failOn);
     if (n > 0) {
       console.error(`\nAbbruch (--fail-on ${o.failOn}): ${n} Befund(e) mit Schweregrad >= ${o.failOn}.`);
       process.exit(2);

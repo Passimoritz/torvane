@@ -7,6 +7,7 @@
 //          unless?: RegExp (ganze Datei), max?, redact?: true (Fundstelle maskieren), conf? }
 
 const { normalizeFinding, redactSecret } = require('../schema');
+const { inComment } = require('../codemask');
 
 const base = (u) => String(u.label || u.path || '').replace(/\\/g, '/');
 const fileName = (u) => base(u).split('/').pop().toLowerCase();
@@ -36,6 +37,8 @@ function applyRules(module, u, rules, out) {
     let m, n = 0;
     while ((m = r.re.exec(c)) && n < (r.max || 5)) {
       if (m.index === r.re.lastIndex) r.re.lastIndex++;
+      // Treffer in Kommentaren zaehlen nicht (ausser die Regel sucht ausdruecklich dort: inComments)
+      if (!r.inComments && inComment(u, m.index)) continue;
       if (r.test && !r.test(m, c, u)) continue;
       n++;
       out.push(mk(module, u, m.index, {

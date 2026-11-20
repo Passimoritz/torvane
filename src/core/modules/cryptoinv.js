@@ -88,7 +88,7 @@ function runCryptoInventory(units) {
       }
     }
     SHORT_CURVE.lastIndex = 0; let sc;
-    while ((sc = SHORT_CURVE.exec(c))) weakKeys.push({ u, idx: sc.index, what: sc[0], ev: sc[0] });
+    while ((sc = SHORT_CURVE.exec(c))) { const cm = require('../codemask'); if (cm.inRegex(u, sc.index) || cm.inComment(u, sc.index)) continue; weakKeys.push({ u, idx: sc.index, what: sc[0], ev: sc[0] }); }
   }
   if (!inv.size && !weakKeys.length) return [];
   const out = [];

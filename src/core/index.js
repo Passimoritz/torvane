@@ -51,7 +51,7 @@ async function runAudit(targets, config, onProgress = () => {}) {
 
   onProgress({ phase: 'prescan', message: 'Statische Vorprüfung (Secrets, Deps, Muster) …' });
   // Native Audit-Module (Lieferkette, Container, Code-Regeln, KI, Server-Konfiguration) laufen mit: im eigenen Thread
-  const { pre, mods } = await require('./prescan-worker').runPrescan(ing.units, { customSecrets: config.customRules, disabledRules: config.disabledRules }, onProgress);
+  const { pre, mods } = await require('./prescan-worker').runPrescan(ing.units, { customSecrets: config.customRules, disabledRules: config.disabledRules, cache: config.ruleCache }, onProgress);
   for (const t of targets) if (t.type === 'path') for (const id of mods.ran) scannersRun.push({ target: t.value, source: id });
   const moduleNotes = [...mods.errors];
   // Aktive Werkzeuge veraltet oder ohne Vorlagen? Sonst sieht ein leeres Ergebnis wie "alles sauber" aus.

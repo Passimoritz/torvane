@@ -39,19 +39,12 @@ function parseFile(text, file) {
   return /\.json$/i.test(file) ? JSON.parse(text) : parseYaml(text);
 }
 
-// Liefert { patterns: [{cat,name,re,sev}], findings: [{...}], errors: [] }
-function loadRuleFiles(dirs = [RULES_DIR]) {
-  const patterns = [];
-  const findings = [];
-  const errors = [];
-  for (const dir of dirs) {
-    let files = [];
-    try { files = fs.readdirSync(dir).filter((f) => /\.(ya?ml|json)$/i.test(f)).sort(); } catch { continue; }
-    for (const f of files) {
-      let doc;
-      try { doc = parseFile(fs.readFileSync(path.join(dir, f), 'utf8'), f); } catch (e) { errors.push(`${f}: nicht lesbar (${e.message})`); continue; }
+// Ein Regel-Dokument ({ rules: [...] }) pruefen und in patterns/findings einsortieren
+function addDoc(doc, f, patterns, findings, errors) {
+  {
+    {
       const top = FileSchema.safeParse(doc);
-      if (!top.success) { errors.push(`${f}: kein "rules:"-Eintrag`); continue; }
+      if (!top.success) { errors.push(`${f}: kein "rules:"-Eintrag`); return; }
       top.data.rules.forEach((raw, i) => {
         const r = RuleSchema.safeParse(raw);
         if (!r.success) { errors.push(`${f} Regel ${i + 1}: ${r.error.issues.map((x) => (x.path.join('.') || 'Regel') + ' ' + x.message).join('; ')}`); return; }
@@ -65,7 +58,32 @@ function loadRuleFiles(dirs = [RULES_DIR]) {
       });
     }
   }
+}
+
+// Liefert { patterns: [{cat,name,re,sev}], findings: [{...}], errors: [] }
+function loadRuleFiles(dirs = [RULES_DIR]) {
+  const patterns = [];
+  const findings = [];
+  const errors = [];
+  for (const dir of dirs) {
+    let files = [];
+    try { files = fs.readdirSync(dir).filter((f) => /\.(ya?ml|json)$/i.test(f)).sort(); } catch { continue; }
+    for (const f of files) {
+      let doc;
+      try { doc = parseFile(fs.readFileSync(path.join(dir, f), 'utf8'), f); } catch (e) { errors.push(`${f}: nicht lesbar (${e.message})`); continue; }
+      addDoc(doc, f, patterns, findings, errors);
+    }
+  }
   return { patterns, findings, errors };
 }
 
-module.exports = { loadRuleFiles, RuleSchema, RULES_DIR };
+// Bereits gelesene Dokumente (z. B. gepruefte Regelpakete): [{ doc, label }]
+function loadRuleDocs(docs) {
+  const patterns = [];
+  const findings = [];
+  const errors = [];
+  for (const { doc, label } of docs || []) addDoc(doc, label, patterns, findings, errors);
+  return { patterns, findings, errors };
+}
+
+module.exports = { loadRuleFiles, loadRuleDocs, RuleSchema, RULES_DIR };

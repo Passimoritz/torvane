@@ -103,9 +103,41 @@ jobs:
           New-Item -ItemType Directory -Force release | Out-Null
           Copy-Item dist/Vigil-Setup-*.exe, dist/Vigil-Portable-*.exe release/
 
+      - name: Stückliste (SBOM) und Prüfsummen
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          node src/cli.js --rules-only --no-cve --sbom release/torvane-sbom.cdx.json .
+          Get-ChildItem release -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } | Set-Content release/SHA256SUMS.txt -Encoding utf8
+
       - name: GitHub-Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*.exe
+          files: |
+            release/*.exe
+            release/torvane-sbom.cdx.json
+            release/SHA256SUMS.txt
           generate_release_notes: true
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Abhängigkeiten
+        run: npm ci
+      - name: Tests
+        run: npm test
+      - name: AppImage und .deb bauen
+        run: npm run dist:linux
+      - name: Linux-Pakete ins Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.AppImage
+            dist/*.deb

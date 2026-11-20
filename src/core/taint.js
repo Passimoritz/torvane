@@ -18,6 +18,9 @@ const base = (u) => String(u.label || u.path || '').replace(/\\/g, '/');
 const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 const isJs = (u) => /\.(m?[jt]sx?|cjs)$/i.test(base(u));
 const isPy = (u) => /\.py$/i.test(base(u));
+const isJava = (u) => /\.(java|kt)$/i.test(base(u));
+// Spring/JAX-RS: Parameter mit diesen Annotationen kommen direkt aus der Anfrage
+const JAVA_SRC_ANNOT = /@(RequestParam|PathVariable|RequestBody|RequestHeader|CookieValue|QueryParam|PathParam|FormParam|HeaderParam|ModelAttribute)\b/;
 const isTest = (u) => /(^|\/)(test|tests|__tests__|spec|e2e|fixtures?|mocks?)(\/|$)|\.(test|spec)\.[jt]sx?$/i.test(base(u));
 
 const SINKS = [
@@ -29,6 +32,15 @@ const SINKS = [
   { kind: 'ssrf', cat: 'SSRF', label: 'den Abruf einer fremden Adresse (SSRF)', re: (p) => new RegExp(`\\b(fetch|axios(?:\\.get|\\.post)?|got|http\\.get|https\\.get|requests\\.(?:get|post)|urlopen)\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|${p}\\b)`), guard: /allowlist|allowedHosts|whitelist|new URL\([^)]*\)\.host(name)?\s*(===|!==|in)/ },
   { kind: 'redirect', cat: 'Config', label: 'eine Weiterleitung', re: (p) => new RegExp(`\\b(res\\.redirect|redirect)\\s*\\(\\s*${p}\\b`), guard: /startsWith\(['"]\/['"]\)|allowlist/ },
 ];
+// Java/Kotlin-Senken: Konkatenation in SQL, Runtime.exec/ProcessBuilder, Dateipfade, URL-Abrufe, Weiterleitungen
+const JAVA_SINKS = [
+  { kind: 'sql', cat: 'Injection', label: 'einen SQL-Befehl', re: (p) => new RegExp(`\\b(executeQuery|executeUpdate|execute|prepareStatement|createQuery|createNativeQuery|query|queryForObject|queryForList|queryForMap|update|batchUpdate)\\s*\\(\\s*(?:"[^"]*"\\s*\\+\\s*${p}\\b|${p}\\s*\\+|String\\.format\\([^)]*\\b${p}\\b)`), guard: /setString|setInt|setLong|\?\s*"|:\w+\b|Criteria|escape/ },
+  { kind: 'shell', cat: 'Injection', label: 'einen Systembefehl', re: (p) => new RegExp(`(Runtime\\.getRuntime\\(\\)\\.exec|new\\s+ProcessBuilder)\\s*\\(\\s*(?:"[^"]*"\\s*\\+\\s*)?${p}\\b`), guard: /ALLOWED|allowList|matches\("\^\[/ },
+  { kind: 'path', cat: 'PathTraversal', label: 'einen Dateipfad', re: (p) => new RegExp(`(new\\s+(File|FileInputStream|FileOutputStream|FileReader)|Paths\\.get|Path\\.of|Files\\.(read\\w*|write\\w*|delete\\w*|newInputStream))\\s*\\(\\s*(?:[\\w.]+\\s*,\\s*)?(?:"[^"]*"\\s*\\+\\s*)?${p}\\b`), guard: /normalize\(\)\.startsWith|getCanonicalPath|FilenameUtils\.getName|getFileName\(\)/ },
+  { kind: 'ssrf', cat: 'SSRF', label: 'den Abruf einer fremden Adresse (SSRF)', re: (p) => new RegExp(`(new\\s+URL|URI\\.create|getForObject|getForEntity|postForObject|exchange|\\.uri)\\s*\\(\\s*${p}\\b`), guard: /allow(ed)?Hosts|allowList|whitelist/ },
+  { kind: 'redirect', cat: 'Config', label: 'eine Weiterleitung', re: (p) => new RegExp(`(sendRedirect\\s*\\(\\s*${p}\\b|"redirect:"\\s*\\+\\s*${p}\\b)`), guard: /startsWith\("\/"\)/ },
+];
+
 const SOURCE = /\b(req|request)\.(query|body|params|headers|cookies|args|form|json|values|files|GET|POST|COOKIES|META|data|query_params|path_params)\b(?:\.\w+|\[['"][^'"]+['"]\])?|\bprocess\.argv\[\d+\]|\blocation\.(search|hash)\b|\binput\(\)/;
 
 // Funktionen mit Parametern und Rumpf finden
@@ -47,6 +59,25 @@ function functionsOf(u) {
       for (; i < c.length; i++) { if (c[i] === '{') d++; else if (c[i] === '}' && --d === 0) break; }
       out.push({ name, params, body: c.slice(open, i + 1), at: m.index });
     }
+  } else if (isJava(u)) {
+    // Methoden: [Modifikatoren] Typ name(Parameter) [throws …] {   bzw. Kotlin: fun name(p: Typ): Typ {
+    const re = /(?:^|\n)[ \t]*(?:@\w+(?:\([^)]*\))?\s*)*(?:(?:public|private|protected|static|final|synchronized|override|suspend|open)\s+)*(?:fun\s+(\w+)|[\w<>\[\],.? ]+?\s+(\w+))\s*\(((?:[^()]|\([^()]*\))*)\)\s*(?::\s*[\w<>?,. ]+)?(?:throws\s+[\w., ]+)?\s*\{/g; let m;
+    while ((m = re.exec(c))) {
+      const name = m[1] || m[2];
+      if (!name || /^(if|for|while|switch|catch|return|new|synchronized)$/.test(name)) continue;
+      const params = [], sources = [];
+      for (const raw of m[3].split(',')) {
+        const p = raw.trim(); if (!p) continue;
+        const clean = p.replace(/@\w+(\([^)]*\))?/g, '').trim();
+        const nm = /:/.test(clean) ? clean.split(':')[0].trim().replace(/^(val|var)\s+/, '') : clean.split(/\s+/).pop();
+        if (!/^[A-Za-z_]\w*$/.test(nm)) continue;
+        params.push(nm); if (JAVA_SRC_ANNOT.test(p)) sources.push(nm);
+      }
+      const open = m.index + m[0].length - 1;
+      let d = 0, i = open;
+      for (; i < c.length; i++) { if (c[i] === '{') d++; else if (c[i] === '}' && --d === 0) break; }
+      out.push({ name, params, sources, body: c.slice(open, i + 1), at: m.index });
+    }
   } else if (isPy(u)) {
     const re = /^([ \t]*)(?:async\s+)?def\s+(\w+)\s*\(([^)]*)\)\s*(?:->[^:]+)?:/gm; let m;
     while ((m = re.exec(c))) {
@@ -63,7 +94,7 @@ function functionsOf(u) {
 
 // Darf Datei `caller` eine Funktion aus `def` aufrufen? Gleiche Datei oder ein Import/require, dessen Pfad auf
 // den Dateinamen von `def` endet. Ohne diese Pruefung verbanden gleichnamige Funktionen fremde Module (Web <-> Server).
-const stem = (f) => f.replace(/\.(m?[jt]sx?|cjs|py)$/i, '').split('/');
+const stem = (f) => f.replace(/\.(m?[jt]sx?|cjs|py|java|kt)$/i, '').split('/');
 function canCall(caller, def) {
   if (base(caller) === def) return true;
   const parts = stem(def);
@@ -71,6 +102,11 @@ function canCall(caller, def) {
   if (!name) return false;
   const c = caller.content || '';
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Java/Kotlin: gleiches Paket (gleicher Ordner) oder import …Klasse;
+  if (/\.(java|kt)$/i.test(def)) {
+    if (base(caller).replace(/[^/]+$/, '') === def.replace(/[^/]+$/, '')) return true;
+    return new RegExp(`^\\s*import\\s+[\\w.]*\\b${esc}\\s*;?\\s*$`, 'm').test(c);
+  }
   // Barrel-Import (import … from './modules') erreicht Dateien darin: Ordnername zaehlt mit
   const dir = parts.length > 1 ? parts[parts.length - 2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
   if (dir && new RegExp(`(?:from|require\\(|import\\()\\s*['"][^'"]*\\b${dir}(?:/index(?:\\.[cm]?[jt]sx?)?)?['"]`).test(c)) return true;
@@ -79,13 +115,19 @@ function canCall(caller, def) {
 
 function analyzeTaint(units) {
   const fns = [];
-  for (const u of units) if ((isJs(u) || isPy(u)) && !isTest(u)) for (const f of functionsOf(u)) fns.push({ ...f, unit: u });
+  for (const u of units) if ((isJs(u) || isPy(u) || isJava(u)) && !isTest(u)) for (const f of functionsOf(u)) fns.push({ ...f, unit: u });
   // summaries: name -> [{ param index, sink, file, chain }]
   const summary = new Map();
   const add = (name, s) => { const l = summary.get(name) || []; if (!l.some((x) => x.idx === s.idx && x.sink.kind === s.sink.kind)) { l.push(s); summary.set(name, l); return true; } return false; };
+  // Vorfilter: dieselbe Senke mit beliebigem Namen - nur Funktionen, die ueberhaupt eine Senke enthalten, werden je Parameter geprueft
+  const ANY = '[A-Za-z_$][\\w$]*';
+  const anyOf = new Map([...SINKS, ...JAVA_SINKS].map((sk) => [sk, sk.re(ANY)]));
   for (const f of fns) {
+    if (!f.params.length) continue;
+    const sinks = (isJava(f.unit) ? JAVA_SINKS : SINKS).filter((sk) => anyOf.get(sk).test(f.body));
+    if (!sinks.length) continue;
     f.params.forEach((p, idx) => {
-      for (const sink of SINKS) {
+      for (const sink of sinks) {
         const m = f.body.match(sink.re(p.replace(/\$/g, '\\$')));
         if (m && !(sink.guard && sink.guard.test(f.body))) add(f.name, { idx, sink, def: base(f.unit), file: base(f.unit), line: lineOf(f.unit.content, f.unit.content.indexOf(f.body) + f.body.indexOf(m[0])), chain: [`${base(f.unit)}:${f.name}()`] });
       }
@@ -94,12 +136,17 @@ function analyzeTaint(units) {
   // Weitergabe ueber Aufrufe: g(p) ruft f(..., p, ...) auf -> g erbt die Senke von f
   for (let round = 0; round < 5; round++) {
     let changed = false;
+    const names = [...summary.keys()].filter((n) => /^[A-Za-z_$][\w$]*$/.test(n)).map((n) => n.replace(/\$/g, '\\$'));
+    if (!names.length) break;
+    const callRe = new RegExp(`\\b(${names.join('|')})\\s*\\(([^)]*)\\)`, 'g');
     for (const g of fns) {
-      for (const [callee, sums] of summary) {
+      callRe.lastIndex = 0; let m;
+      while ((m = callRe.exec(g.body))) {
+        const callee = m[1];
         if (callee === g.name) continue;
-        const re = new RegExp(`\\b${callee}\\s*\\(([^)]*)\\)`, 'g'); let m;
-        while ((m = re.exec(g.body))) {
-          const args = m[1].split(',').map((a) => a.trim());
+        const sums = summary.get(callee) || [];
+        {
+          const args = m[2].split(',').map((a) => a.trim());
           for (const s of sums) {
             const arg = args[s.idx]; if (!arg) continue;
             if (!canCall(g.unit, s.def)) continue;
@@ -112,23 +159,30 @@ function analyzeTaint(units) {
     if (!changed) break;
   }
   // Quellen: Eingabe von aussen geht an eine zusammengefasste Funktion in einer anderen Datei
+  const srcNames = [...summary.keys()].filter((n) => /^[A-Za-z_$][\w$]*$/.test(n)).map((n) => n.replace(/\$/g, '\\$'));
+  const srcCallRe = srcNames.length ? new RegExp(`\\b(${srcNames.join('|')})\\s*\\(([^()]*(?:\\([^()]*\\)[^()]*)*)\\)`, 'g') : null;
   const findings = [];
   const seen = new Set();
   for (const u of units) {
-    if (!(isJs(u) || isPy(u)) || isTest(u)) continue;
+    if (!(isJs(u) || isPy(u) || isJava(u)) || isTest(u)) continue;
     const c = u.content || '';
-    for (const [callee, sums] of summary) {
-      const re = new RegExp(`\\b${callee}\\s*\\(([^()]*(?:\\([^()]*\\)[^()]*)*)\\)`, 'g'); let m;
-      while ((m = re.exec(c))) {
-        const args = m[1].split(',').map((a) => a.trim());
+    // Java: Parameter mit Anfrage-Annotationen (@RequestParam …) gelten in dieser Datei als Quelle
+    const javaSrc = isJava(u) ? new Set(functionsOf(u).flatMap((f) => f.sources || [])) : null;
+    const isSource = (arg) => SOURCE.test(arg) || /request\.get(Parameter|Header|QueryString)\(/.test(arg) || !!(javaSrc && javaSrc.has(arg));
+    {
+      const re = srcCallRe; if (re) re.lastIndex = 0; let m;
+      while (re && (m = re.exec(c))) {
+        const callee = m[1];
+        const sums = summary.get(callee) || [];
+        const args = m[2].split(',').map((a) => a.trim());
         for (const s of sums) {
           const arg = args[s.idx];
-          if (!arg || !SOURCE.test(arg)) continue;
+          if (!arg || !isSource(arg)) continue;
           if (s.file === base(u) || !canCall(u, s.def)) continue;
           const key = `${base(u)}:${callee}:${s.sink.kind}`;
           if (seen.has(key)) continue;
           seen.add(key);
-          const src = arg.match(SOURCE)[0];
+          const src = (arg.match(SOURCE) || [arg])[0];
           const path = [`${base(u)}:${lineOf(c, m.index)}`, ...s.chain];
           findings.push(normalizeFinding({
             ruleId: `taint-${s.sink.kind}`, severity: s.sink.kind === 'redirect' ? 'medium' : 'high', category: s.sink.cat, confidence: 'medium',

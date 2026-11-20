@@ -41,6 +41,16 @@ if (env.VIGIL_SIGN_ENDPOINT && env.VIGIL_SIGN_ACCOUNT && env.VIGIL_SIGN_PROFILE 
 //  - onlyLoadAppFromAsar                    kein Ausweichen auf einen entpackten "app"-Ordner
 //  - enableCookieEncryption                 Cookie-Speicher mit OS-Schluessel verschluesselt
 // Abschalten (z. B. zur Fehlersuche): VIGIL_NO_FUSES=1 npm run dist
+// Linux: AppImage (ohne Installation startbar) und .deb (Debian/Ubuntu). npm run dist:linux, im Release auf ubuntu-latest
+config.linux = {
+  target: ['AppImage', 'deb'],
+  category: 'Development',
+  icon: 'assets/icon.png',
+  synopsis: 'Sicherheitsprüfung für eigene Projekte',
+  artifactName: '${productName}-${version}-${arch}.${ext}',
+};
+config.deb = { maintainer: 'Passimoritz <noreply@github.com>' };
+
 config.asar = true;
 if (env.VIGIL_NO_FUSES !== '1') {
   config.electronFuses = {

@@ -108,6 +108,12 @@ const PATTERN_RULES = [
 ];
 // Weitere Musterregeln aus rules/*.yml|json (Zod-geprueft); kind: finding erzeugt eigene Befunde
 const RULE_FILES = require('./rulefiles').loadRuleFiles();
+// Signierte Regelpakete (~/.torvane/rulepacks): nur mit gueltiger Signatur eines vertrauenswuerdigen Schluessels
+const RULE_PACKS = (() => { try { return require('./rulepacks').loadTrustedPacks(); } catch (e) { return { docs: [], notes: [`Regelpakete: ${e.message}`] }; } })();
+const PACK_RULES = require('./rulefiles').loadRuleDocs(RULE_PACKS.docs);
+RULE_FILES.patterns.push(...PACK_RULES.patterns);
+RULE_FILES.findings.push(...PACK_RULES.findings);
+RULE_FILES.errors.push(...PACK_RULES.errors, ...RULE_PACKS.notes);
 PATTERN_RULES.push(...RULE_FILES.patterns);
 const FILE_FINDING_RULES = RULE_FILES.findings;
 
@@ -266,15 +272,46 @@ function compileCustom(list) {
 
 // opts: { customSecrets:[{name,regex,severity}], disabledRules:[name] } - alles optional.
 function prescan(units, opts = {}) {
-  const findings = [];
-  const deps = new Map(); // key -> {ecosystem,name,version,raw}
-  const patternHits = {}; // name -> count
+  return mergeUnitResults(scanUnits(units, opts));
+}
 
+// --- Je Datei pruefen: Teilergebnisse sind zwischenspeicherbar (opts.cache) und auf Threads verteilbar ---
+// Schluessel aus Regelstand (Quelltext dieser Pruefung + eigene Regeln) und Dateiinhalt: aendert sich eine
+// Regel oder die Datei, wird neu geprueft.
+const crypto = require('crypto');
+let CODE_SIG = null;
+function codeSignature() {
+  if (CODE_SIG) return CODE_SIG;
+  const h = crypto.createHash('sha1');
+  for (const f of ['prescan.js', 'entropy.js', 'fsaudit.js', 'schema.js', 'rulefiles.js']) { try { h.update(require('fs').readFileSync(require('path').join(__dirname, f))); } catch { h.update(f); } }
+  h.update(JSON.stringify([...FILE_FINDING_RULES, ...PATTERN_RULES].map((r) => [r.name, r.re.source, r.sev])));
+  return (CODE_SIG = h.digest('hex'));
+}
+function cacheKeyFor(u, opts = {}) {
+  const sig = codeSignature() + JSON.stringify([opts.customSecrets || [], opts.disabledRules || []]);
+  return 'pre:' + crypto.createHash('sha1').update(sig).update('\0' + String(u.label || '') + '\0' + String(u.kind || '') + (u.devData ? 'D' : '') + (u.generated ? 'G' : '') + '\0').update(String(u.content || '')).digest('hex');
+}
+
+function scanUnits(units, opts = {}) {
   const disabled = new Set(opts.disabledRules || []);
   const secretRules = [...SECRET_RULES.filter((r) => !disabled.has(r.name)), ...compileCustom(opts.customSecrets)];
   const patternRules = PATTERN_RULES.filter((r) => !disabled.has(r.name));
+  const cache = opts.cache && typeof opts.cache.get === 'function' ? opts.cache : null;
+  return units.map((u) => {
+    const key = cache ? cacheKeyFor(u, opts) : null;
+    const hit = key ? cache.get(key) : null;
+    if (hit && Array.isArray(hit.findings)) return hit;
+    const r = scanOne(u, secretRules, patternRules, disabled);
+    if (key) cache.set(key, r);
+    return r;
+  });
+}
 
-  for (const u of units) {
+function scanOne(u, secretRules, patternRules, disabled) {
+  const findings = [];
+  const deps = new Map(); // key -> {ecosystem,name,version,raw}
+  const patternHits = {}; // name -> { cat, name, sev, examples }
+  {
     const content = u.content || '';
     const devFile = !!(u.devData || u.generated) || TEST_OR_DOC.test(String(u.label || ''));
     // Secrets -> direkte Befunde
@@ -362,7 +399,24 @@ function prescan(units, opts = {}) {
     }
   }
   // Methode: sensible Dateien/Metadaten (name-/endungsbasiert)
-  findings.push(...fsaudit(units));
+  findings.push(...fsaudit([u]));
+  return { findings, deps: [...deps.values()], hits: patternHits };
+}
+
+// Teilergebnisse zusammenfuehren – gleiches Ergebnis wie ein Durchgang ueber alle Dateien
+function mergeUnitResults(results) {
+  const findings = [];
+  const deps = new Map();
+  const patternHits = {};
+  for (const r of results) {
+    if (!r) continue;
+    findings.push(...r.findings);
+    for (const d of r.deps || []) deps.set(`${d.ecosystem}:${d.name}@${d.version}`, d);
+    for (const [k, h] of Object.entries(r.hits || {})) {
+      const t = patternHits[k] || (patternHits[k] = { cat: h.cat, name: h.name, sev: h.sev, examples: [] });
+      for (const e of h.examples) if (t.examples.length < 8) t.examples.push(e);
+    }
+  }
   const depList = [...deps.values()];
 
   // Fakten-Text fuer den KI-Prompt
@@ -393,4 +447,4 @@ function ruleNames() {
   return { secrets: SECRET_RULES.map((r) => r.name), patterns: [...PATTERN_RULES, ...FILE_FINDING_RULES].map((r) => ({ cat: r.cat, name: r.name })) };
 }
 
-module.exports = { prescan, ruleNames, SECRET_RULES, PATTERN_RULES, FILE_FINDING_RULES, ruleFileErrors: RULE_FILES.errors };
+module.exports = { RULE_PACKS, prescan, scanUnits, mergeUnitResults, cacheKeyFor, ruleNames, SECRET_RULES, PATTERN_RULES, FILE_FINDING_RULES, ruleFileErrors: RULE_FILES.errors };

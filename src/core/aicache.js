@@ -10,7 +10,7 @@ const path = require('path');
 
 const MAX = 5000;
 
-function openCache(file) {
+function openCache(file, max = MAX) {
   let data = {};
   try { data = JSON.parse(fs.readFileSync(file, 'utf8')) || {}; } catch { data = {}; }
   let dirty = false;
@@ -20,7 +20,7 @@ function openCache(file) {
     flush() {
       if (!dirty) return;
       const keys = Object.keys(data);
-      if (keys.length > MAX) keys.sort((a, b) => data[a].at - data[b].at).slice(0, keys.length - MAX).forEach((k) => delete data[k]);
+      if (keys.length > max) keys.sort((a, b) => data[a].at - data[b].at).slice(0, keys.length - max).forEach((k) => delete data[k]);
       try { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file + '.tmp', JSON.stringify(data)); fs.renameSync(file + '.tmp', file); dirty = false; } catch { /* nicht kritisch */ }
     },
     size: () => Object.keys(data).length,

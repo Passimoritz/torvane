@@ -14,6 +14,8 @@
     "dist:portable": "electron-builder --win portable --config electron-builder.config.js",
     "bench": "node tools/bench.js",
     "fp": "node tools/fpmeasure.js",
+    "selfscan": "node src/cli.js --rules-only --no-cve --fail-on high .",
+    "dist:linux": "electron-builder --linux --config electron-builder.config.js",
     "e2e": "node test/e2e.js",
     "visual": "node test/visual.js --update",
     "visual:check": "node test/visual.js",

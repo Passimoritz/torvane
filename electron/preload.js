@@ -88,6 +88,7 @@ contextBridge.exposeInMainWorld('vigil', {
   askFinding: (payload) => ipcRenderer.invoke('finding:ask', payload),
   // KI-Hilfen: nur Vorschlaege, nichts wird automatisch angewendet
   patchFinding: (finding) => ipcRenderer.invoke('finding:patch', { finding }),
+  fixTestFinding: (finding, patch) => ipcRenderer.invoke('finding:fixtest', { finding, patch }),
   explainFinding: (finding, level, refresh) => ipcRenderer.invoke('finding:explain', { finding, level, refresh: !!refresh }),
   threatModel: () => ipcRenderer.invoke('threat:model'),
   upgradeGuide: (pkg) => ipcRenderer.invoke('upgrade:guide', pkg),

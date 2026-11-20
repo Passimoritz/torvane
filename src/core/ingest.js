@@ -16,7 +16,8 @@ const { analyzeBinary } = require('./binaryaudit');
 // --- Grenzen, damit nichts ausufert -------------------------------------
 const MAX_TEXT_BYTES = 400 * 1024;      // groesste Textdatei, die voll gelesen wird
 const MAX_STRINGS_BYTES = 200 * 1024;   // wieviel aus einem Binary als "strings" extrahiert wird
-const MAX_FILES = 2500;                  // Dateianzahl pro Lauf
+const MAX_FILES = 5000;                  // Dateianzahl pro Lauf (wichtige Dateien zuerst, siehe filePriority)
+const MAX_LISTED = 100000;               // so viele Dateien werden hoechstens aufgelistet und sortiert
 const MAX_TOTAL_BYTES = 40 * 1024 * 1024; // Gesamt-Textbudget
 const MAX_HTTP_BYTES = 256 * 1024;       // wieviel von einem Link/Endpoint gelesen wird
 
@@ -166,11 +167,65 @@ function addTextBuffer(col, label, kind, buf, srcPath) {
     return;
   }
   let text = buf.toString('utf8');
-  if (SCRIPT_EXT.has(ext)) for (const f of analyzeScript(text, label, ext)) col.findings.push(f);
+  if (SCRIPT_EXT.has(ext)) {
+    const scriptText = /\.(m?js|cjs|ts)$/i.test(label) ? require('./codemask').maskCode(text, label, { regex: true }) : text;
+    for (const f of analyzeScript(scriptText, label, ext)) col.findings.push(f);
+  }
   if (Buffer.byteLength(text, 'utf8') > MAX_TEXT_BYTES) {
     text = text.slice(0, MAX_TEXT_BYTES) + '\n\n/* ... [von Vigil gekuerzt] ... */';
   }
   col.add({ label, kind, language: langFor(ext), path: srcPath || label, content: text });
+}
+
+// Reihenfolge beim Einlesen grosser Ordner: eigener Code und Konfiguration zuerst, Doku/Medien zuletzt.
+// So landet bei der Dateigrenze das Wichtige sicher in der Pruefung.
+const CODE_EXT = /\.(m?[jt]sx?|cjs|py|rb|php|java|kt|kts|go|rs|cs|swift|scala|c|cc|cpp|h|hpp|dart|ex|exs|lua|vue|svelte|sh|ps1|sql|tf|gradle)$/i;
+const CONF_NAME = /(^|\/)(package\.json|requirements[^/]*\.txt|pyproject\.toml|go\.mod|pom\.xml|build\.gradle(\.kts)?|cargo\.toml|gemfile|composer\.json|dockerfile|docker-compose[^/]*\.ya?ml|\.env[^/]*|[^/]+\.ya?ml|[^/]+\.(toml|ini|conf|properties|xml|json))$/i;
+function filePriority(rel) {
+  const r = rel.toLowerCase();
+  const testish = /(^|\/)(test|tests|__tests__|spec|e2e|fixtures?|examples?|docs?|samples?)\//.test(r) ? 1 : 0;
+  if (CODE_EXT.test(r)) return 0 + testish;
+  if (CONF_NAME.test(r)) return 2 + testish;
+  if (BINARY_EXE_EXT.has(extname(r)) || ARCHIVE_EXT.has(extname(r))) return 4;
+  if (/\.(md|txt|rst|adoc|lock|log|csv|svg|html?|css|scss)$/.test(r)) return 5;
+  return 3;
+}
+
+// Alle Dateien eines Ordners auflisten (gleiche Filter wie walkDir), ohne sie zu lesen
+function listFiles(col, dir, root, matcher, out) {
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+  catch (e) { col.notes.push(`Ordner nicht lesbar: ${dir} (${e.code || e.message})`); return out; }
+  for (const ent of entries) {
+    if (out.length >= MAX_LISTED) return out;
+    const full = path.join(dir, ent.name);
+    const rel = path.relative(root, full).replace(/\\/g, '/');
+    if (ent.name === '.vigilignore' || PROJECT_FILES.includes(ent.name)) continue;
+    if (matcher && matcher(rel, ent.name)) continue;
+    if (ent.isDirectory()) {
+      if (SKIP_DIR.has(ent.name)) continue;
+      if (ent.name === 'worktrees' && /(^|[\\/])\.(claude|cursor|git)$/.test(dir)) continue;
+      if (isDbDataDir(full)) { col.notes.push(`Datenbank-Datenverzeichnis übersprungen: ${rel}`); continue; }
+      listFiles(col, full, root, matcher, out);
+    } else if (ent.isFile() && ent.name !== '.git') out.push({ full, rel, prio: filePriority(rel) });
+  }
+  return out;
+}
+
+// Ordner einlesen: erst auflisten und nach Wichtigkeit sortieren, dann bis zur Grenze lesen
+function ingestDir(col, dir, matcher) {
+  const files = listFiles(col, dir, dir, matcher, []);
+  files.sort((a, b) => a.prio - b.prio || a.rel.localeCompare(b.rel));
+  let i = 0;
+  for (; i < files.length; i++) {
+    if (col.atCapacity()) break;
+    ingestFile(col, files[i].full, dir);
+  }
+  if (i < files.length) {
+    const rest = files.slice(i);
+    const code = rest.filter((f) => f.prio <= 1).length;
+    col.notes.push(`Limit erreicht – ${rest.length} weitere Datei(en) übersprungen${code ? `, davon ${code} Code-Dateien` : ' (nur Doku, Medien und Ähnliches)'}. Ordner mit .vigilignore oder torvane.yml (ignore) eingrenzen.`);
+  }
 }
 
 function walkDir(col, dir, root, matcher) {
@@ -477,7 +532,7 @@ async function ingestTargets(targets, onProgress = () => {}) {
           const patterns = [...loadIgnore(t.value), ...(proj ? proj.ignore : [])];
           if (patterns.length) col.notes.push(`.vigilignore: ${patterns.length} Muster aktiv in ${path.basename(t.value)}.`);
           const before = col.units.length;
-          walkDir(col, t.value, t.value, makeMatcher(patterns));
+          ingestDir(col, t.value, makeMatcher(patterns));
           for (const u of col.units.slice(before)) classifyUnit(u, proj, path.basename(t.value));
         } else { const before = col.units.length; ingestFile(col, t.value, null); for (const u of col.units.slice(before)) classifyUnit(u, null, ''); }
       }

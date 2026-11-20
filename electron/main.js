@@ -722,6 +722,9 @@ function effectiveConfig(cfg, providerId) {
 const { openCache } = require('../src/core/aicache');
 let aiCacheInst = null;
 const aiCache = () => (aiCacheInst = aiCacheInst || openCache(path.join(app.getPath('userData'), 'ai-cache.json')));
+// Regel-Ergebnisse je Datei: unveraenderte Dateien werden beim naechsten Lauf nicht neu geprueft
+let ruleCacheInst = null;
+const ruleCache = () => (ruleCacheInst = ruleCacheInst || openCache(path.join(app.getPath('userData'), 'rule-cache.json'), 30000));
 
 function iconPath() {
   const ico = path.join(__dirname, '..', 'assets', 'icon.ico');
@@ -853,7 +856,7 @@ app.whenReady().then(() => {
     runState,
     buildConfig: (providerId, job = {}) => {
       const c = loadConfig(); applyProxySafe(c);
-      return { ...effectiveConfig(c, providerId || c.selected), aiCache: aiCache(), spendLedger: budget.load(SPEND_PATH()), intel: loadIntel(INTEL_PATH()), domAudit: c.domAudit !== false ? domAudit : null, apiMatrix: apiMatrixFor(c), webLogin: webLoginFor(c), feeds: currentFeeds(), greenbone: greenboneFor(c, job.useGreenbone), webCrawl: c.webCrawl !== false, allowlist: c.allowlist || [], malwareScan: c.malwareScan !== false, malwareBazaarKey: dec(c.malwareBazaarKeyEnc || ''), maxRequestsPerSecond: c.maxRequestsPerSecond || 4, secretLiveCheck: c.secretLiveCheck === true, yara: { rulesDir: YARA_DIR() }, osvOffline: c.osvOffline ? osvOffline.createOfflineQuery(OSV_DIR()) : null, systemSettings: systemSettingsFor(c) };
+      return { ...effectiveConfig(c, providerId || c.selected), aiCache: aiCache(), ruleCache: ruleCache(), spendLedger: budget.load(SPEND_PATH()), intel: loadIntel(INTEL_PATH()), domAudit: c.domAudit !== false ? domAudit : null, apiMatrix: apiMatrixFor(c), webLogin: webLoginFor(c), feeds: currentFeeds(), greenbone: greenboneFor(c, job.useGreenbone), webCrawl: c.webCrawl !== false, allowlist: c.allowlist || [], malwareScan: c.malwareScan !== false, malwareBazaarKey: dec(c.malwareBazaarKeyEnc || ''), maxRequestsPerSecond: c.maxRequestsPerSecond || 4, secretLiveCheck: c.secretLiveCheck === true, yara: { rulesDir: YARA_DIR() }, osvOffline: c.osvOffline ? osvOffline.createOfflineQuery(OSV_DIR()) : null, systemSettings: systemSettingsFor(c) };
     },
   });
   // Browser-Erweiterung: Adresse nur vormerken – das Fenster fragt nach, bevor sie in die Pruefliste kommt
@@ -1091,6 +1094,13 @@ ipcMain.handle('finding:patch', (_e, payload) => onDemand('patch', async (eff) =
   let code = null;
   try { code = readSnippet(f.location, 40); } catch { /* ohne Code */ }
   return aifix.generatePatch({ finding: f, code, config: eff });
+}));
+// Regressionstest zum Fix (Entwurf, wird nicht ausgefuehrt)
+ipcMain.handle('finding:fixtest', (_e, payload) => onDemand('patch', async (eff) => {
+  const f = findingOf(payload && payload.finding);
+  let code = null;
+  try { code = readSnippet(f.location, 40); } catch { /* ohne Code */ }
+  return aifix.generateRegressionTest({ finding: f, code, patch: String((payload && payload.patch) || ''), config: eff });
 }));
 ipcMain.handle('finding:explain', (_e, payload) => onDemand('explain', async (eff) => {
   const p = payload && typeof payload === 'object' ? payload : {};

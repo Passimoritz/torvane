@@ -197,6 +197,7 @@ const F = {
 const fill = (s, ...v) => s.replace(/\{(\d)\}/g, (x, i) => v[Number(i)] ?? '');
 
 function push(out, u, idx, key, sev, cat, vals = [], ev = '', conf = 'medium') {
+  if (idx >= 0 && !/\.(json|ya?ml|xml)$/i.test(base(u)) && require('../codemask').inComment(u, idx)) return; // nur Kommentar
   const t = F[key];
   out.push(mk(M, u, idx, {
     ruleId: 'appsec-' + key.replace(/[A-Z]/g, (x) => '-' + x.toLowerCase()), severity: sev, category: cat, confidence: conf,

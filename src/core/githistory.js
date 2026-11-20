@@ -50,8 +50,12 @@ async function scanGitHistory(dir, { currentText = '', signal, onProgress = () =
   if (!log.ok) return { findings: [], notes: [`Git-Historie konnte nicht gelesen werden: ${log.error}`], ran: false };
   const seen = new Set();
   const findings = [];
+  const TEST_OR_DOC = /(^|\/)(test|tests|__tests__|spec|specs|e2e|fixtures?|mocks?|examples?|samples?|demo|docs?|bench)(\/|$)|\.(test|spec)\.[cm]?[jt]sx?$|\.(md|mdx|rst|txt)$/i;
+  const GENERIC = /Generisches|Connection String|Zugangsdaten in URL|^JWT$|Basic-Auth/;
   for (const h of scanLog(log.stdout)) {
     if (currentText.includes(h.value)) continue;        // steht noch im Code -> meldet die Vorpruefung
+    if (/EXAMPLE|AKIAIOSFODNN7|wJalrXUtnFEMI/.test(h.value)) continue; // bekannte Doku-Beispielwerte
+    if (TEST_OR_DOC.test(h.file) && GENERIC.test(h.rule.name)) continue; // Testwerte in Tests/Doku
     const key = h.rule.name + h.value;
     if (seen.has(key)) continue;
     seen.add(key);

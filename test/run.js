@@ -3075,6 +3075,68 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     fs.rmSync(dir2, { recursive: true, force: true });
   }
 
+  // --- Welle 6: Code-Maske, Java-Datenfluss, Tempo, Regelpakete, Regressionstest, Defender ---
+  console.log('Große Umbauten (Welle 6):');
+  {
+    const fs = require('fs'); const os = require('os'); const path = require('path');
+    const { maskCode, inComment } = require('../src/core/codemask');
+    const js = "const a = 1; // eval(x)\n/* exec(y) */ const t = `${eval(z)} // nein`;\nconst s = \"// kein Kommentar\"; exec(cmd);";
+    const mk = maskCode(js, 'a.js');
+    check('maske: Zeilen- und Blockkommentare weg, Template-Code und Strings bleiben', !/eval\(x\)/.test(mk) && !/exec\(y\)/.test(mk) && /\$\{eval\(z\)\}/.test(mk) && /kein Kommentar/.test(mk) && mk.length === js.length);
+    const u = { label: 'p/a.py', content: 'x = 1  # os.system(a)\nos.system(b)\n' };
+    check('maske: Python-Kommentar erkannt', inComment(u, u.content.indexOf('os.system(a)')) && !inComment(u, u.content.indexOf('os.system(b)')));
+    const { runStaticModules } = require('../src/core/modules/static');
+    const cm = runStaticModules([{ label: 'c/x.js', content: "// Beispiel: app.get('/a', (req, res) => res.send(`<p>${req.query.q}</p>`))\nconst ok = 1;\n" }]).findings.filter((f) => f.ruleId === 'sast-reflected-xss');
+    check('maske: Regel trifft nicht in Kommentaren', cm.length === 0);
+    const { analyzeTaint } = require('../src/core/taint');
+    const J = (l, c) => ({ label: l, content: c });
+    const jt = analyzeTaint([
+      J('s/web/OrderController.java', 'package s.web;\nimport s.service.OrderService;\npublic class OrderController {\n  @GetMapping("/o")\n  public List<O> find(@RequestParam("c") String customer) { return orderService.byCustomer(customer); }\n}'),
+      J('s/service/OrderService.java', 'package s.service;\nimport s.repo.OrderRepo;\npublic class OrderService {\n  public List<O> byCustomer(String c) { return repo.query(c); }\n}'),
+      J('s/repo/OrderRepo.java', 'package s.repo;\npublic class OrderRepo {\n  public List<O> query(String who) { return jdbc.queryForList("SELECT * FROM o WHERE c = \'" + who + "\'"); }\n}'),
+    ]);
+    check('java: Spring-Parameter über drei Klassen bis in den SQL-Befehl', jt.length === 1 && jt[0].ruleId === 'taint-sql' && /OrderRepo\.java:3/.test(jt[0].location));
+    const safeJ = analyzeTaint([J('s/web/C.java', 'package s.web;\npublic class C {\n  public void f(@RequestParam String n) { repo.q(n); }\n}'), J('s/web/R.java', 'package s.web;\npublic class R {\n  public void q(String w) { jdbc.query("SELECT * FROM t WHERE n = ?", w); }\n}')]);
+    check('java: Platzhalter im SQL bleibt ruhig', safeJ.length === 0);
+    // Tempo: Zwischenspeicher je Datei und gleiches Ergebnis
+    const { runPrescan } = require('../src/core/prescan-worker');
+    const units = Array.from({ length: 450 }, (_, i) => ({ label: `big/f${i}.js`, kind: 'file', content: i === 7 ? 'const k = "AKIAQ3EGRV7YXMBN4P2K";\n' : `const v${i} = ${i};\n` }));
+    const mem = new Map(); const cache = { get: (k) => mem.get(k), set: (k, v) => mem.set(k, v) };
+    const r1 = await runPrescan(units, { cache });
+    const r2 = await runPrescan(units, { cache });
+    check('tempo: parallel geprüft, zweiter Lauf aus dem Zwischenspeicher, gleiches Ergebnis', r1.stats.threads >= 1 && r2.stats.cached === 450 && r1.pre.findings.length === r2.pre.findings.length && r1.pre.findings.some((f) => /AWS/.test(f.title)));
+    const { prescan } = require('../src/core/prescan');
+    check('tempo: Zusammenführen ergibt dasselbe wie ein Durchgang', prescan(units).findings.length === r1.pre.findings.length);
+    // Dateigrenze: Code vor Doku
+    const big = fs.mkdtempSync(path.join(os.tmpdir(), 'torvane-prio-'));
+    fs.mkdirSync(path.join(big, 'docs'));
+    fs.writeFileSync(path.join(big, 'docs', 'a.md'), '# Doku'); fs.writeFileSync(path.join(big, 'z.js'), 'const z = 1;');
+    const { ingestTargets } = require('../src/core/ingest');
+    const ing = await ingestTargets([{ type: 'path', value: big }]);
+    check('dateigrenze: eigener Code wird vor Doku eingelesen', /z\.js$/.test(String(ing.units[0].label).replace(/\\/g, '/')));
+    fs.rmSync(big, { recursive: true, force: true });
+    // Regelpakete: signiert, vertrauenswürdig, verändert
+    const rp = require('../src/core/rulepacks');
+    const k1 = rp.generateKeyPair(); const k2 = rp.generateKeyPair();
+    const pack = rp.signPack({ name: 'demo', version: '1.0.0', rules: [{ name: 'Demo: eval', category: 'Injection', severity: 'high', regex: '\\beval\\(', kind: 'finding', id: 'demo-eval' }] }, k1.privateKeyPem, k1.publicKeyPem);
+    const keys1 = [{ pem: k1.publicKeyPem, keyId: require('../src/core/signing').keyIdOf(k1.publicKeyPem) }];
+    const keys2 = [{ pem: k2.publicKeyPem, keyId: require('../src/core/signing').keyIdOf(k2.publicKeyPem) }];
+    const changed = JSON.parse(JSON.stringify(pack)); changed.rules[0].severity = 'low';
+    check('regelpakete: gültige Signatur angenommen, fremder Schlüssel und Änderung abgelehnt', rp.verifyPack(pack, keys1).ok && !rp.verifyPack(pack, keys2).ok && !rp.verifyPack(changed, keys1).ok);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'torvane-packs-'));
+    fs.writeFileSync(path.join(dir, 'demo.json'), JSON.stringify(pack)); fs.writeFileSync(path.join(dir, 'boese.json'), JSON.stringify(changed));
+    const lp = rp.loadTrustedPacks(dir, keys1);
+    check('regelpakete: nur geprüfte Pakete werden geladen, Hinweis für das andere', lp.docs.length === 1 && lp.notes.some((n) => /boese\.json/.test(n)));
+    fs.rmSync(dir, { recursive: true, force: true });
+    // Regressionstest-Entwurf
+    const aifix = require('../src/core/aifix');
+    check('fix-test: passendes Test-Framework je Sprache', aifix.testFrameworkFor('a/b.ts', '"vitest"') === 'vitest' && aifix.testFrameworkFor('x.py') === 'pytest' && aifix.testFrameworkFor('X.java') === 'JUnit 5');
+    // Defender: fehlender Pfad ist keine Bedrohung
+    const mw = require('../src/core/malware');
+    const nd = await mw.scanMalware(path.join(os.tmpdir(), 'gibt-es-nicht-' + Date.now()));
+    check('defender: nicht vorhandener Pfad meldet keine Schadsoftware', !nd.findings.some((f) => /Schadsoftware/.test(f.title)));
+  }
+
   console.log(`\n${pass} ok, ${fail} fehlgeschlagen`);
   process.exit(fail ? 1 : 0);
 })();

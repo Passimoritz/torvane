@@ -81,6 +81,9 @@ function applyPostFilters(findings, units = [], opts = {}) {
       if (ign.reason) { suppressed.push({ ruleId: id, title: f.title, location: f.location, by: 'inline', reason: ign.reason.slice(0, 300) }); continue; }
       noReason++;
     }
+    if (unit && id === 'script-obfuscated' && (unit.devData || /(^|\/)(test|tests|__tests__|spec|e2e|fixtures?)\//i.test(splitLoc(f.location).file)) && f.severity !== 'info') {
+      f = { ...f, severityOriginal: f.severity, severity: 'info', devOnly: true };
+    }
     if (unit && (unit.vendored || unit.generated) && !['Secrets', 'Dependencies'].includes(f.category) && f.severity !== 'info') {
       f = { ...f, severityOriginal: f.severityOriginal || f.severity, severity: 'info', thirdParty: unit.vendored ? 'vendored' : 'generated' };
       thirdParty++;

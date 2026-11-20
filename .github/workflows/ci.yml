@@ -37,5 +37,8 @@ jobs:
       - name: Fehlalarme auf sauberem Code (Budget je Regel)
         run: npm run fp
 
+      - name: Selbstprüfung (Torvane prüft den eigenen Code, ab "hoch" rot)
+        run: npm run selfscan
+
       - name: Bekannte Lücken in Laufzeit-Abhängigkeiten
         run: npm audit --omit=dev --audit-level=high

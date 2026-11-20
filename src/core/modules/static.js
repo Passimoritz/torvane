@@ -243,7 +243,8 @@ function sast(units) {
       if (r.unless && r.unless.test(c)) continue;
       r.re.lastIndex = 0; let m, hits = 0;
       while ((m = r.re.exec(c)) && hits < 5) {
-        if (r.test && !r.test(m, c)) continue;
+        if (require('../codemask').inComment(u, m.index) || require('../codemask').inString(u, m.index)) continue; // nur Kommentar oder Text
+        if (r.test && !r.test(m, c, u)) continue;
         hits++;
         out.push(mk('semgrep-custom-sast', u, m.index, { ruleId: r.id, severity: r.sev, category: r.cat, title: r.title, description: `${r.desc} Fundstelle: \`${m[0].replace(/\s+/g, ' ').slice(0, 120)}\``, remediation: 'Siehe Lösungsschritte.', confidence: 'medium' }));
       }

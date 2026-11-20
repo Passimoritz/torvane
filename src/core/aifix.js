@@ -98,6 +98,40 @@ async function generatePatch({ finding = {}, code = null, config }) {
   return { ok: true, diff, summary: x.summary, notes: x.notes, confidence: x.confidence, check: diff ? checkDiff(diff, code) : { checked: false, applies: null, hunks: 0 }, stats: diffStats(diff), withCode: !!code, redacted: r.redacted, model: config.model, cost: r.cost, usage: r.usage };
 }
 
+// --- 1b. Regressionstest zum Fix ----------------------------------------------
+// Test, der mit dem verwundbaren Code fehlschlaegt und nach dem Fix gruen ist. Ein Entwurf: er wird nicht
+// ausgefuehrt; der Nutzer legt ihn ins Projekt und laesst ihn mit seinem Test-Runner laufen.
+function testFrameworkFor(file, projectHint = '') {
+  const f = String(file || '').toLowerCase();
+  if (/\.(m?[jt]sx?|cjs)$/.test(f)) return /vitest/.test(projectHint) ? 'vitest' : /jest/.test(projectHint) ? 'jest' : /mocha/.test(projectHint) ? 'mocha' : 'node:test';
+  if (/\.py$/.test(f)) return 'pytest';
+  if (/\.(java|kt)$/.test(f)) return 'JUnit 5';
+  if (/\.cs$/.test(f)) return 'xUnit';
+  if (/\.go$/.test(f)) return 'go test';
+  if (/\.php$/.test(f)) return 'PHPUnit';
+  if (/\.rb$/.test(f)) return 'RSpec';
+  return 'passendes Test-Framework der Sprache';
+}
+const FIXTEST_PROMPT = `Du bist ein defensiver Security-Engineer. Schreibe fuer GENAU den genannten Befund einen kleinen, lauffaehigen Regressionstest im angegebenen Test-Framework.
+Ziel: Der Test schlaegt mit dem gezeigten (verwundbaren) Code fehl und besteht, sobald die Luecke behoben ist. Er prueft das sichere Verhalten (z. B. Eingabe wird abgelehnt, Platzhalter statt Verkettung, Pfad bleibt im Ordner, Header ist gesetzt).
+Regeln:
+- Nur die Funktion/Route aus dem Ausschnitt testen; Abhaengigkeiten (Datenbank, Netzwerk) mit einfachen Attrappen ersetzen.
+- Harmlose Markierungswerte statt echter Angriffs-Payloads (z. B. "../geheim.txt", "x' OR 'y" als Marker); keine echten Zugangsdaten.
+- Importpfade relativ zur genannten Datei schreiben; was du nicht weisst, als Kommentar im Test kennzeichnen.
+Antworte AUSSCHLIESSLICH mit JSON: {"file": string (vorgeschlagener Pfad der Testdatei), "test": string (vollstaendiger Testcode), "notes": string, "confidence": "high"|"medium"|"low"}`;
+
+async function generateRegressionTest({ finding = {}, code = null, patch = '', projectHint = '', config }) {
+  const file = code ? code.file : String(finding.location || '').replace(/:\d+(:\d+)?$/, '');
+  const framework = testFrameworkFor(file, projectHint);
+  const user = `## Befund\n${factsOf(finding)}\n\n## Test-Framework\n${framework}\n\n` + (code
+    ? `## Datei\n${code.file}\n\n## Code (Zeilennummern links, ">" = gemeldete Zeile ${code.line})\n\`\`\`\n${numbered(code)}\n\`\`\`\n`
+    : '## Code\n(nicht verfuegbar)\n') + (patch ? `\n## Geplanter Fix (unified diff)\n\`\`\`diff\n${String(patch).slice(0, 6000)}\n\`\`\`\n` : '') + `\n${langLine(config)} (notes, Kommentare im Test)`;
+  const r = await aiCall(config, { system: FIXTEST_PROMPT, user, json: true, kind: 'patch', maxTokens: 3000 });
+  const j = parseJsonObject(r.text) || {};
+  const test = String(j.test || '').replace(/^\s*```\w*\s*|\s*```\s*$/g, '');
+  return { ok: !!test, framework, file: String(j.file || '').slice(0, 300), test, notes: String(j.notes || '').slice(0, 2000), confidence: ['high', 'medium', 'low'].includes(j.confidence) ? j.confidence : 'low', withCode: !!code, cost: r.cost, redacted: r.redacted, ...(test ? {} : { error: 'Die KI hat keinen Test geliefert.' }) };
+}
+
 // --- 2. Erklaerung je Stufe ---------------------------------------------------
 const LEVELS = {
   lay: 'fuer einen Laien ohne Programmierkenntnisse (z. B. Geschaeftsfuehrung): Alltagsvergleich, was konkret passieren kann, wie dringend – keine Fachbegriffe, kein Code.',
@@ -319,4 +353,4 @@ async function threatModel({ result = {}, targets = [], config }) {
   return tm;
 }
 
-module.exports = { generatePatch, explainFinding, normalizeExplanation, explanationText, stripEcho, SECTIONS, summarizeRun, ruleSummary, threatModel, ruleThreatModel, normalizeThreatModel, checkDiff, normalizeDiff, extractDiff, aiCall, LEVELS, STRIDE, explainKey };
+module.exports = { generateRegressionTest, testFrameworkFor, generatePatch, explainFinding, normalizeExplanation, explanationText, stripEcho, SECTIONS, summarizeRun, ruleSummary, threatModel, ruleThreatModel, normalizeThreatModel, checkDiff, normalizeDiff, extractDiff, aiCall, LEVELS, STRIDE, explainKey };
