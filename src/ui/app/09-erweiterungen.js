@@ -148,7 +148,7 @@ function paletteCommands() {
   add('Gehe zu', 'Übersicht', () => showView('dash'), 'dashboard overview', 'Strg 3');
   add('Gehe zu', 'Verlauf', () => showView('history'), 'history runs', 'Strg 4');
   add('Gehe zu', 'Einstellungen', () => showView('settings'), 'settings options', 'Strg ,');
-  for (const [g, l] of [['general', 'Einstellungen: Allgemein'], ['checks', 'Einstellungen: Prüfungen'], ['web', 'Einstellungen: Web & Server'], ['advanced', 'Einstellungen: Erweitert']]) add('Gehe zu', l, () => { showView('settings'); setGroup(g); }, 'settings ' + g);
+  for (const [g, l] of [['general', 'Einstellungen: Allgemein'], ['ai', 'Einstellungen: KI & Datenschutz'], ['checks', 'Einstellungen: Prüfungen'], ['web', 'Einstellungen: Web & Server'], ['auto', 'Einstellungen: Automatisch prüfen'], ['advanced', 'Einstellungen: Erweitert']]) add('Gehe zu', l, () => { showView('settings'); setGroup(g); }, 'settings ' + g);
   if (!run && !$('runBtn').disabled) add('Prüfung', 'Prüfung starten', () => { showView('scan'); runAudit(); }, 'run scan start', 'Strg Enter');
   if (run) add('Prüfung', state.paused ? 'Prüfung fortsetzen' : 'Prüfung pausieren', togglePause, 'pause resume');
   if (run) add('Prüfung', 'Prüfung abbrechen', () => $('cancelBtn').click(), 'cancel stop');

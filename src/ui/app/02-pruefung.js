@@ -139,6 +139,7 @@ async function runAudit(opts = {}) {
   resetStage();
   $('baselineStatus').textContent = 'Prüfung läuft – die Befunde erscheinen hier, sobald sie fertig ist.';
   showView('results');
+  renderFlow();
   // Laufzeit und Restzeit live mitzaehlen
   const expected = expectedSeconds();
   const tick = () => {
@@ -228,8 +229,7 @@ function updateStage(p) {
   c.setAttribute('cx', (100 + Math.cos(a) * r).toFixed(1));
   c.setAttribute('cy', (100 + Math.sin(a) * r).toFixed(1));
   c.setAttribute('r', '3');
-  c.setAttribute('fill', Math.random() < 0.2 ? '#f4f1ea' : '#f2b23a');
-  c.setAttribute('class', 'blip');
+  c.setAttribute('class', Math.random() < 0.2 ? 'blip alt' : 'blip');
   box.appendChild(c);
   while (box.childNodes.length > 14) box.firstChild.remove();
 }
@@ -277,7 +277,7 @@ function renderVerdict() {
   const total = SEV_ORDER.reduce((n, s) => n + c[s], 0);
   let kind = 'ok', head = 'Keine Probleme gefunden.', sub = 'Vigil hat nichts Auffälliges entdeckt – gute Arbeit.';
   if (total > 0) {
-    sub = 'Eine Stufe anklicken filtert die Liste.';
+    sub = 'Fang oben in der Liste an – dort steht das Dringendste. Eine Stufe anklicken filtert die Liste.';
     if (c.critical) { kind = 'crit'; head = `${c.critical} kritische${c.high ? ` und ${c.high} hohe` : ''} ${plural(c.critical + c.high, 'Lücke', 'Lücken')} – bitte zuerst beheben.`; }
     else if (c.high) { kind = 'high'; head = `${c.high} ${plural(c.high, 'Problem', 'Probleme')} mit hohem Risiko gefunden.`; }
     else if (c.medium) { kind = 'med'; head = `${c.medium} ${plural(c.medium, 'Problem', 'Probleme')} mittleren Risikos gefunden.`; }
@@ -304,11 +304,12 @@ function renderVerdict() {
       <div class="score-inner"><span class="score-grade">${grade}</span><span class="score-label">${score} / 100</span></div>
     </div>
     <div class="v-main">
-      <div class="v-head">${esc(head)}</div>
-      <div class="v-sub">${esc(sub)}</div>
-      <div class="stats">${stats}</div>
-      ${mergeNote}
-    </div>`;
+      <span class="v-eyebrow">Fazit</span>
+      <h2 class="v-head">${esc(head)}</h2>
+      <p class="v-sub">${esc(sub)}</p>
+    </div>
+    <div class="stats" role="group" aria-label="Nach Schwere filtern">${stats}</div>
+    ${mergeNote}`;
   v.querySelectorAll('.stat').forEach((b) => b.onclick = () => setFilter(state.filter === b.dataset.f ? 'all' : b.dataset.f));
 }
 
@@ -319,7 +320,7 @@ function setFilter(f) {
 function renderFilters() {
   const c = visibleCounts();
   const total = SEV_ORDER.reduce((n, s) => n + c[s], 0);
-  const btn = (f, label, n, dot) => `<button class="fbtn${state.filter === f ? ' active' : ''}" data-f="${f}" role="tab" aria-selected="${state.filter === f}">${dot ? `<span class="fdot" style="--c:var(--${dot})"></span>` : ''}${label}<span class="fcount">${n}</span></button>`;
+  const btn = (f, label, n, dot) => `<button class="fbtn${state.filter === f ? ' active' : ''}" data-f="${f}" role="tab" aria-selected="${state.filter === f}">${dot ? `<span class="fdot c-${dot}"></span>` : ''}${label}<span class="fcount">${n}</span></button>`;
   const box = $('filters');
   box.innerHTML = btn('all', 'Alle', total) + SEV_ORDER.filter((s) => c[s]).map((s) => btn(s, SEV_LABEL[s], c[s], SEV_CLS[s])).join('');
   box.querySelectorAll('.fbtn').forEach((b) => b.onclick = () => setFilter(b.dataset.f));
@@ -351,7 +352,7 @@ function renderResult(result) {
   refreshResultView();
 }
 function refreshResultView() {
-  renderVerdict(); renderRunSummary(); renderThreatModel(); renderFilters(); updateBaselineStatus(); renderViewToggles(); renderFindings();
+  renderVerdict(); renderRunSummary(); renderThreatModel(); renderFilters(); updateBaselineStatus(); renderViewToggles(); renderFindings(); renderFlow();
 }
 
 // Zusammenfassung des Laufs (KI oder regelbasiert, aus result.meta.runSummary)

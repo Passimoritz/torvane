@@ -123,6 +123,11 @@ async function init() {
   ['depthSelect', 'validateChk', 'cveChk', 'activeChk', 'domChk', 'malwareChk', 'crawlChk'].forEach((id) => $(id).addEventListener('change', () => { collectSettings(); renderPresets(); }));
   // Einstellungen: vier Bereiche statt einer langen Seite
   $('setNav').querySelectorAll('[data-group]').forEach((b) => b.onclick = () => setGroup(b.dataset.group));
+  $('setSearch').addEventListener('input', () => filterSettings($('setSearch').value));
+  $('setSearch').addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('setSearch').value) { e.stopPropagation(); $('setSearch').value = ''; filterSettings(''); } });
+  $('openAllSettings').onclick = () => { showView('settings'); setGroup('ai'); };
+  setupFlow();
+  setupTips();
   $('exportMenu').querySelectorAll('[data-fmt]').forEach((b) => b.onclick = exportAs(b.dataset.fmt));
   $('verifyReportBtn').onclick = () => { closeMenus(); verifyReportUi(); };
   setupExtras();

@@ -9,7 +9,8 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': 
 
 const SEV_ORDER = ['critical', 'high', 'medium', 'low', 'info'];
 const SEV_LABEL = { critical: 'Kritisch', high: 'Hoch', medium: 'Mittel', low: 'Niedrig', info: 'Hinweis' };
-const SEV_CLS = { critical: 'crit', high: 'high', medium: 'med', low: 'low', info: 'info' };
+// Kurzformen fuer Farbklassen (c-*, sb-*, --sev-*). Nie "info": das kollidiert mit UI-Klassen.
+const SEV_CLS = { critical: 'crit', high: 'high', medium: 'med', low: 'low', info: 'note' };
 const SEV_HELP = {
   critical: 'Sofort beheben – leicht ausnutzbar, großer Schaden möglich.',
   high: 'Zeitnah beheben – ernstes Risiko.',
@@ -210,7 +211,111 @@ function updateRunState() {
   setRunEta();
   updateReady(ready);
   updateStatusBar();
+  renderFlow();
 }
+
+// --- Gefuehrter Ablauf: Ziel waehlen -> Einstellungen -> Pruefen -> Ergebnis -------------
+// Dieselbe Leiste steht ueber "Neue Pruefung" und "Ergebnis"; ein Klick springt zum Schritt.
+const FLOW = [
+  { key: 'target', label: 'Ziel wählen' },
+  { key: 'settings', label: 'Einstellungen' },
+  { key: 'run', label: 'Prüfen' },
+  { key: 'result', label: 'Ergebnis' },
+];
+function flowState() {
+  const n = state.targets.length;
+  const aiOk = !needsAi() || (typeof aiReady === 'function' && aiReady().ok);
+  const hasResult = !!state.lastResult;
+  // Im Ergebnis beschreibt die Leiste den letzten Lauf, in "Neue Pruefung" den naechsten
+  const past = state.running || (state.view === 'results' && hasResult);
+  const done = past
+    ? { target: true, settings: true, run: !state.running, result: hasResult && !state.running }
+    : { target: n > 0, settings: n > 0 && aiOk, run: false, result: false };
+  const current = state.running ? 'run' : past ? 'result' : !done.target ? 'target' : !done.settings ? 'settings' : 'run';
+  const sub = {
+    target: n ? `${n} ${n === 1 ? 'Ziel' : 'Ziele'}` : past ? 'Erledigt' : 'Noch leer',
+    settings: past ? 'Erledigt' : !n ? 'Nach dem Ziel' : !needsAi() ? 'Keine KI nötig' : aiOk ? 'KI bereit' : 'KI fehlt',
+    run: state.running ? 'Läuft gerade' : past ? 'Erledigt' : done.settings ? 'Startklar' : 'Noch nicht bereit',
+    result: hasResult ? `${state.lastFindings.filter((f) => !f.suppressed).length} offen` : 'Noch keins',
+  };
+  return { done, current, sub };
+}
+function renderFlow() {
+  const s = flowState();
+  for (const id of ['flowScan', 'flowResults']) {
+    const nav = $(id);
+    if (!nav) continue;
+    nav.innerHTML = `<ol>${FLOW.map((st, i) => {
+      const cls = st.key === s.current ? 'current' : s.done[st.key] ? 'done' : '';
+      const disabled = st.key === 'result' && !state.lastResult && !state.running;
+      return `<li><button type="button" class="flow-step ${cls}" data-flow="${st.key}"${st.key === s.current ? ' aria-current="step"' : ''}${disabled ? ' disabled' : ''}>
+        <span class="flow-num" aria-hidden="true">${s.done[st.key] && st.key !== s.current ? '✓' : i + 1}</span>
+        <span class="flow-label"><b>${esc(st.label)}</b><small>${esc(s.sub[st.key])}</small></span></button></li>`;
+    }).join('')}</ol>`;
+  }
+}
+function goFlow(key) {
+  if (key === 'result') { showView('results'); return; }
+  showView('scan');
+  const target = { target: 'targetInput', settings: 'aiCard', run: 'runBtn' }[key];
+  const el = $(target);
+  if (!el) return;
+  el.scrollIntoView({ block: key === 'run' ? 'center' : 'start' });
+  if (key === 'target') el.focus();
+  else if (key === 'run' && !el.disabled) el.focus();
+  else { const first = el.querySelector('button, input, select'); if (first) first.focus(); }
+}
+function setupFlow() {
+  for (const id of ['flowScan', 'flowResults']) {
+    const nav = $(id);
+    if (nav) nav.addEventListener('click', (e) => { const b = e.target.closest('[data-flow]'); if (b && !b.disabled) goFlow(b.dataset.flow); });
+  }
+  renderFlow();
+}
+
+// --- Erklaertexte als (i)-Tooltip -------------------------------------------------------
+// Markup: <button class="tip" aria-label="Erklärung"><span class="tip-ico">i</span><span class="tip-body" role="tooltip">…</span></button>
+// Zeigen bei Maus und Tastaturfokus, Klick heftet an, Esc schliesst (WCAG 1.4.13). Der Text bleibt im DOM,
+// damit die Uebersetzung ihn findet; aria-describedby verbindet ihn mit dem Knopf.
+let tipSeq = 0;
+function wireTip(t) {
+  if (t.dataset.tipReady) return;
+  t.dataset.tipReady = '1';
+  const body = t.querySelector('.tip-body');
+  if (body && !body.id) { body.id = 'tip-' + (++tipSeq); t.setAttribute('aria-describedby', body.id); }
+}
+function placeTip(t) {
+  const body = t.querySelector('.tip-body');
+  if (!body) return;
+  t.classList.remove('align-start', 'align-end', 'above', 'closed');
+  const r = t.getBoundingClientRect();
+  const w = Math.min(340, window.innerWidth * 0.78);
+  if (r.left + r.width / 2 - w / 2 < 8) t.classList.add('align-start');
+  else if (r.left + r.width / 2 + w / 2 > window.innerWidth - 8) t.classList.add('align-end');
+  if (r.bottom + 180 > window.innerHeight && r.top > 200) t.classList.add('above');
+}
+function setupTips(root = document) {
+  root.querySelectorAll('.tip').forEach(wireTip);
+}
+document.addEventListener('mouseover', (e) => { const t = e.target.closest && e.target.closest('.tip'); if (t) { wireTip(t); placeTip(t); } });
+document.addEventListener('focusin', (e) => { const t = e.target.closest && e.target.closest('.tip'); if (t) { wireTip(t); placeTip(t); } });
+document.addEventListener('click', (e) => {
+  const t = e.target.closest && e.target.closest('.tip');
+  document.querySelectorAll('.tip.open').forEach((o) => { if (o !== t) o.classList.remove('open'); });
+  if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  wireTip(t); placeTip(t);
+  t.classList.toggle('open');
+}, true);
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const open = document.querySelectorAll('.tip.open, .tip:hover, .tip:focus-visible');
+  if (!open.length) return;
+  open.forEach((t) => { t.classList.remove('open'); t.classList.add('closed'); });
+  e.stopPropagation();
+}, true);
+document.addEventListener('mouseout', (e) => { const t = e.target.closest && e.target.closest('.tip'); if (t && !t.contains(e.relatedTarget)) t.classList.remove('closed'); });
+document.addEventListener('focusout', (e) => { const t = e.target.closest && e.target.closest('.tip'); if (t) t.classList.remove('closed', 'open'); });
 
 // --- Drag & Drop --------------------------------------------------------
 function setupDropzone() {

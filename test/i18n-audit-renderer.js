@@ -40,7 +40,7 @@
     const keys = [...document.querySelectorAll('#findings .frow')].map((x) => x.dataset.key);
     for (const k of keys) { selectFinding(k); await wait(25); where = 'Befund'; collect(bad); }
     for (const v of ['scan', 'dash', 'history', 'settings']) { showView(v); await wait(120); where = `Ansicht ${v}`; collect(bad); }
-    for (const g of ['general', 'checks', 'web', 'advanced']) { setGroup(g); await wait(120); where = `Einstellungen ${g}`; collect(bad); }
+    for (const g of ['general', 'ai', 'checks', 'web', 'auto', 'advanced']) { setGroup(g); await wait(120); where = `Einstellungen ${g}`; collect(bad); }
     showView('dash');
     for (const tab of document.querySelectorAll('.dash-tab')) { tab.click(); await wait(100); where = `Übersicht ${tab.dataset.tab || ''}`; collect(bad); }
     showView('scan');

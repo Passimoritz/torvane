@@ -14,8 +14,8 @@
   <aside class="sidebar" aria-label="Navigation">
     <div class="brand">
       <span class="logo-tile"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path fill="#f2b23a" d="M216 208 L380 208 L512 540 L644 208 L808 208 L808 492 C808 676 692 808 512 892 C332 808 216 676 216 492 Z"/></svg></span>
-      <span class="brand-name">Vigil</span>
-      <span class="brand-tag">Security Audit</span>
+      <span class="brand-name" data-brand="name">Vigil</span>
+      <span class="brand-tag" data-brand="tagline">Sicherheitsprüfung</span>
     </div>
 
     <nav class="nav" aria-label="Bereiche">
@@ -61,13 +61,13 @@
 
   <!-- ===================== Neue Prüfung ===================== -->
   <section id="scanView" class="view" aria-labelledby="scanTitle">
-    <header class="page-head scan-hero">
+    <header class="page-head">
       <div>
-        <span class="eyebrow">Neue Prüfung</span>
         <h1 id="scanTitle">Was soll Vigil prüfen?</h1>
         <p class="page-sub">Ordner hineinziehen, Adresse eintippen oder unten eine Art wählen. Vigil prüft nur, was dir gehört – zerstörungsfrei.</p>
       </div>
     </header>
+    <nav class="flow" id="flowScan" aria-label="Ablauf der Prüfung"></nav>
     <div id="pausedRun" class="paused-run" role="status" hidden>
       <div><b id="pausedRunTitle">Pausierte Prüfung</b><span id="pausedRunInfo" class="muted small"></span></div>
       <button id="pausedRunDrop" type="button" class="btn">Verwerfen</button>
@@ -77,9 +77,14 @@
     <div class="scan-grid">
       <div class="scan-main">
 
-        <!-- 1 · Ziele: die ganze Karte ist Ablagefläche -->
-        <section class="card target-card" id="dropzone" aria-label="Ziele – Dateien oder Ordner hierher ziehen">
+        <!-- Schritt 1 · Ziele: die ganze Karte ist Ablagefläche -->
+        <section class="card step-card target-card" id="dropzone" aria-labelledby="stepTargetTitle">
           <div class="drop-overlay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><b>Loslassen zum Hinzufügen</b></div>
+          <header class="step-head">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h2 id="stepTargetTitle">Ziel wählen</h2>
+            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Vigil nur zerstörungsfrei: Zertifikat, Sicherheits-Header, Cookies, CORS und offen liegende Pfade. Keine Angriffe, keine Last-Tests.</span></button>
+          </header>
 
           <div class="omni">
             <div class="omni-field">
@@ -138,24 +143,29 @@
                   <button type="button" class="fbtn active" data-kf="all">Alle</button>
                   <button type="button" class="fbtn" data-kf="trusted">Vertraut</button>
                 </span>
+                <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">„Vertraut“ heißt: Vigil prüft diese Webadresse bzw. diesen Server ohne erneute Rückfrage. Mit „Vertrauen entziehen“ fragt Vigil beim nächsten Mal wieder nach. „Ausblenden“ entfernt ein Ziel nur aus dieser Liste – Befunde und Verlauf bleiben erhalten.</span></button>
               </div>
               <ul id="knownList" class="known-list"></ul>
-              <p class="muted small known-foot">„Vertraut“ heißt: Vigil prüft diese Webadresse bzw. diesen Server ohne erneute Rückfrage. Mit „Vertrauen entziehen“ fragt Vigil beim nächsten Mal wieder nach. „Ausblenden“ entfernt ein Ziel nur aus dieser Liste – Befunde und Verlauf bleiben erhalten.</p>
             </div>
           </div>
 
         </section>
 
-        <!-- 2 · KI -->
-        <section class="card" id="aiCard">
-          <header class="card-title"><span class="step">2</span><div><h2>KI</h2><p>Wer analysiert den Code? Webadressen, Server und Images laufen ohne KI.</p></div></header>
+        <!-- Schritt 2 · Einstellungen: KI und Gründlichkeit -->
+        <section class="card step-card" id="aiCard" aria-labelledby="stepSetTitle">
+          <header class="step-head">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h2 id="stepSetTitle">Einstellungen</h2>
+            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Wer analysiert den Code? Webadressen, Server und Images laufen ohne KI.</span></button>
+            <button type="button" class="btn ghost tiny step-more" id="openAllSettings">Alle Einstellungen</button>
+          </header>
 
-          <div class="segmented" role="tablist" aria-label="Art der KI">
-            <button id="modeLocal" class="seg" role="tab" data-mode="local">
+          <div class="mode-grid" role="tablist" aria-label="Art der KI">
+            <button id="modeLocal" class="mode-card" role="tab" data-mode="local">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 19.5h8M12 15.5v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
               <span><b>Lokal</b><small>privat &amp; kostenlos</small></span>
             </button>
-            <button id="modeCloud" class="seg" role="tab" data-mode="cloud">
+            <button id="modeCloud" class="mode-card" role="tab" data-mode="cloud">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.5a4.5 4.5 0 0 0 0 9z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
               <span><b>Cloud</b><small>Claude, OpenAI, Gemini</small></span>
             </button>
@@ -238,10 +248,14 @@
         </section>
       </div>
 
-      <!-- 3 · Zusammenfassung, Kosten, Start -->
-      <aside class="scan-side">
-        <section class="card summary">
-          <header class="card-title"><span class="step">3</span><div><h2>Startklar?</h2><p>Kosten und Dauer siehst du vor dem ersten Token</p></div></header>
+      <!-- Schritt 3 · Prüfen: Zusammenfassung, Kosten, Start -->
+      <aside class="scan-side" aria-label="Prüfung starten">
+        <section class="card step-card summary" aria-labelledby="stepRunTitle">
+          <header class="step-head">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h2 id="stepRunTitle">Prüfen</h2>
+            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip"><b>Regeln &amp; Datenbanken</b> finden Secrets, verwundbare Pakete und Fehlkonfigurationen. <b>Die KI</b> sucht Logik- und Zugriffsfehler und prüft ihre Funde gegen. <b>Vigil fasst zusammen</b>: keine Doppelungen, mit konkreter Lösung, Verlauf über alle Läufe.</span></button>
+          </header>
           <ul class="ready" id="readyList" aria-label="Checkliste vor dem Start">
             <li id="readyTarget"><span class="ready-dot" aria-hidden="true"></span><span class="ready-text">Ziel hinzufügen</span></li>
             <li id="readyAi"><span class="ready-dot" aria-hidden="true"></span><span class="ready-text">KI wählen</span></li>
@@ -253,7 +267,7 @@
             <div><dt>Gründlichkeit</dt><dd><button type="button" class="link-btn" id="sbMode" title="Umschalten">Gründlich</button></dd></div>
           </dl>
           <div class="set-row gb-run" id="gbRunRow" hidden>
-            <div class="set-label"><b>Greenbone OpenVAS</b><span>Gilt nur für diese Prüfung. Verlängert sie deutlich.</span></div>
+            <div class="set-label"><b>Greenbone OpenVAS</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gilt nur für diese Prüfung. Verlängert sie deutlich.</span></button></div>
             <label class="switch"><input type="checkbox" id="gbRunChk" aria-label="Greenbone in dieser Prüfung mitlaufen lassen" /><span></span></label>
           </div>
           <div id="estimateCard" class="estimate" hidden aria-live="polite"></div>
@@ -264,14 +278,6 @@
           </button>
           <p class="run-hint" id="runHint" aria-live="polite"></p>
           <p class="kbd-hint"><kbd>Strg</kbd>+<kbd>Enter</kbd> startet</p>
-        </section>
-        <section class="card how">
-          <h3>So arbeitet Vigil</h3>
-          <ol>
-            <li><b>Regeln &amp; Datenbanken</b> finden Secrets, verwundbare Pakete und Fehlkonfigurationen.</li>
-            <li><b>Die KI</b> sucht Logik- und Zugriffsfehler und prüft ihre Funde gegen.</li>
-            <li><b>Vigil fasst zusammen</b>: keine Doppelungen, mit konkreter Lösung, Verlauf über alle Läufe.</li>
-          </ol>
         </section>
       </aside>
     </div>
@@ -313,9 +319,10 @@
           </div>
         </div>
         <button id="threatBtn" class="btn" title="STRIDE-Bedrohungsmodell des Projekts erstellen">Bedrohungsmodell</button>
-        <button id="newScanBtn" class="btn">Neue Prüfung</button>
+        <button id="newScanBtn" class="btn primary">Neue Prüfung</button>
       </div>
     </header>
+    <nav class="flow" id="flowResults" aria-label="Ablauf der Prüfung"></nav>
 
     <div id="emptyState" class="empty-hero">
       <div class="empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m8.5 12 2.3 2.4L15.8 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -330,22 +337,19 @@
         <div class="radar">
           <svg viewBox="0 0 200 200">
             <defs>
-              <radialGradient id="radarBg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#16243a"/><stop offset="1" stop-color="#0b111c"/></radialGradient>
-              <linearGradient id="radarShield" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2b23a"/><stop offset="1" stop-color="#f2b23a"/></linearGradient>
-              <radialGradient id="radarSweep" cx="0" cy="1" r="1"><stop offset="0" stop-color="#f2b23a" stop-opacity=".45"/><stop offset="1" stop-color="#f2b23a" stop-opacity="0"/></radialGradient>
+              <radialGradient id="radarSweep" cx="0" cy="1" r="1"><stop offset="0" class="rs-a"/><stop offset="1" class="rs-b"/></radialGradient>
             </defs>
-            <circle cx="100" cy="100" r="98" fill="url(#radarBg)"/>
-            <g fill="none" stroke="#f2b23a">
-              <circle cx="100" cy="100" r="34" stroke-opacity=".35"/>
-              <circle cx="100" cy="100" r="60" stroke-opacity=".22"/>
-              <circle cx="100" cy="100" r="86" stroke-opacity=".12"/>
-              <path d="M100 6v188M6 100h188" stroke-opacity=".08"/>
+            <circle cx="100" cy="100" r="98" class="radar-bg"/>
+            <g fill="none" class="radar-rings">
+              <circle cx="100" cy="100" r="34" stroke-opacity=".45"/>
+              <circle cx="100" cy="100" r="60" stroke-opacity=".3"/>
+              <circle cx="100" cy="100" r="86" stroke-opacity=".18"/>
+              <path d="M100 6v188M6 100h188" stroke-opacity=".12"/>
             </g>
-            <g class="radar-sweep"><path d="M100 100 L100 6 A94 94 0 0 1 181 53 Z" fill="url(#radarSweep)"/><path d="M100 100 L181 53" stroke="#f2b23a" stroke-width="1.5" stroke-opacity=".8"/></g>
+            <g class="radar-sweep"><path d="M100 100 L100 6 A94 94 0 0 1 181 53 Z" fill="url(#radarSweep)"/><path d="M100 100 L181 53" class="radar-arm" stroke-width="1.5"/></g>
             <g id="radarBlips"></g>
-            <g class="radar-shield"><path transform="translate(100 97) scale(.075) translate(-512 -550)" d="M216 208 L380 208 L512 540 L644 208 L808 208 L808 492 C808 676 692 808 512 892 C332 808 216 676 216 492 Z" fill="#f2b23a"/></g>
+            <g class="radar-shield"><path transform="translate(100 97) scale(.075) translate(-512 -550)" d="M216 208 L380 208 L512 540 L644 208 L808 208 L808 492 C808 676 692 808 512 892 C332 808 216 676 216 492 Z"/></g>
           </svg>
-          <span class="radar-ping"></span>
         </div>
         <div class="stage-info">
           <span class="eyebrow" id="stageStep">Schritt 1 von 8</span>
@@ -373,7 +377,7 @@
 
     <!-- Ergebnis -->
     <section id="resultPanel" class="result" hidden>
-      <div id="verdict" class="verdict card"></div>
+      <section id="verdict" class="verdict card" aria-label="Fazit"></section>
       <div id="runSummary" class="run-summary card" hidden></div>
       <section id="threatPanel" class="threat-panel card" hidden aria-label="Bedrohungsmodell"></section>
 
@@ -383,6 +387,7 @@
           <input id="findingSearch" type="search" placeholder="Befunde durchsuchen" aria-label="Befunde durchsuchen" />
           <kbd>Strg F</kbd>
         </label>
+        <div class="chips" id="filters" role="tablist" aria-label="Nach Schwere filtern"></div>
         <label class="group-by"><span>Gruppieren</span>
           <select id="groupBySelect" aria-label="Befunde gruppieren nach">
             <option value="severity">nach Schwere</option>
@@ -391,7 +396,6 @@
             <option value="target">nach Ziel</option>
           </select>
         </label>
-        <div class="chips" id="filters" role="tablist"></div>
         <div class="chips" id="viewToggles"></div>
       </div>
 
@@ -412,7 +416,6 @@
     </div>
     <header class="page-head">
       <div>
-        <span class="eyebrow">Alle Prüfungen zusammen</span>
         <h1 id="dashTitle">Übersicht</h1>
         <p class="page-sub" id="dashSummary"></p>
       </div>
@@ -513,7 +516,7 @@
 
     <!-- Ziele -->
     <section class="card dash-pane" data-pane="targets" hidden>
-      <p class="hint">Alle bisher geprüften Ziele. „Löschen“ entfernt das Ziel mit allen seinen Befunden aus der Übersicht – die Prüfung selbst lässt sich jederzeit wiederholen.</p>
+      <div class="block-head"><h2>Geprüfte Ziele</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Alle bisher geprüften Ziele. „Löschen“ entfernt das Ziel mit allen seinen Befunden aus der Übersicht – die Prüfung selbst lässt sich jederzeit wiederholen.</span></button></div>
       <div id="dashTargets" class="tgt-grid"></div>
     </section>
 
@@ -527,7 +530,7 @@
 
     <!-- Pakete -->
     <section class="card dash-pane" data-pane="sbom" hidden>
-      <p class="hint">Neue Lücke in einem Paket gemeldet? Hier siehst du sofort, in welchen geprüften Projekten es steckt und in welcher Version.</p>
+      <div class="block-head"><h2>Pakete suchen</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Neue Lücke in einem Paket gemeldet? Hier siehst du sofort, in welchen geprüften Projekten es steckt und in welcher Version.</span></button></div>
       <label class="search wide">
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <input id="sbomSearch" type="search" placeholder="Paket suchen, z. B. lodash oder lodash@4.17" aria-label="Paket suchen" />
@@ -597,16 +600,25 @@
     </header>
 
     <div class="settings-layout">
-      <nav class="set-nav" id="setNav" role="tablist" aria-label="Einstellungsbereiche">
-        <button type="button" role="tab" data-group="general" aria-selected="true" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Allgemein</b><small>Profil, Darstellung, Sprache, Bericht</small></span></button>
-        <button type="button" role="tab" data-group="checks" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Prüfungen</b><small>KI, Schadsoftware, Erkennungsdaten</small></span></button>
-        <button type="button" role="tab" data-group="web" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.5 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.5-3.5-8.5s1-5.9 3.5-8.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span><b>Web &amp; Login</b><small>Freigaben, Testkonto, API-Rechte</small></span></button>
-        <button type="button" role="tab" data-group="advanced" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Erweitert</b><small>Eigene Regeln, Netzwerk, REST-API, Daten</small></span></button>
-      </nav>
+      <div class="set-side">
+        <label class="search set-search">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="setSearch" type="search" placeholder="Einstellung suchen" aria-label="Einstellung suchen" autocomplete="off" />
+        </label>
+        <nav class="set-nav" id="setNav" role="tablist" aria-label="Einstellungsbereiche">
+          <button type="button" role="tab" data-group="general" aria-selected="true" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.8v2.4M12 18.8v2.4M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Allgemein</b><small>Profil, Darstellung, Bericht</small></span></button>
+          <button type="button" role="tab" data-group="ai" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 2.5v2.5M15 2.5v2.5M9 19v2.5M15 19v2.5M2.5 9H5M2.5 15H5M19 9h2.5M19 15h2.5M9.5 9.5h5v5h-5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span><b>KI & Datenschutz</b><small>Analyse, Kosten, Schwärzen</small></span></button>
+          <button type="button" role="tab" data-group="checks" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.5c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Prüfungen</b><small>Schadsoftware, Tools, Zugänge</small></span></button>
+          <button type="button" role="tab" data-group="web" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.5 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.5-3.5-8.5s1-5.9 3.5-8.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span><b>Web & Login</b><small>Freigaben, Testkonto, API-Rechte</small></span></button>
+          <button type="button" role="tab" data-group="auto" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 9v4l2.5 2M9.5 2.5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Automatisch prüfen</b><small>Zeitpläne, Hintergrund</small></span></button>
+          <button type="button" role="tab" data-group="advanced" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Erweitert</b><small>Regeln, Netzwerk, REST-API, Daten</small></span></button>
+        </nav>
+      </div>
 
       <div class="set-body">
+        <p id="setSearchEmpty" class="set-empty" hidden>Keine Einstellung gefunden.</p>
         <section class="presets" aria-labelledby="presetTitle">
-          <div class="presets-head"><h2 id="presetTitle">Profil</h2><p class="hint">Ein Klick stellt alles Wichtige passend ein. Feinheiten darunter.</p></div>
+          <div class="presets-head block-head"><h2 id="presetTitle">Profil</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Ein Klick stellt alles Wichtige passend ein. Feinheiten darunter.</span></button></div>
           <div class="preset-grid" id="presetGrid">
             <button type="button" class="preset" data-preset="fast">
               <span class="p-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5 13.5h6L10 21l8-10.5h-6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
@@ -626,66 +638,66 @@
         <section class="card set-block" id="set-analyse">
           <h2>Analyse</h2>
           <div class="set-row">
-            <div class="set-label"><b>Gründlichkeit</b><span>Gründlich = fünf fokussierte Durchgänge (Zugriff, Injection, Krypto, Logik, Konfig). Findet mehr, kostet mehr.</span></div>
+            <div class="set-label"><span class="set-title"><b>Gründlichkeit</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gründlich = fünf fokussierte Durchgänge (Zugriff, Injection, Krypto, Logik, Konfig). Findet mehr, kostet mehr.</span></button></span></div>
             <select id="depthSelect">
               <option value="thorough">Gründlich – 5 Durchgänge</option>
               <option value="standard">Schnell – 1 Durchgang</option>
             </select>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Kostenbremse</b><span>Vor dem Start nachfragen, wenn ein Cloud-Lauf voraussichtlich mehr kostet.</span></div>
+            <div class="set-label"><span class="set-title"><b>Kostenbremse</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vor dem Start nachfragen, wenn ein Cloud-Lauf voraussichtlich mehr kostet.</span></button></span></div>
             <label class="cost-limit"><input id="costWarnInput" type="number" min="0" step="0.5" /> <span>$</span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Genauigkeit der KI</b><span id="tempDesc"></span></div>
+            <div class="set-label"><span class="set-title"><b>Genauigkeit der KI</b></span><span class="set-desc" id="tempDesc"></span></div>
             <div class="slider-row"><input type="range" id="tempRange" min="0" max="1" step="0.1" /><span id="tempVal" class="temp-val">0.1</span></div>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Schwachstellen-Datenbank</b><span>Abhängigkeiten (npm, PyPI, Maven, Go, Cargo, RubyGems) gegen OSV.dev prüfen. Kostenlos, braucht Internet.</span></div>
+            <div class="set-label"><span class="set-title"><b>Schwachstellen-Datenbank</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Abhängigkeiten (npm, PyPI, Maven, Go, Cargo, RubyGems) gegen OSV.dev prüfen. Kostenlos, braucht Internet.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="cveChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Nur Geändertes neu prüfen</b><span>Vigil merkt sich die KI-Ergebnisse je Datei. Unveränderte Dateien kommen beim nächsten Lauf aus dem Zwischenspeicher – das spart meist den Großteil an Zeit und Kosten. <span id="cacheInfo"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Nur Geändertes neu prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil merkt sich die KI-Ergebnisse je Datei. Unveränderte Dateien kommen beim nächsten Lauf aus dem Zwischenspeicher – das spart meist den Großteil an Zeit und Kosten.</span></button></span><span id="cacheInfo" class="set-status"></span></div>
             <span class="set-ctrl"><button id="cacheClearBtn" type="button" class="btn tiny ghost">Leeren</button><label class="switch"><input type="checkbox" id="incrChk" /><span></span></label></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Gelöschte Schlüssel in der Git-Historie suchen</b><span>Auch Zugangsdaten, die längst aus dem Code entfernt wurden, stehen oft noch in alten Versionen. Nur für Ordner, die ein Git-Repository sind.</span></div>
+            <div class="set-label"><span class="set-title"><b>Gelöschte Schlüssel in der Git-Historie suchen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Auch Zugangsdaten, die längst aus dem Code entfernt wurden, stehen oft noch in alten Versionen. Nur für Ordner, die ein Git-Repository sind.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="gitHistChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Kleines Modell sortiert vor</b><span>Optional: Ein günstiges Modell markiert verdächtige Dateien, nur diese gehen an das große Modell. Leer lassen zum Abschalten. Gilt für den gerade gewählten Anbieter.</span></div>
+            <div class="set-label"><span class="set-title"><b>Kleines Modell sortiert vor</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Optional: Ein günstiges Modell markiert verdächtige Dateien, nur diese gehen an das große Modell. Leer lassen zum Abschalten. Gilt für den gerade gewählten Anbieter.</span></button></span></div>
             <input id="triageModelInput" type="text" class="set-input" placeholder="z. B. qwen2.5-coder:1.5b" spellcheck="false" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Zweites Modell prüft gegen</b><span>Optional: Ein zweites Modell prüft dieselben Dateien. Was beide finden, gilt als sicher, Einzelfunde werden heruntergestuft. Verdoppelt Zeit und Kosten der KI-Analyse.</span></div>
+            <div class="set-label"><span class="set-title"><b>Zweites Modell prüft gegen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Optional: Ein zweites Modell prüft dieselben Dateien. Was beide finden, gilt als sicher, Einzelfunde werden heruntergestuft. Verdoppelt Zeit und Kosten der KI-Analyse.</span></button></span></div>
             <input id="consensusModelInput" type="text" class="set-input" placeholder="z. B. llama3.1:8b" spellcheck="false" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Monatliches KI-Budget</b><span>Obergrenze für Cloud-KI pro Kalendermonat (0 = aus). Ist sie erreicht, fragt Vigil vor jedem Lauf nach und sperrt Einzelaufrufe. <span id="budgetInfo"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Monatliches KI-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Obergrenze für Cloud-KI pro Kalendermonat (0 = aus). Ist sie erreicht, fragt Vigil vor jedem Lauf nach und sperrt Einzelaufrufe.</span></button></span><span id="budgetInfo" class="set-status"></span></div>
             <label class="cost-limit"><input id="monthlyBudgetInput" aria-label="Monatliches KI-Budget" type="number" min="0" step="1" /> <span>$</span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Eigene Vorgaben für die KI</b><span>Schwerpunkte oder Hinweise zu deinem Projekt, z. B. „Mandantentrennung über tenant_id prüfen“. Gehen in jede Analyse ein; geänderte Vorgaben prüfen alle Dateien neu.</span></div>
+            <div class="set-label"><span class="set-title"><b>Eigene Vorgaben für die KI</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Schwerpunkte oder Hinweise zu deinem Projekt, z. B. „Mandantentrennung über tenant_id prüfen“. Gehen in jede Analyse ein; geänderte Vorgaben prüfen alle Dateien neu.</span></button></span></div>
           </div>
           <textarea id="aiFocusInput" aria-label="Eigene Vorgaben für die KI" rows="3" maxlength="2000" spellcheck="false" placeholder="z. B. Achte besonders auf Rechteprüfungen in /api/admin und auf die Zahlungslogik."></textarea>
           <div class="set-row">
-            <div class="set-label"><b>KI darf nachschlagen</b><span>Die KI kann während der Analyse weitere Dateien oder Funktionsdefinitionen aus dem geprüften Projekt anfordern (Claude, OpenAI-Format, Gemini, Ollama). Höchstens so viele Abfragen je Block:</span></div>
+            <div class="set-label"><span class="set-title"><b>KI darf nachschlagen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Die KI kann während der Analyse weitere Dateien oder Funktionsdefinitionen aus dem geprüften Projekt anfordern (Claude, OpenAI-Format, Gemini, Ollama). Höchstens so viele Abfragen je Block:</span></button></span></div>
             <span class="set-ctrl"><input id="lookupMaxInput" type="number" min="1" max="10" step="1" class="set-input tiny-num" aria-label="Höchstzahl Abfragen je Block" /><label class="switch"><input type="checkbox" id="lookupChk" /><span></span></label></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Große Projekte: Datei-Budget</b><span>Vigil ordnet Dateien nach Risiko (Routen, Anmeldung, Eingaben, Shell, SQL …). Optional gehen nur die wichtigsten N Dateien an die KI (0 = alle).</span></div>
+            <div class="set-label"><span class="set-title"><b>Große Projekte: Datei-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil ordnet Dateien nach Risiko (Routen, Anmeldung, Eingaben, Shell, SQL …). Optional gehen nur die wichtigsten N Dateien an die KI (0 = alle).</span></button></span></div>
             <input id="fileBudgetInput" type="number" min="0" step="10" class="set-input tiny-num" aria-label="Höchstzahl Dateien für die KI" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Lokale Embeddings zum Ordnen</b><span>Optional: ein Ollama-Embedding-Modell verfeinert die Reihenfolge – läuft lokal, nichts verlässt den Rechner. Leer lassen zum Abschalten.</span></div>
+            <div class="set-label"><span class="set-title"><b>Lokale Embeddings zum Ordnen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Optional: ein Ollama-Embedding-Modell verfeinert die Reihenfolge – läuft lokal, nichts verlässt den Rechner. Leer lassen zum Abschalten.</span></button></span></div>
             <input id="embedModelInput" aria-label="Lokale Embeddings zum Ordnen" type="text" class="set-input" placeholder="z. B. nomic-embed-text" spellcheck="false" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Zusammenfassung per KI</b><span>Nach jedem Lauf ein Absatz in Alltagssprache über das Ergebnis. Aus: Vigil schreibt ihn regelbasiert.</span></div>
+            <div class="set-label"><span class="set-title"><b>Zusammenfassung per KI</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Nach jedem Lauf ein Absatz in Alltagssprache über das Ergebnis. Aus: Vigil schreibt ihn regelbasiert.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="runSumChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>KI auch für Webadressen</b><span>Gibt die Serverantwort (Header und Seitenanfang) an die gewählte KI. Mit Cloud-KI verlässt sie deinen Rechner und kostet Geld. Aus: Webadressen und Server prüft Vigil ohne KI.</span></div>
+            <div class="set-label"><span class="set-title"><b>KI auch für Webadressen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gibt die Serverantwort (Header und Seitenanfang) an die gewählte KI. Mit Cloud-KI verlässt sie deinen Rechner und kostet Geld. Aus: Webadressen und Server prüft Vigil ohne KI.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="aiWebChk" /><span></span></label>
           </div>
         </section>
@@ -693,19 +705,19 @@
         <section class="card set-block" id="set-privacy">
           <h2>Belastbarkeit &amp; Datenschutz</h2>
           <div class="set-row">
-            <div class="set-label"><b>Befunde von der KI gegenprüfen</b><span>Die KI versucht jeden reinen KI-Fund am Code-Ausschnitt zu widerlegen (Widerlegtes fliegt raus) und liest Regel-Befunde ab „mittel“ auf Fehlalarme gegen (Zweifel stufen herab, gelöscht wird nichts).</span></div>
+            <div class="set-label"><span class="set-title"><b>Befunde von der KI gegenprüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Die KI versucht jeden reinen KI-Fund am Code-Ausschnitt zu widerlegen (Widerlegtes fliegt raus) und liest Regel-Befunde ab „mittel“ auf Fehlalarme gegen (Zweifel stufen herab, gelöscht wird nichts).</span></button></span></div>
             <label class="switch"><input type="checkbox" id="validateChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Secrets schwärzen</b><span>Bevor Code an externe KI-Anbieter geht. Lokale Modelle sehen den Code unverändert, dort verlässt nichts den Rechner.</span></div>
+            <div class="set-label"><span class="set-title"><b>Secrets schwärzen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Bevor Code an externe KI-Anbieter geht. Lokale Modelle sehen den Code unverändert, dort verlässt nichts den Rechner.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="redactChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Gefundene Schlüssel live prüfen</b><span>Fragt beim Anbieter nach, ob ein gefundener Schlüssel noch gilt – je Schlüssel eine harmlose, nur lesende Abfrage (GitHub, AWS, Slack, OpenAI, Anthropic, Stripe). Es wird nichts verändert; gespeichert wird nur das Ergebnis. Standard: aus.</span></div>
+            <div class="set-label"><span class="set-title"><b>Gefundene Schlüssel live prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Fragt beim Anbieter nach, ob ein gefundener Schlüssel noch gilt – je Schlüssel eine harmlose, nur lesende Abfrage (GitHub, AWS, Slack, OpenAI, Anthropic, Stripe). Es wird nichts verändert; gespeichert wird nur das Ergebnis. Standard: aus.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="secretLiveChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Strenger Datenschutz</b><span>Schwärzt vor dem Versand an Cloud-KI zusätzlich E-Mail-Adressen, interne Hostnamen und private IPs, Personennamen (Autor-/Copyright-Zeilen) und die Firmennamen unten.</span></div>
+            <div class="set-label"><span class="set-title"><b>Strenger Datenschutz</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Schwärzt vor dem Versand an Cloud-KI zusätzlich E-Mail-Adressen, interne Hostnamen und private IPs, Personennamen (Autor-/Copyright-Zeilen) und die Firmennamen unten.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="privacyChk" /><span></span></label>
           </div>
           <div class="priv-lists">
@@ -713,55 +725,52 @@
             <textarea id="privacyHostsInput" rows="2" spellcheck="false" aria-label="Interne Domains" placeholder="Interne Domains, z. B. firma.intern"></textarea>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Protokoll für Reproduzierbarkeit</b><span>Speichert je Lauf Prompts (wie gesendet, also geschwärzt), Modell, Parameter und Prüfsummen der Antworten – nur lokal, einsehbar im Verlauf.</span></div>
+            <div class="set-label"><span class="set-title"><b>Protokoll für Reproduzierbarkeit</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Speichert je Lauf Prompts (wie gesendet, also geschwärzt), Modell, Parameter und Prüfsummen der Antworten – nur lokal, einsehbar im Verlauf.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="reproChk" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-scope">
-          <h2>Freigegebene Ziele</h2>
-          <p class="hint">Webadressen und Server prüft Vigil nur, wenn sie hier stehen oder du sie beim Hinzufügen bestätigst. <code>example.com</code> gilt auch für Subdomains, <code>*.example.com</code> nur für Subdomains. Die REST-API darf nur Ziele von dieser Liste prüfen.</p>
+          <div class="block-head"><h2>Freigegebene Ziele</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Vigil nur, wenn sie hier stehen oder du sie beim Hinzufügen bestätigst. <code>example.com</code> gilt auch für Subdomains, <code>*.example.com</code> nur für Subdomains. Die REST-API darf nur Ziele von dieser Liste prüfen.</span></button></div>
           <textarea id="allowlistInput" rows="4" spellcheck="false" placeholder="eine Domain oder IP pro Zeile, z. B.&#10;meine-seite.example&#10;192.168.1.20"></textarea>
         </section>
 
         <section class="card set-block" id="set-deep">
           <h2>Tiefe Prüfungen &amp; Threat-Intel</h2>
           <div class="set-row">
-            <div class="set-label"><b>Browser-Laufzeitprüfung</b><span>Für verifizierte Webseiten: Tokens im Speicher, Drittskripte ohne SRI, unverschlüsselte Aufrufe.</span></div>
+            <div class="set-label"><span class="set-title"><b>Browser-Laufzeitprüfung</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Für verifizierte Webseiten: Tokens im Speicher, Drittskripte ohne SRI, unverschlüsselte Aufrufe.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="domChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Threat-Intel (CISA KEV, EPSS)</b><span id="intelSettings"></span></div>
+            <div class="set-label"><span class="set-title"><b>Threat-Intel (CISA KEV, EPSS)</b></span><span class="set-desc" id="intelSettings"></span></div>
             <button id="intelSyncBtn" type="button" class="btn">Jetzt aktualisieren</button>
           </div>
         </section>
 
         <section class="card set-block" id="set-feeds">
-          <h2>Erkennungsdaten – automatisch aktuell</h2>
-          <p class="hint">Vigil holt sich neue Erkennungsdaten selbst, ganz ohne App-Update: beim Start und danach alle 6 Stunden, spätestens einmal am Tag. Es werden nur Daten geladen, nie Programmcode. Jede Quelle wird vor der Nutzung geprüft; schlägt ein Download fehl, bleibt die letzte gute Fassung aktiv.</p>
+          <div class="block-head"><h2>Erkennungsdaten – automatisch aktuell</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil holt sich neue Erkennungsdaten selbst, ganz ohne App-Update: beim Start und danach alle 6 Stunden, spätestens einmal am Tag. Es werden nur Daten geladen, nie Programmcode. Jede Quelle wird vor der Nutzung geprüft; schlägt ein Download fehl, bleibt die letzte gute Fassung aktiv.</span></button></div>
           <ul class="feed-list" id="feedList"><li class="muted small">Lade Stand …</li></ul>
           <div class="row-inline"><button id="feedsSyncBtn" type="button" class="btn">Jetzt alles aktualisieren</button><span id="feedsSyncStatus" class="hint"></span></div>
           <div class="set-row">
-            <div class="set-label"><b>Neue Lücken in geprüften Paketen melden</b><span>Alle 6 Stunden gleicht Vigil die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.</span></div>
+            <div class="set-label"><span class="set-title"><b>Neue Lücken in geprüften Paketen melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Alle 6 Stunden gleicht Vigil die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="watchCvesChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Neue Zertifikate für eigene Domains melden</b><span>Prüft für nachgewiesene eigene Domains die öffentlichen Certificate-Transparency-Logs (crt.sh). Taucht ein bisher unbekanntes Zertifikat auf, meldet Vigil es.</span></div>
+            <div class="set-label"><span class="set-title"><b>Neue Zertifikate für eigene Domains melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Prüft für nachgewiesene eigene Domains die öffentlichen Certificate-Transparency-Logs (crt.sh). Taucht ein bisher unbekanntes Zertifikat auf, meldet Vigil es.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="watchCtChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>OSV-Datenbank offline vorhalten</b><span>Lädt die komplette OSV-Datenbank für die Paket-Arten aus deinen Prüfungen (z. B. npm, PyPI) und nutzt sie, wenn OSV.dev nicht erreichbar ist. Braucht je Paket-Art bis zu einige Hundert MB. <span id="osvOfflineStatus"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>OSV-Datenbank offline vorhalten</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Lädt die komplette OSV-Datenbank für die Paket-Arten aus deinen Prüfungen (z. B. npm, PyPI) und nutzt sie, wenn OSV.dev nicht erreichbar ist. Braucht je Paket-Art bis zu einige Hundert MB.</span></button></span><span id="osvOfflineStatus" class="set-status"></span></div>
             <label class="switch"><input type="checkbox" id="osvOfflineChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Eigene YARA-Regeln</b><span>Ist YARA installiert, prüft Vigil Dateien zusätzlich mit allen .yar-Dateien aus diesem Ordner und den geladenen YARA-Regeln. <span id="yaraStatus"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Eigene YARA-Regeln</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Ist YARA installiert, prüft Vigil Dateien zusätzlich mit allen .yar-Dateien aus diesem Ordner und den geladenen YARA-Regeln.</span></button></span><span id="yaraStatus" class="set-status"></span></div>
             <button id="yaraFolderBtn" type="button" class="btn">Ordner öffnen</button>
           </div>
         </section>
 
         <section class="card set-block" id="set-login">
-          <h2>Login-Prüfung</h2>
-          <p class="hint">Vigil meldet sich mit einem <b>Testkonto deiner eigenen Webseite</b> an und prüft: Anmeldung nur über HTTPS, neue Sitzung nach dem Login, geschützte Cookies, ob die Anmeldung existierende Konten verrät und ob Abmelden die Sitzung wirklich beendet. Danach geht es den angemeldeten Bereich durch. Nur für nachgewiesene eigene Domains, keine Passwort-Rateversuche. Nutze nie ein echtes Kunden- oder Admin-Konto.</p>
+          <div class="block-head"><h2>Login-Prüfung</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil meldet sich mit einem <b>Testkonto deiner eigenen Webseite</b> an und prüft: Anmeldung nur über HTTPS, neue Sitzung nach dem Login, geschützte Cookies, ob die Anmeldung existierende Konten verrät und ob Abmelden die Sitzung wirklich beendet. Danach geht es den angemeldeten Bereich durch. Nur für nachgewiesene eigene Domains, keine Passwort-Rateversuche. Nutze nie ein echtes Kunden- oder Admin-Konto.</span></button></div>
           <div class="api-row">
             <input id="wlUrl" type="text" placeholder="Anmelde-Adresse, z. B. https://meine-seite.de/login" aria-label="Anmelde-Adresse" />
             <input id="wlUser" type="text" placeholder="Benutzername oder E-Mail des Testkontos" aria-label="Benutzername des Testkontos" autocomplete="off" />
@@ -775,26 +784,25 @@
         <section class="card set-block" id="set-malware">
           <h2>Schadsoftware &amp; Webseiten-Durchgang</h2>
           <div class="set-row">
-            <div class="set-label"><b>Programme und Dateien auf Schadsoftware prüfen</b><span>Microsoft Defender prüft das Ziel, ohne etwas zu löschen. Dazu prüft Vigil die digitale Signatur jeder Programmdatei. Makros in Office-Dateien und Skripte in PDFs erkennt Vigil immer.</span></div>
+            <div class="set-label"><span class="set-title"><b>Programme und Dateien auf Schadsoftware prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Microsoft Defender prüft das Ziel, ohne etwas zu löschen. Dazu prüft Vigil die digitale Signatur jeder Programmdatei. Makros in Office-Dateien und Skripte in PDFs erkennt Vigil immer.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="malwareChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Abgleich mit bekannten Schadprogrammen</b><span>Optional: Fingerabdrücke (SHA-256) gegen MalwareBazaar abgleichen – nur der Fingerabdruck verlässt den Rechner, nie die Datei. Den kostenlosen Schlüssel gibt es bei auth.abuse.ch. <span id="mbStatus"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Abgleich mit bekannten Schadprogrammen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Optional: Fingerabdrücke (SHA-256) gegen MalwareBazaar abgleichen – nur der Fingerabdruck verlässt den Rechner, nie die Datei. Den kostenlosen Schlüssel gibt es bei auth.abuse.ch.</span></button></span><span id="mbStatus" class="set-status"></span></div>
             <input id="mbKey" type="password" class="set-input" placeholder="Auth-Key (leer = unverändert)" autocomplete="off" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Unterseiten und Formulare durchgehen</b><span>Folgt Links derselben Domain (bis 40 Seiten) und prüft Formulare. Bei nachgewiesenen Domains zusätzlich harmlose Testwerte in Parametern: XSS, SQL-Fehler, offene Weiterleitung, Pfad-Ausbruch – nur Seiten abrufen, nie Formulare abschicken.</span></div>
+            <div class="set-label"><span class="set-title"><b>Unterseiten und Formulare durchgehen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Folgt Links derselben Domain (bis 40 Seiten) und prüft Formulare. Bei nachgewiesenen Domains zusätzlich harmlose Testwerte in Parametern: XSS, SQL-Fehler, offene Weiterleitung, Pfad-Ausbruch – nur Seiten abrufen, nie Formulare abschicken.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="crawlChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>USB-Laufwerke beim Einstecken prüfen</b><span>Erkennt Vigil einen neuen Wechseldatenträger, fragt es per Benachrichtigung nach. Erst nach deinem Klick kommt das Laufwerk in die Prüfliste – geprüft wird nur lesend.</span></div>
+            <div class="set-label"><span class="set-title"><b>USB-Laufwerke beim Einstecken prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Erkennt Vigil einen neuen Wechseldatenträger, fragt es per Benachrichtigung nach. Erst nach deinem Klick kommt das Laufwerk in die Prüfliste – geprüft wird nur lesend.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="usbChk" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-matrix">
-          <h2>API-Rechtematrix (BOLA/IDOR)</h2>
-          <p class="hint">Vigil holt mit dem Token von Nutzer A dessen Objekt und versucht denselben GET-Aufruf ohne Anmeldung und mit dem Token von Nutzer B. Nur GET, nur verifizierte Domains, nur mit Test-Konten deiner eigenen Anwendung.</p>
+          <div class="block-head"><h2>API-Rechtematrix (BOLA/IDOR)</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil holt mit dem Token von Nutzer A dessen Objekt und versucht denselben GET-Aufruf ohne Anmeldung und mit dem Token von Nutzer B. Nur GET, nur verifizierte Domains, nur mit Test-Konten deiner eigenen Anwendung.</span></button></div>
           <div class="api-row">
             <input id="amHost" type="text" placeholder="Host, z. B. app.example.com" />
             <input id="amResource" type="text" placeholder="Objekt-ID von Nutzer A, z. B. 1042" />
@@ -806,8 +814,7 @@
         </section>
 
         <section class="card set-block" id="set-schedules">
-          <h2>Geplante Prüfungen</h2>
-          <p class="hint">Vigil prüft täglich oder wöchentlich von selbst und meldet nur neue Befunde: als Windows-Benachrichtigung und auf Wunsch an einen Webhook (Slack, Teams, Discord oder eigene Adresse). Der Webhook bekommt nur Schwere, Titel und Ort. Webadressen und Server müssen bereits freigegeben sein, unbeaufsichtigt fragt Vigil nicht nach. Verpasste Läufe werden beim nächsten Start nachgeholt.</p>
+          <div class="block-head"><h2>Geplante Prüfungen</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil prüft täglich oder wöchentlich von selbst und meldet nur neue Befunde: als Windows-Benachrichtigung und auf Wunsch an einen Webhook (Slack, Teams, Discord oder eigene Adresse). Der Webhook bekommt nur Schwere, Titel und Ort. Webadressen und Server müssen bereits freigegeben sein, unbeaufsichtigt fragt Vigil nicht nach. Verpasste Läufe werden beim nächsten Start nachgeholt.</span></button></div>
           <div id="schedList" class="sched-list"></div>
           <div class="sched-form">
             <input id="schedName" class="set-input" type="text" maxlength="80" placeholder="Name, z. B. Eigene Webseite" autocomplete="off" />
@@ -822,22 +829,21 @@
             <div class="row-inline"><button id="schedAdd" type="button" class="btn">Prüfung planen</button></div>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Beim Schließen im Hintergrund weiterlaufen</b><span>Das Fenster verschwindet in den Infobereich, geplante Prüfungen laufen weiter. Ohne das läuft ein Plan nur, solange Vigil offen ist.</span></div>
+            <div class="set-label"><span class="set-title"><b>Beim Schließen im Hintergrund weiterlaufen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Das Fenster verschwindet in den Infobereich, geplante Prüfungen laufen weiter. Ohne das läuft ein Plan nur, solange Vigil offen ist.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="schedBackground" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Mit Windows starten</b><span>Vigil startet beim Anmelden ohne Fenster im Hintergrund.</span></div>
+            <div class="set-label"><span class="set-title"><b>Mit Windows starten</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil startet beim Anmelden ohne Fenster im Hintergrund.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="schedLogin" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-greenbone">
-          <h2>Greenbone OpenVAS</h2>
-          <p class="hint">Zusätzlicher Netzwerk-Scanner mit täglich aktualisierten Tests. Vigil richtet die kostenlose Greenbone Community Edition auf Wunsch ein: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das belegt mindestens 40 GB auf der Festplatte. Arbeitsspeicher braucht Greenbone nur während eines Scans (4 bis 8 GB), danach wird es wieder beendet. Ein Scan kann pro Host deutlich über eine Stunde dauern und ist im Netz sichtbar. Geprüft werden nur freigegebene Ziele, ohne Passwort-Rateversuche, Standard-Zugänge und Denial-of-Service-Tests.</p>
+          <div class="block-head"><h2>Greenbone OpenVAS</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zusätzlicher Netzwerk-Scanner mit täglich aktualisierten Tests. Vigil richtet die kostenlose Greenbone Community Edition auf Wunsch ein: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das belegt mindestens 40 GB auf der Festplatte. Arbeitsspeicher braucht Greenbone nur während eines Scans (4 bis 8 GB), danach wird es wieder beendet. Ein Scan kann pro Host deutlich über eine Stunde dauern und ist im Netz sichtbar. Geprüft werden nur freigegebene Ziele, ohne Passwort-Rateversuche, Standard-Zugänge und Denial-of-Service-Tests.</span></button></div>
           <div id="gbProgress" class="gb-progress" hidden aria-live="polite"></div>
           <div class="row-inline"><button id="gbAuto" type="button" class="btn">Einrichten</button><button id="gbPause" type="button" class="btn" hidden>Pausieren</button><button id="gbCancel" type="button" class="btn" hidden>Abbrechen</button><span id="gbAutoStatus" class="small muted" aria-live="polite"></span></div>
           <div class="set-row">
-            <div class="set-label"><b>Bei Prüfungen freigegebener Server mitlaufen lassen</b><span>Verlängert jede Prüfung einer Webadresse oder eines Servers deutlich.</span></div>
+            <div class="set-label"><span class="set-title"><b>Bei Prüfungen freigegebener Server mitlaufen lassen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Verlängert jede Prüfung einer Webadresse oder eines Servers deutlich.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="gbEnabled" /><span></span></label>
           </div>
           <div class="row-inline"><button id="gbTest" type="button" class="btn">Verbindung testen</button><button id="gbRemove" type="button" class="btn danger">Entfernen</button><span id="gbResult" class="small muted" aria-live="polite"></span></div>
@@ -847,21 +853,20 @@
           <h2>Externe Sicherheits-Tools</h2>
           <div id="toolHealth" class="tool-health" aria-live="polite"></div>
           <div class="set-row">
-            <div class="set-label"><b>Werkzeuge automatisch aktualisieren</b><span>Einmal am Tag von den offiziellen Quellen, mit Prüfsumme. Läuft eine neue Datei nicht, kommt die alte zurück. Für nmap fragt Windows einmal nach Administratorrechten. Vigil selbst wird aktualisiert, wenn es aus einer unveränderten Git-Kopie läuft.</span><span id="toolUpdateStatus" class="tool-update-status" aria-live="polite"></span></div>
+            <div class="set-label"><span class="set-title"><b>Werkzeuge automatisch aktualisieren</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Einmal am Tag von den offiziellen Quellen, mit Prüfsumme. Läuft eine neue Datei nicht, kommt die alte zurück. Für nmap fragt Windows einmal nach Administratorrechten. Vigil selbst wird aktualisiert, wenn es aus einer unveränderten Git-Kopie läuft.</span></button></span><span id="toolUpdateStatus" class="tool-update-status set-status" aria-live="polite"></span></div>
             <button id="toolUpdateNow" type="button" class="btn">Jetzt prüfen</button>
             <label class="switch"><input type="checkbox" id="toolUpdateChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Installierte Tools einbeziehen</b><span>gitleaks, trufflehog, trivy, grype, semgrep, bandit, checkov, retire.js, hadolint, osv-scanner. Bei freigegebenen Servern zusätzlich nmap und nuclei, ohne DoS und ohne Brute-Force. Fehlende Tools werden übersprungen.</span></div>
+            <div class="set-label"><span class="set-title"><b>Installierte Tools einbeziehen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">gitleaks, trufflehog, trivy, grype, semgrep, bandit, checkov, retire.js, hadolint, osv-scanner. Bei freigegebenen Servern zusätzlich nmap und nuclei, ohne DoS und ohne Brute-Force. Fehlende Tools werden übersprungen.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="activeChk" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-systems">
-          <h2>Systeme &amp; Konten</h2>
-          <p class="hint">Zugänge für die System-Prüfungen auf der Startseite. Vigil nutzt sie nur lesend: feste Abfragen, keine Änderungen, keine Anmelde-Rateversuche. Schlüssel und Tokens werden verschlüsselt gespeichert und nie wieder angezeigt. „-“ eintragen und speichern entfernt einen gespeicherten Wert.</p>
+          <div class="block-head"><h2>Systeme &amp; Konten</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zugänge für die System-Prüfungen auf der Startseite. Vigil nutzt sie nur lesend: feste Abfragen, keine Änderungen, keine Anmelde-Rateversuche. Schlüssel und Tokens werden verschlüsselt gespeichert und nie wieder angezeigt. „-“ eintragen und speichern entfernt einen gespeicherten Wert.</span></button></div>
           <div class="set-row">
-            <div class="set-label"><b>Verwaltungs-Ports im lokalen Netz prüfen</b><span>Für „Geräte im Netz“: zusätzlich je Gerät ein Verbindungsversuch zu wenigen Verwaltungs-Ports (z. B. Telnet, Weboberfläche). Nur private Adressen im eigenen Subnetz, kein Port-Scan.</span></div>
+            <div class="set-label"><span class="set-title"><b>Verwaltungs-Ports im lokalen Netz prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Für „Geräte im Netz“: zusätzlich je Gerät ein Verbindungsversuch zu wenigen Verwaltungs-Ports (z. B. Telnet, Weboberfläche). Nur private Adressen im eigenen Subnetz, kein Port-Scan.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="lanPortChk" aria-label="Verwaltungs-Ports im lokalen Netz prüfen" /><span></span></label>
           </div>
           <div class="api-row" id="sysFields"></div>
@@ -869,8 +874,7 @@
         </section>
 
         <section class="card set-block" id="set-rules">
-          <h2>Eigene Regeln &amp; Muster</h2>
-          <p class="hint">Eigene Muster als regulären Ausdruck, z. B. ein firmeninternes Schlüsselformat.</p>
+          <div class="block-head"><h2>Eigene Regeln &amp; Muster</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Eigene Muster als regulären Ausdruck, z. B. ein firmeninternes Schlüsselformat.</span></button></div>
           <div id="customRules"></div>
           <button id="addRuleBtn" type="button" class="btn">+ Eigene Regel</button>
           <details class="rules-off">
@@ -880,8 +884,7 @@
         </section>
 
         <section class="card set-block" id="set-network">
-          <h2>Netzwerk: Proxy / VPN</h2>
-          <p class="hint">Leer = Direktverbindung. Unterstützt <code>http://</code>, <code>https://</code>, <code>socks5://</code> (z. B. Tor unter <code>socks5://127.0.0.1:9050</code>) und <code>socks4://</code>.</p>
+          <div class="block-head"><h2>Netzwerk: Proxy / VPN</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Leer = Direktverbindung. Unterstützt <code>http://</code>, <code>https://</code>, <code>socks5://</code> (z. B. Tor unter <code>socks5://127.0.0.1:9050</code>) und <code>socks4://</code>.</span></button></div>
           <div class="row">
             <input type="text" id="proxyInput" placeholder="z. B. socks5://127.0.0.1:9050" />
             <button id="proxyTestBtn" class="btn">Testen</button>
@@ -890,15 +893,14 @@
         </section>
 
         <section class="card set-block" id="set-providers">
-          <h2>Server-Adressen der KI-Anbieter</h2>
-          <p class="hint">Nur für eigene Server (z. B. Ollama auf einem anderen Rechner) oder OpenAI-kompatible Dienste. Leer = Standard.</p>
+          <div class="block-head"><h2>Server-Adressen der KI-Anbieter</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Nur für eigene Server (z. B. Ollama auf einem anderen Rechner) oder OpenAI-kompatible Dienste. Leer = Standard.</span></button></div>
           <div id="providerSettings"></div>
         </section>
 
         <section class="card set-block" id="set-app">
           <h2>Darstellung &amp; App</h2>
           <div class="set-row">
-            <div class="set-label"><b>Farbschema</b><span>Unabhängig von der Windows-Einstellung.</span></div>
+            <div class="set-label"><span class="set-title"><b>Farbschema</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Unabhängig von der Windows-Einstellung.</span></button></span></div>
             <span class="seg" role="radiogroup" aria-label="Farbschema" id="themeSeg">
               <button type="button" role="radio" data-theme="system">Wie Windows</button>
               <button type="button" role="radio" data-theme="light">Hell</button>
@@ -906,7 +908,7 @@
             </span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Schriftgröße</b><span>Vergrößert die ganze Oberfläche. Auch mit Strg + Plus / Minus.</span></div>
+            <div class="set-label"><span class="set-title"><b>Schriftgröße</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vergrößert die ganze Oberfläche. Auch mit Strg + Plus / Minus.</span></button></span></div>
             <span class="seg" role="radiogroup" aria-label="Schriftgröße" id="scaleSeg">
               <button type="button" role="radio" data-scale="0.9">Klein</button>
               <button type="button" role="radio" data-scale="1">Normal</button>
@@ -915,22 +917,22 @@
             </span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Sprache</b><span>Oberfläche, Befunde, Berichte und KI-Antworten auf Deutsch oder Englisch.</span></div>
+            <div class="set-label"><span class="set-title"><b>Sprache</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Oberfläche, Befunde, Berichte und KI-Antworten auf Deutsch oder Englisch.</span></button></span></div>
             <span class="seg" role="radiogroup" aria-label="Sprache" id="langSeg">
               <button type="button" role="radio" data-lang="de">Deutsch</button>
               <button type="button" role="radio" data-lang="en">English</button>
             </span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Absturzberichte</b><span>Stürzt Vigil ab, landet ein Bericht nur auf diesem PC – nichts wird übertragen. Bei Bedarf kannst du ihn selbst weitergeben. <span id="crashInfo"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Absturzberichte</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Stürzt Vigil ab, landet ein Bericht nur auf diesem PC – nichts wird übertragen. Bei Bedarf kannst du ihn selbst weitergeben.</span></button></span><span id="crashInfo" class="set-status"></span></div>
             <button id="crashOpenBtn" type="button" class="btn tiny">Ordner öffnen</button>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Einführung</b><span>Die kurze Einführung vom ersten Start noch einmal zeigen.</span></div>
+            <div class="set-label"><span class="set-title"><b>Einführung</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Die kurze Einführung vom ersten Start noch einmal zeigen.</span></button></span></div>
             <button id="onboardAgainBtn" type="button" class="btn tiny">Einführung zeigen</button>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Glossar</b><span>Fachbegriffe wie CVE, CVSS, EPSS oder SBOM kurz erklärt. Im Befundtext genügt es, mit der Maus auf einen unterstrichenen Begriff zu zeigen.</span></div>
+            <div class="set-label"><span class="set-title"><b>Glossar</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Fachbegriffe wie CVE, CVSS, EPSS oder SBOM kurz erklärt. Im Befundtext genügt es, mit der Maus auf einen unterstrichenen Begriff zu zeigen.</span></button></span></div>
             <button id="glossaryBtn" type="button" class="btn tiny">Glossar anzeigen</button>
           </div>
         </section>
@@ -938,7 +940,7 @@
         <section class="card set-block" id="set-rest">
           <h2>Lokale REST-API</h2>
           <div class="set-row">
-            <div class="set-label"><b>REST-API anbieten</b><span>Für Skripte und CI auf diesem Rechner. Lauscht nur auf 127.0.0.1, verlangt das Token und prüft nur freigegebene Ziele.</span></div>
+            <div class="set-label"><span class="set-title"><b>REST-API anbieten</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Für Skripte und CI auf diesem Rechner. Lauscht nur auf 127.0.0.1, verlangt das Token und prüft nur freigegebene Ziele.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="apiChk" /><span></span></label>
           </div>
           <div class="api-grid">
@@ -952,45 +954,43 @@
         </section>
 
         <section class="card set-block" id="set-report">
-          <h2>Berichte &amp; Branding</h2>
-          <p class="hint">Gilt für PDF, HTML, Word und den Kurzbericht für die Geschäftsführung. Firmenname und Logo erscheinen im Kopf.</p>
+          <div class="block-head"><h2>Berichte &amp; Branding</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gilt für PDF, HTML, Word und den Kurzbericht für die Geschäftsführung. Firmenname und Logo erscheinen im Kopf.</span></button></div>
           <div class="set-row">
-            <div class="set-label"><b>Firmenname</b><span>Erscheint oben im Bericht.</span></div>
+            <div class="set-label"><span class="set-title"><b>Firmenname</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Erscheint oben im Bericht.</span></button></span></div>
             <input id="reportCompanyInput" type="text" class="set-input" placeholder="z. B. Muster GmbH" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Logo</b><span id="reportLogoInfo">PNG, JPG, SVG oder WebP, höchstens 300 KB.</span></div>
+            <div class="set-label"><span class="set-title"><b>Logo</b></span><span class="set-desc" id="reportLogoInfo">PNG, JPG, SVG oder WebP, höchstens 300 KB.</span></div>
             <span class="set-ctrl"><img id="reportLogoPreview" class="logo-preview" alt="" hidden /><button id="reportLogoClear" type="button" class="btn tiny ghost" hidden>Entfernen</button><label class="btn tiny">Logo wählen<input id="reportLogoFile" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden /></label></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Akzentfarbe</b><span>Für Überschriften, Deckblatt-Leiste und Kurzbericht.</span></div>
+            <div class="set-label"><span class="set-title"><b>Akzentfarbe</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Für Überschriften, Deckblatt-Leiste und Kurzbericht.</span></button></span></div>
             <span class="set-ctrl"><input id="reportAccentInput" type="color" value="#b7791f" aria-label="Akzentfarbe" /><button id="reportAccentReset" type="button" class="btn tiny ghost">Standard</button></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Text auf dem Deckblatt</b><span>Zum Beispiel Auftrag, Prüfzeitraum oder Ansprechpartner.</span></div>
+            <div class="set-label"><span class="set-title"><b>Text auf dem Deckblatt</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zum Beispiel Auftrag, Prüfzeitraum oder Ansprechpartner.</span></button></span></div>
             <textarea id="reportCoverInput" class="set-input" rows="3" maxlength="600" placeholder="z. B. Prüfung im Auftrag von …"></textarea>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Fußzeile</b><span>Erscheint unten auf jeder Seite, z. B. „Vertraulich – nur intern“.</span></div>
+            <div class="set-label"><span class="set-title"><b>Fußzeile</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Erscheint unten auf jeder Seite, z. B. „Vertraulich – nur intern“.</span></button></span></div>
             <input id="reportFooterInput" type="text" class="set-input" maxlength="200" placeholder="z. B. Vertraulich – nur intern" />
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Normen im Bericht</b><span>Welche Kataloge das Kapitel „Nachweise für Normen“ enthält.</span></div>
+            <div class="set-label"><span class="set-title"><b>Normen im Bericht</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Welche Kataloge das Kapitel „Nachweise für Normen“ enthält.</span></button></span></div>
             <span class="fw-list" id="reportFrameworks" role="group" aria-label="Normen im Bericht"></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Exporte signieren</b><span>Legt neben jeden Export eine Signatur (.sig.json: SHA-256 + Ed25519). Der Schlüssel entsteht lokal und wird verschlüsselt gespeichert. <span id="signInfo"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Exporte signieren</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Legt neben jeden Export eine Signatur (.sig.json: SHA-256 + Ed25519). Der Schlüssel entsteht lokal und wird verschlüsselt gespeichert.</span></button></span><span id="signInfo" class="set-status"></span></div>
             <label class="switch"><input type="checkbox" id="signChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><b>Bericht prüfen</b><span>Kontrolliert Signatur und Prüfsummen eines Berichts oder Audit-Pakets. <span id="verifyResult" aria-live="polite"></span></span></div>
+            <div class="set-label"><span class="set-title"><b>Bericht prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Kontrolliert Signatur und Prüfsummen eines Berichts oder Audit-Pakets.</span></button></span><span id="verifyResult" class="set-status" aria-live="polite"></span></div>
             <button id="verifyBtn" type="button" class="btn tiny">Datei wählen …</button>
           </div>
         </section>
 
         <section class="card set-block" id="set-data">
-          <h2>Gespeicherte Befunde</h2>
-          <p class="hint">Vigil merkt sich Befunde über alle Läufe (Status, zuerst und zuletzt gesehen), um Neues, Behobenes und Wiederkehrendes zu erkennen.</p>
+          <div class="block-head"><h2>Gespeicherte Befunde</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil merkt sich Befunde über alle Läufe (Status, zuerst und zuletzt gesehen), um Neues, Behobenes und Wiederkehrendes zu erkennen.</span></button></div>
           <div class="row-inline"><button id="clearStoreBtn" type="button" class="btn danger">Befund-Speicher leeren</button><span id="clearStoreStatus" class="hint"></span></div>
           <p class="hint" id="encInfo"></p>
           <div id="appLockBox"></div>
@@ -1063,6 +1063,7 @@
   </div>
 </div>
 
+<script src="brand.js"></script>
 <script src="../core/findings-en.js"></script>
 <script src="../core/findings-i18n.js"></script>
 <script src="i18n.js"></script>

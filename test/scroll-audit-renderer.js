@@ -20,11 +20,11 @@
       if (!scrolled()) { const e = document.elementFromPoint(x, y); dead.push(name + ' @' + x + ',' + y + ' ' + (e ? e.tagName + '#' + e.id : '')); }
     }
   };
-  for (const g of ['general', 'checks', 'web', 'advanced']) { showView('settings'); setGroup(g); await sweep('Einstellungen ' + g); }
+  for (const g of ['general', 'ai', 'checks', 'web', 'auto', 'advanced']) { showView('settings'); setGroup(g); await sweep('Einstellungen ' + g); }
   showView('results'); $('emptyState').hidden = true; renderResult((await window.vigil.sampleDemo()).result); await sweep('Ergebnis');
   showView('scan'); await sweep('Neue Prüfung');
   // Fokussiertes Auswahlfeld: Das Rad scrollt die Seite und aendert den Wert nicht
-  showView('settings'); setGroup('checks'); await wait(300); reset();
+  showView('settings'); setGroup('ai'); await wait(300); reset();
   const sel = [...document.querySelectorAll('#settingsView select')].find((e) => { const r = e.getBoundingClientRect(); return e.offsetParent && r.top > 60 && r.bottom < innerHeight - 30; });
   sel.focus(); const before = sel.value; const box = sel.getBoundingClientRect();
   await window.vigil.e2eWheel(box.left + box.width / 2, box.top + box.height / 2, 240); await wait(250);
