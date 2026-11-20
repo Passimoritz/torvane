@@ -224,7 +224,7 @@ async function runSchedule(id) {
     recordHistory(out.result, scope.targets);
     lastHistoryId = keep;
     const meta = out.result.meta || {};
-    recordSpend({ kind: 'run', usd: ((meta.usage && meta.usage.usd) || 0) + ((meta.runSummary && meta.runSummary.usd) || 0), provider: meta.provider, model: meta.model, inputTokens: meta.usage && meta.usage.inputTokens, outputTokens: meta.usage && meta.usage.outputTokens, runId: out.runId });
+    recordSpend({ kind: 'run', usd: ((meta.usage && meta.usage.usd) || 0) + ((meta.runSummary && meta.runSummary.usd) || 0), provider: meta.provider, model: meta.model, inputTokens: meta.usage && meta.usage.inputTokens, outputTokens: meta.usage && meta.usage.outputTokens, runId: out.runId, target: meta.project && meta.project.key });
     updateOverlay();
     const alerts = schedule.alertsOf(out.result, s.minSeverity);
     const status = { ok: true, at: new Date().toISOString(), total: (out.result.findings || []).length, alerts: alerts.length };
@@ -853,7 +853,7 @@ app.whenReady().then(() => {
     runState,
     buildConfig: (providerId, job = {}) => {
       const c = loadConfig(); applyProxySafe(c);
-      return { ...effectiveConfig(c, providerId || c.selected), aiCache: aiCache(), intel: loadIntel(INTEL_PATH()), domAudit: c.domAudit !== false ? domAudit : null, apiMatrix: apiMatrixFor(c), webLogin: webLoginFor(c), feeds: currentFeeds(), greenbone: greenboneFor(c, job.useGreenbone), webCrawl: c.webCrawl !== false, allowlist: c.allowlist || [], malwareScan: c.malwareScan !== false, malwareBazaarKey: dec(c.malwareBazaarKeyEnc || ''), maxRequestsPerSecond: c.maxRequestsPerSecond || 4, secretLiveCheck: c.secretLiveCheck === true, yara: { rulesDir: YARA_DIR() }, osvOffline: c.osvOffline ? osvOffline.createOfflineQuery(OSV_DIR()) : null, systemSettings: systemSettingsFor(c) };
+      return { ...effectiveConfig(c, providerId || c.selected), aiCache: aiCache(), spendLedger: budget.load(SPEND_PATH()), intel: loadIntel(INTEL_PATH()), domAudit: c.domAudit !== false ? domAudit : null, apiMatrix: apiMatrixFor(c), webLogin: webLoginFor(c), feeds: currentFeeds(), greenbone: greenboneFor(c, job.useGreenbone), webCrawl: c.webCrawl !== false, allowlist: c.allowlist || [], malwareScan: c.malwareScan !== false, malwareBazaarKey: dec(c.malwareBazaarKeyEnc || ''), maxRequestsPerSecond: c.maxRequestsPerSecond || 4, secretLiveCheck: c.secretLiveCheck === true, yara: { rulesDir: YARA_DIR() }, osvOffline: c.osvOffline ? osvOffline.createOfflineQuery(OSV_DIR()) : null, systemSettings: systemSettingsFor(c) };
     },
   });
   // Browser-Erweiterung: Adresse nur vormerken – das Fenster fragt nach, bevor sie in die Pruefliste kommt
@@ -968,7 +968,7 @@ ipcMain.handle('audit:run', async (e, payload) => {
     lastResult = out.result; lastTargets = scope.targets; recordHistory(out.result, scope.targets, out.runId);
     const meta = out.result.meta || {};
     const usd = ((meta.usage && meta.usage.usd) || 0) + ((meta.runSummary && meta.runSummary.usd) || 0);
-    recordSpend({ kind: 'run', usd, provider: meta.provider, model: meta.model, inputTokens: meta.usage && meta.usage.inputTokens, outputTokens: meta.usage && meta.usage.outputTokens, runId: out.runId });
+    recordSpend({ kind: 'run', usd, provider: meta.provider, model: meta.model, inputTokens: meta.usage && meta.usage.inputTokens, outputTokens: meta.usage && meta.usage.outputTokens, runId: out.runId, target: meta.project && meta.project.key });
   }
   // Aus vollstaendigen Laeufen lernen, wie lange welche Phase wirklich dauert
   if (out.ok && !out.canceled) {

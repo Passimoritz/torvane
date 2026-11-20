@@ -321,7 +321,7 @@ async function runAudit(targets, config, onProgress = () => {}) {
   // KI-Gegencheck: Regel-Befunde ab "mittel" liest die KI einmal mit Beleg und Lauf-Hinweisen gegen
   // Die KI liest Code. Webadressen und Server nur mit der Einstellung aiForWeb, Images und Systeme nie.
   const webAi = !!config.aiForWeb;
-  const usesAi = targets.some((t) => t.type === 'path') || (webAi && webTargets.length > 0);
+  let usesAi = targets.some((t) => t.type === 'path') || (webAi && webTargets.length > 0);
   const aiUnits = webAi ? ing.units : ing.units.filter((u) => u.kind !== 'endpoint');
   // Ohne die Einstellung bleibt auch in gemischten Pruefungen alles von Web-Zielen bei der KI aussen vor
   const webKeyOf = (f) => `${f.ruleId}|${f.location}`;
@@ -346,7 +346,15 @@ async function runAudit(targets, config, onProgress = () => {}) {
     postNotes.push(...p.notes); postSuppressed.push(...p.suppressed);
     return p.findings;
   };
-  if (ing.project) extraMeta.project = { files: ing.project.files, failOn: ing.project.failOn || undefined };
+  const projectKey = targets.filter((t) => t.type === 'path').map((t) => t.value).sort().join('|');
+  if (ing.project) extraMeta.project = { files: ing.project.files, failOn: ing.project.failOn || undefined, key: projectKey };
+  // KI-Budget je Projekt (torvane.yml aiBudgetUsd, config.spendLedger = geladene Ausgabenliste):
+  // ausgeschoepft -> nur Regeln (auch kein KI-Gegencheck), ab 80 % ein Hinweis
+  if (ing.project && ing.project.aiBudgetUsd && config.spendLedger && !require('./cost').isLocalProvider(config.provider, config.baseUrl)) {
+    const s = require('./budget').stats(config.spendLedger, ing.project.aiBudgetUsd, undefined, { target: projectKey });
+    if (s.exceeded) { usesAi = false; postNotes.push(`KI-Budget dieses Projekts ausgeschöpft (${s.spent.toFixed(2)} $ von ${s.budget.toFixed(2)} $ in ${s.month}) – geprüft wurde nur mit Regeln.`); }
+    else if (s.warn) postNotes.push(`KI-Budget dieses Projekts zu ${s.percent} % verbraucht (${s.spent.toFixed(2)} $ von ${s.budget.toFixed(2)} $).`);
+  }
 
   if (!aiUnits.length || !usesAi) {
     const rv = await review(dedupeFindings(staticFindings));

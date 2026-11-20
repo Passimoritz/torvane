@@ -2990,6 +2990,41 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     check('datenfluss: Django request.GET bis in den SQL-Befehl', dj.some((f) => f.ruleId === 'taint-sql'));
   }
 
+  // --- Welle 3: KI-Analyse ---
+  console.log('KI-Analyse (Welle 3):');
+  {
+    const lp = require('../src/core/localpreset');
+    const o7 = lp.ollamaOptions({ model: 'qwen2.5-coder:7b', promptChars: 60000, maxTokens: 4096 });
+    const o3 = lp.ollamaOptions({ model: 'llama3.2:3b', promptChars: 90000, maxTokens: 4096 });
+    check('lokal: Kontextlänge passend zur Eingabe, begrenzt nach Modellgröße', o7.num_ctx === 16384 && o3.num_ctx === 8192 && lp.ollamaOptions({ model: 'x', numCtx: 12000 }).num_ctx === 12000);
+    check('lokal: kleinere Blöcke für kleine Modelle, Cloud unverändert', lp.charBudgetFor({ provider: 'ollama', model: 'llama3.2:3b' }) === 12000 && lp.charBudgetFor({ provider: 'anthropic', model: 'claude-sonnet-5-5' }) === null);
+    const { buildProjectMap } = require('../src/core/projectmap');
+    const map = buildProjectMap([
+      { label: 'p/server.js', content: "const express = require('express');\nconst jwt = require('jsonwebtoken');\nrouter.get('/me', requireAuth, h);\nrouter.post('/orders', h);\napp.listen(process.env.PORT);\nconst { Pool } = require('pg');\n" },
+      { label: 'p/vendor/jquery.min.js', content: 'process.env.SHOULD_NOT_APPEAR', vendored: true },
+    ]);
+    check('projektkarte: Framework, Datenbank, Anmeldung, Routen mit Status, Umgebung', /Express/.test(map) && /PostgreSQL/.test(map) && /JWT/.test(map) && /POST \/orders  \[ohne erkennbare Anmeldung\]/.test(map) && /PORT/.test(map) && !/SHOULD_NOT_APPEAR/.test(map));
+    const bud = require('../src/core/budget');
+    const led = { entries: [] };
+    bud.record(led, { kind: 'run', usd: 4.2, target: 'C:/proj/a' }, '2026-11-10T10:00:00Z');
+    bud.record(led, { kind: 'run', usd: 9, target: 'C:/proj/b' }, '2026-11-11T10:00:00Z');
+    const sa = bud.stats(led, 5, '2026-11-20T10:00:00Z', { target: 'C:/proj/a' });
+    check('budget: je Projekt gezählt, Hinweis ab 80 %', sa.spent === 4.2 && sa.warn === true && sa.exceeded === false && bud.stats(led, 5, '2026-11-20T10:00:00Z', { target: 'C:/proj/b' }).exceeded === true);
+    // Projektbudget ausgeschoepft -> nur Regeln, ohne KI-Aufruf
+    const fs = require('fs'); const os = require('os'); const path = require('path');
+    const { runAudit } = require('../src/core');
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'torvane-w3-'));
+    fs.writeFileSync(path.join(dir, 'torvane.yml'), 'aiBudgetUsd: 2\n');
+    fs.writeFileSync(path.join(dir, 'a.js'), 'const x = 1;\n');
+    const ledger = { entries: [] };
+    bud.record(ledger, { kind: 'run', usd: 3, target: dir }, new Date().toISOString());
+    let called = 0;
+    const cfg = { provider: 'anthropic', model: 'claude-sonnet-5-5', apiKey: 'x', baseUrl: 'https://127.0.0.1:9', cveLookup: false, aiValidation: false, spendLedger: ledger, onAiCall: () => { called++; } };
+    const { result } = await runAudit([{ type: 'path', value: dir }], cfg, () => {});
+    check('budget: Projektbudget ausgeschöpft → nur Regeln mit Hinweis', called === 0 && result.errors.some((e) => /KI-Budget dieses Projekts ausgeschöpft/.test(e)) && result.meta.project.key === dir);
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
   console.log(`\n${pass} ok, ${fail} fehlgeschlagen`);
   process.exit(fail ? 1 : 0);
 })();

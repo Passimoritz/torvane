@@ -138,7 +138,7 @@ function focusBlock(config) {
 async function analyze(opts) {
   const { units = [], facts = '', prescanFindings = [], onProgress = () => {} } = opts;
   let config = opts.config;
-  const budget = opts.charBudget || DEFAULT_CHAR_BUDGET;
+  const budget = opts.charBudget || require('./localpreset').charBudgetFor(opts.config || {}) || DEFAULT_CHAR_BUDGET;
   const errors = [];
   // Reproduzierbarkeit (opt-in): jeden KI-Aufruf mit Prompt-/Antwort-Hash protokollieren
   const recorder = config.aiRepro ? createRecorder({ storePrompts: config.aiReproPrompts !== false, promptVersion: PROMPT_VERSION }) : null;
@@ -146,7 +146,9 @@ async function analyze(opts) {
 
   const depth = config.analysisDepth === 'thorough' ? 'thorough' : 'standard';
   const passes = depth === 'thorough' ? FOCI : [{ key: 'all', label: 'Rundum', hint: '' }];
-  const factBlock = facts ? `## Statische Vorab-Fakten (Heuristik; verifizieren):\n${facts.slice(0, 8000)}\n\n` : '';
+  // Projektkarte: Ueberblick ueber Routen, Anmeldung, Datenbank und Einstiege, damit die KI Ausschnitte einordnen kann
+  const map = config.projectMap === false ? '' : (opts.projectMap != null ? opts.projectMap : require('./projectmap').buildProjectMap(units));
+  const factBlock = (map ? `## Projektkarte (Ueberblick, statisch ermittelt):\n${map}\n\n` : '') + (facts ? `## Statische Vorab-Fakten (Heuristik; verifizieren):\n${facts.slice(0, 8000)}\n\n` : '');
   // Aus Fehlalarmen lernen: bestaetigte Fehlalarme werden der KI als "nicht erneut melden" mitgegeben
   const fps = (config.knownFalsePositives || []).slice(0, 40);
   const fpBlock = (fps.length ? `## Bereits als FEHLALARM bestaetigt (nicht erneut melden, ausser der Code hat sich dort wesentlich geaendert):\n${fps.map((f) => `- ${f.title} @ ${f.location}`).join('\n')}\n\n` : '') + focusBlock(config);
@@ -334,7 +336,7 @@ async function analyze(opts) {
 }
 
 // --- Hilfen fuer Zwischenspeicher, Vorsortierung, Konsens -------------------------
-const PROMPT_VERSION = 'v3';
+const PROMPT_VERSION = 'v4'; // v4: Projektkarte im Prompt
 // Hinweis fuer den Nachschlage-Modus (nur wenn Werkzeuge mitgeschickt werden)
 const LOOKUP_HINT = '\nDu darfst mit den Werkzeugen read_file und find_definition gezielt weitere Dateien bzw. Funktionsdefinitionen aus dem geprueften Projekt anfordern, wenn das fuer die Bewertung eines Datenflusses noetig ist (sparsam, nur wenn wirklich noetig). Die Antwort bleibt das JSON-Format oben.';
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
@@ -412,7 +414,7 @@ function estimateRun({ units = [], facts = '', config = {}, charBudget }) {
   const passes = depth === 'thorough' ? FOCI.length : 1;
   const maxFiles = Math.max(0, Math.floor(Number(config.aiFileBudget) || 0));
   if (maxFiles && units.length > maxFiles) units = relevance.selectByBudget(relevance.rankUnits(units), { maxFiles }).keep;
-  const batches = batchUnits(units, charBudget || DEFAULT_CHAR_BUDGET);
+  const batches = batchUnits(units, charBudget || require('./localpreset').charBudgetFor(config) || DEFAULT_CHAR_BUDGET);
   const factLen = facts ? Math.min(8000, facts.length) + 60 : 0;
   let chars = 0;
   for (const b of batches) chars += SYSTEM_PROMPT.length + factLen + 400 + b.map((x) => x.text).join('\n').length;

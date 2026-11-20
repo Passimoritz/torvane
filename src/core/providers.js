@@ -132,7 +132,8 @@ async function callOllama(cfg, { system, user, prefix, json: jsonMode = true }) 
         model: cfg.model || PROVIDERS.ollama.defaultModel,
         stream: false,
         ...(jsonMode ? { format: 'json' } : {}),
-        options: { temperature: cfg.temperature ?? 0.1 },
+        // Kontextlaenge passend zur Eingabe (sonst schneidet Ollama lange Prompts still ab), begrenzt nach Modellgroesse
+        options: { temperature: cfg.temperature ?? 0.1, ...require('./localpreset').ollamaOptions({ model: cfg.model || PROVIDERS.ollama.defaultModel, promptChars: String(system || '').length + String(prefix || '').length + String(user || '').length, maxTokens: cfg.maxTokens, numCtx: cfg.numCtx }) },
         // Modell zwischen den Bloecken im Speicher halten (sonst Neuladen je Aufruf)
         keep_alive: '20m',
         messages: [{ role: 'system', content: system }, { role: 'user', content: prefix ? prefix + user : user }],

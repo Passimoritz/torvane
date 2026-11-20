@@ -27,15 +27,17 @@ function save(file, ledger) {
 function record(ledger, entry, now = new Date().toISOString()) {
   const usd = Math.max(0, Number(entry.usd) || 0);
   if (!usd && !entry.inputTokens && !entry.outputTokens) return ledger;
-  ledger.entries.push({ at: now, kind: entry.kind || 'run', usd: Math.round(usd * 1e6) / 1e6, provider: entry.provider || '', model: entry.model || '', inputTokens: entry.inputTokens || 0, outputTokens: entry.outputTokens || 0, ...(entry.runId ? { runId: entry.runId } : {}) });
+  ledger.entries.push({ ...(entry.target ? { target: String(entry.target).slice(0, 500) } : {}), at: now, kind: entry.kind || 'run', usd: Math.round(usd * 1e6) / 1e6, provider: entry.provider || '', model: entry.model || '', inputTokens: entry.inputTokens || 0, outputTokens: entry.outputTokens || 0, ...(entry.runId ? { runId: entry.runId } : {}) });
   if (ledger.entries.length > MAX_ENTRIES) ledger.entries.splice(0, ledger.entries.length - MAX_ENTRIES);
   return ledger;
 }
 
-function stats(ledger, budgetUsd = 0, now = new Date().toISOString()) {
+// opts.target: nur Eintraege dieses Projekts (Budget je Projekt aus torvane.yml)
+function stats(ledger, budgetUsd = 0, now = new Date().toISOString(), opts = {}) {
   const month = monthOf(now);
   const byMonth = new Map();
   for (const e of ledger.entries) {
+    if (opts.target && e.target !== opts.target) continue;
     const m = monthOf(e.at);
     const x = byMonth.get(m) || { month: m, usd: 0, runs: 0, calls: 0 };
     x.usd += e.usd || 0; if (e.kind === 'run') x.runs++; else x.calls++;
@@ -48,6 +50,7 @@ function stats(ledger, budgetUsd = 0, now = new Date().toISOString()) {
     month, budget, spent: round(cur.usd), runs: cur.runs, calls: cur.calls,
     remaining: budget ? round(Math.max(0, budget - cur.usd)) : null,
     exceeded: !!budget && cur.usd >= budget,
+    warn: !!budget && cur.usd >= budget * 0.8 && cur.usd < budget, // Hinweis ab 80 %
     percent: budget ? Math.min(999, Math.round((cur.usd / budget) * 100)) : null,
     months: [...byMonth.values()].sort((a, b) => b.month.localeCompare(a.month)).slice(0, 6).map((x) => ({ ...x, usd: round(x.usd) })),
     recentRuns: recentRuns.map((e) => ({ at: e.at, usd: round(e.usd), model: e.model, provider: e.provider })),

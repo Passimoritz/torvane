@@ -11,6 +11,7 @@
 //   severity: { gha-unpinned-action: info } # Schwere je Regel festlegen
 //   qualityRules: true                     # Qualitaetsregeln (lange Funktionen, Kopien) wieder einschalten
 //   failOn: high                           # fuer die Kommandozeile/CI
+//   aiBudgetUsd: 5                         # KI-Kosten dieses Projekts je Monat (danach nur Regeln, ab 80 % Hinweis)
 //
 // Dazu erkennt classifyUnit erzeugte Dateien und Fremdcode auch ohne Projektdatei.
 
@@ -40,6 +41,7 @@ function normalize(raw, file) {
     severity,
     qualityRules: r.qualityRules === true || r.quality === true,
     failOn: SEVERITIES.includes(String(r.failOn || '').toLowerCase()) ? String(r.failOn).toLowerCase() : '',
+    aiBudgetUsd: Number(r.aiBudgetUsd || r.aiBudget) > 0 ? Number(r.aiBudgetUsd || r.aiBudget) : 0,
   };
 }
 
@@ -65,6 +67,7 @@ function mergeConfigs(cfgs) {
     Object.assign(out.severity, c.severity);
     if (c.qualityRules) out.qualityRules = true;
     if (c.failOn && (!out.failOn || SEVERITIES.indexOf(c.failOn) < SEVERITIES.indexOf(out.failOn))) out.failOn = c.failOn;
+    if (c.aiBudgetUsd && (!out.aiBudgetUsd || c.aiBudgetUsd < out.aiBudgetUsd)) out.aiBudgetUsd = c.aiBudgetUsd;
   }
   return out;
 }
