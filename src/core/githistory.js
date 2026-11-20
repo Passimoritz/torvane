@@ -65,7 +65,33 @@ async function scanGitHistory(dir, { currentText = '', signal, onProgress = () =
     }, 'git-history'));
     if (findings.length >= 30) break;
   }
+  // Geloeschte Zugangsdateien (.env, Schluessel, Zertifikate mit privatem Teil): die Datei ist weg, ihr Inhalt nicht
+  const del = await git(dir, ['log', '--all', '--diff-filter=D', '--name-only', `-n${MAX_COMMITS}`, '--date=short', '--format=@@C %H|%an|%ad'], { signal });
+  if (del.ok) for (const d of deletedSecretFiles(del.stdout)) {
+    if (findings.length >= 40) break;
+    findings.push(normalizeFinding({
+      ruleId: 'git-history-deleted-secret-file', severity: 'high', category: 'Secrets', confidence: 'medium',
+      title: `Gelöschte Zugangsdatei steckt noch in der Git-Historie: ${d.file}`,
+      description: `Die Datei „${d.file}“ wurde am ${d.commit.date} von ${d.commit.author} gelöscht. Ihr Inhalt ist in älteren Versionen weiterhin abrufbar.`,
+      impact: 'Wer das Repository klonen kann, holt die Datei mit einem einzigen Befehl aus der Historie zurück.',
+      remediation: 'Alle Zugangsdaten aus der Datei beim Anbieter sperren und neu erzeugen. Danach die Datei mit git filter-repo aus der Historie entfernen und die Datei in .gitignore eintragen.',
+      location: `${d.file}@${d.commit.hash.slice(0, 7)}`, sourceModule: 'git-history',
+    }, 'git-history'));
+  }
   return { findings, notes: [`Git-Historie geprüft (${(log.stdout.match(/^@@C /gm) || []).length} Commits).`], ran: true };
 }
 
-module.exports = { scanGitHistory, scanLog };
+// Ausgabe von git log --diff-filter=D --name-only: geloeschte Dateien, die nach Zugangsdaten aussehen
+const SECRET_FILE = /(^|\/)(\.env(\.(?!example|sample|template|dist|defaults?)[\w-]+)?|\.netrc|\.pgpass|\.git-credentials|credentials(\.json)?|id_(rsa|dsa|ecdsa|ed25519)|[^/]+\.(pem|key|p12|pfx|jks|keystore|ppk|kdbx)|\.htpasswd|\.npmrc|service-account[^/]*\.json)$/i;
+function deletedSecretFiles(text) {
+  const out = []; const seen = new Set(); let commit = null;
+  for (const line of String(text).split('\n')) {
+    if (line.startsWith('@@C ')) { const [h, a, d] = line.slice(4).split('|'); commit = { hash: h, author: a, date: d }; continue; }
+    const f = line.trim();
+    if (!f || !commit || seen.has(f) || !SECRET_FILE.test(f) || /\.pub(\.pem)?$/i.test(f)) continue;
+    seen.add(f); out.push({ file: f, commit });
+  }
+  return out;
+}
+
+module.exports = { scanGitHistory, scanLog, deletedSecretFiles };

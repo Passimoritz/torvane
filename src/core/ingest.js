@@ -30,7 +30,7 @@ const TEXT_EXT = new Set([
   '.html', '.htm', '.css', '.scss', '.vue', '.svelte',
   '.sql', '.graphql', '.proto',
   '.yml', '.yaml', '.toml', '.ini', '.cfg', '.conf', '.env', '.properties',
-  '.xml', '.gradle', '.tf', '.dockerfile', '.md', '.txt', '.lock',
+  '.xml', '.gradle', '.tf', '.dockerfile', '.md', '.txt', '.lock', '.log',
 ]);
 
 const SKIP_DIR = new Set(['node_modules', '.git', '.svn', '.hg', 'dist', 'build', 'out', 'target', '.next', '.cache', 'vendor', '__pycache__', '.venv', 'venv',

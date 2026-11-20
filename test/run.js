@@ -2942,6 +2942,54 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     fs.rmSync(dir, { recursive: true, force: true });
   }
 
+  // --- Welle 2: Anwendungs-Sicherheit ---
+  console.log('Anwendungs-Sicherheit (Welle 2):');
+  {
+    const { runAppSec } = require('../src/core/modules/appsec');
+    const i18n = require('../src/core/findings-i18n');
+    const U = (label, content) => ({ label, kind: 'file', content });
+    const ids = (fs) => fs.map((f) => f.ruleId);
+    const bad = runAppSec([
+      U('app/routes/users.js', "const express = require('express');\nconst session = require('express-session');\nrouter.get('/me', requireAuth, (req, res) => res.json(req.user));\nrouter.post('/users/:id/role', async (req, res) => {\n  const u = await User.findById(req.params.id);\n  u.role = req.body.role; await u.save(); res.json(u);\n});\nrouter.post('/login', async (req, res) => { res.send('ok'); });\nconst upload = multer({ dest: 'uploads/' });\nrouter.post('/avatar', requireAuth, (req, res) => { const target = req.body.imageUrl; fetch(target); });\n"),
+      U('app/web/Post.jsx', 'export const Post = ({ p }) => <div dangerouslySetInnerHTML={{ __html: p.body }} />;'),
+      U('app/electron/main.js', "const { app, BrowserWindow, ipcMain, shell } = require('electron');\nconst w = new BrowserWindow({ webPreferences: { nodeIntegration: true, contextIsolation: false } });\nw.loadURL('https://example.org/app');\nipcMain.handle('run', async (e, cmd) => { return execSync(cmd); });\nipcMain.on('open', (e, link) => shell.openExternal(link));\n"),
+      U('ext/manifest.json', JSON.stringify({ manifest_version: 3, name: 'x', background: { service_worker: 'bg.js' }, host_permissions: ['<all_urls>'], content_security_policy: { extension_pages: "script-src 'self' 'unsafe-eval'" }, externally_connectable: { matches: ['*://*/*'] } })),
+      U('mc/src/main/java/de/x/AdminCmd.java', 'public class AdminCmd implements CommandExecutor {\n  public boolean onCommand(CommandSender s, Command c, String l, String[] args) {\n    Bukkit.getPlayer(args[0]).setOp(true);\n    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "give " + args[0] + " diamond");\n    return true;\n  }\n}'),
+      U('mc/src/main/resources/plugin.yml', 'name: X\nmain: de.x.Main\nversion: 1\ncommands:\n  admin:\n    description: Admin\n  heal:\n    description: Heilen\n    permission: x.heal\n'),
+      U('mc/src/main/resources/config.yml', 'database:\n  user: mc\n  password: Sommer2024!\n'),
+      U('android/app/src/main/AndroidManifest.xml', '<manifest><application><activity android:name=".Main" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".SyncService" android:exported="true"/></application></manifest>'),
+      U('repo/.github/workflows/ci.yml', 'jobs:\n  b:\n    env:\n      ACTIONS_STEP_DEBUG: true\n    steps:\n      - run: echo "${{ secrets.TOKEN }}" | base64\n'),
+    ]);
+    const b = ids(bad);
+    check('appsec: Route ohne Anmeldung neben geschützten Routen, Login-Route ausgenommen', bad.filter((f) => f.ruleId === 'appsec-authz').length === 1 && /role/.test(bad.find((f) => f.ruleId === 'appsec-authz').description));
+    check('appsec: IDOR, CSRF, Rate-Limit, Upload, SSRF, XSS', ['appsec-idor', 'appsec-csrf', 'appsec-rate', 'appsec-upload-no-check', 'appsec-ssrf', 'appsec-xss'].every((x) => b.includes(x)));
+    check('appsec: Electron-Schalter, Navigation, IPC, openExternal', bad.filter((f) => f.ruleId === 'appsec-electron-flag').length === 2 && ['appsec-electron-nav', 'appsec-electron-ipc', 'appsec-electron-external'].every((x) => b.includes(x)));
+    check('appsec: Browser-Erweiterung alle Seiten, unsafe-eval, externally_connectable', ['appsec-ext-all', 'appsec-ext-csp', 'appsec-ext-connect'].every((x) => b.includes(x)));
+    check('appsec: Minecraft setOp ohne Rechte, dispatchCommand mit args, plugin.yml, Passwort', ['appsec-mc-command', 'appsec-mc-dispatch', 'appsec-mc-yml-perm', 'appsec-mc-password'].every((x) => b.includes(x)) && /admin/.test(bad.find((f) => f.ruleId === 'appsec-mc-yml-perm').title) && !/heal/.test(bad.find((f) => f.ruleId === 'appsec-mc-yml-perm').title));
+    check('appsec: Android-Dienst offen, Start-Activity ausgenommen', bad.filter((f) => f.ruleId === 'appsec-android-exported').length === 1 && /SyncService/.test(bad.find((f) => f.ruleId === 'appsec-android-exported').title));
+    check('appsec: Workflow mit umgewandeltem Geheimnis und Debug-Protokoll', b.includes('appsec-ci-secret') && b.includes('appsec-ci-debug'));
+    const good = runAppSec([
+      U('ok/routes.js', "const session = require('express-session');\napp.use(session({ cookie: { sameSite: 'lax' } }));\nconst rateLimit = require('express-rate-limit');\nrouter.use(requireAuth);\nrouter.get('/me', requireAuth, (req, res) => res.json(req.user));\nrouter.post('/items/:id', requireAuth, async (req, res) => { const it = await Item.findOne({ where: { id: req.params.id, userId: req.user.id } }); res.json(it); });\nrouter.post('/login', (req, res) => res.send('ok'));\nconst upload = multer({ dest: 'tmp/', limits: { fileSize: 1e6 }, fileFilter });\nrouter.post('/fetch', requireAuth, (req, res) => { const url = req.body.url; if (!allowList.includes(new URL(url).host)) return; fetch(url); });\n"),
+      U('ok/Post.jsx', 'export const Post = ({ p }) => <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(p.body) }} />;'),
+      U('ok/main.js', "const { BrowserWindow, shell } = require('electron');\nconst w = new BrowserWindow({ webPreferences: { contextIsolation: true, sandbox: true } });\nw.webContents.setWindowOpenHandler(({ url }) => { if (/^https:\\/\\//.test(url)) shell.openExternal(url); return { action: 'deny' }; });\nw.loadURL('https://example.org');\nshell.openExternal(HELP_URL);\n"),
+      U('okext/manifest.json', JSON.stringify({ manifest_version: 3, name: 'y', action: {}, host_permissions: ['https://www.youtube.com/*'] })),
+      U('okmc/Cmd.java', 'public boolean onCommand(CommandSender s, Command c, String l, String[] args) {\n  if (!s.hasPermission("x.op")) return false;\n  Bukkit.getPlayer(args[0]).setOp(true);\n  return true;\n}'),
+      U('lib.jar!/plugin.yml', 'name: X\nmain: de.x.Main\ncommands:\n  admin:\n    description: Admin\n'),
+    ]);
+    check('appsec: abgesicherte Varianten bleiben ruhig', good.length === 0, ids(good).join(', '));
+    const leftEn = bad.map(i18n.localizeFinding).flatMap((f) => [f.title, f.description, f.impact, f.remediation]).filter((t) => t && /[äöüß]|\b(der|die|das|und|nicht|ist|mit|für|wird|ohne)\b/.test(t));
+    check('appsec: alle Texte haben eine englische Fassung', leftEn.length === 0, leftEn.slice(0, 2).join(' | '));
+    const { deletedSecretFiles } = require('../src/core/githistory');
+    const del = deletedSecretFiles('@@C abc1234|Mia|2026-01-02\n.env\nconfig/.env.example\nkeys/server.key\nkeys/server.pub.pem\nsrc/app.js\n');
+    check('git-historie: gelöschte Zugangsdateien erkannt, Vorlagen und öffentliche Schlüssel nicht', del.map((d) => d.file).join() === '.env,keys/server.key');
+    const { analyzeTaint: at } = require('../src/core/taint');
+    const dj = at([
+      U('shop/db.py', 'def find(name):\n    return cursor.execute(f"SELECT * FROM p WHERE n = \'{name}\'")\n'),
+      U('shop/views.py', 'from shop.db import find\ndef search(request):\n    return find(request.GET.get("q"))\n'),
+    ]);
+    check('datenfluss: Django request.GET bis in den SQL-Befehl', dj.some((f) => f.ruleId === 'taint-sql'));
+  }
+
   console.log(`\n${pass} ok, ${fail} fehlgeschlagen`);
   process.exit(fail ? 1 : 0);
 })();

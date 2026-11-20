@@ -390,6 +390,7 @@ const MODULES = [
   { id: 'webserver-config-audit', label: 'Webserver-Konfiguration (nginx, Apache, Caddy)', run: require('./srvconf').runSrvConf },
   { id: 'privacy-audit', label: 'Personenbezogene Daten, Log-Ausgaben, Notebooks', run: require('./privacy').runPrivacy },
   { id: 'crypto-inventory', label: 'Krypto-Inventar', run: require('./cryptoinv').runCryptoInventory },
+  { id: 'appsec-rules', label: 'Anwendungs-Sicherheit (Rechte, IDOR, CSRF, Uploads, SSRF, Electron, Erweiterungen, Minecraft, Android, CI)', run: require('./appsec').runAppSec },
   { id: 'code-quality', label: 'Code-Qualität (lange Funktionen, Kopien)', run: require('./quality').runQuality },
   // Lieferkette, Container-Build, CI und CMS (modules/supply.js, modules/cms.js)
   { id: 'lockfile-drift', label: 'Lockfile passt zum Manifest', run: (u) => require('./supply').lockDrift(u) },
