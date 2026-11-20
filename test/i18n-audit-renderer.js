@@ -15,7 +15,7 @@
   // Englische Woerter in deutschen Saetzen ("VS Code", "from" im Beispiel) zaehlen nicht
   const isEnglish = { test: (t) => EN.test(t) && !DE.test(t) };
   // Bewusst nicht uebersetzt: Sprachwahl, Produktnamen, Beispiele
-  const SKIP = /^(Deutsch|English|Vigil|Ollama|Greenbone OpenVAS|Docker|OWASP|SBOM|SARIF|JSON|HTML|PDF|CSV|CVE-|CWE-|DE|EN|📰|▶ Video:|Have I Been Pwned)/;
+  const SKIP = /^(Deutsch|English|Vigil|Torvane|Ollama|Greenbone OpenVAS|Docker|OWASP|SBOM|SARIF|JSON|HTML|PDF|CSV|CVE-|CWE-|DE|EN|📰|▶ Video:|Have I Been Pwned)/;
   const seen = new Map();
   let where = '';
   const inCode = (el) => el && el.closest && el.closest('code,pre,kbd,script,style,.fr-loc,.fd-loc,.evidence,.md-code,.diff-view,.log,[data-no-i18n],textarea');
@@ -40,7 +40,7 @@
     const keys = [...document.querySelectorAll('#findings .frow')].map((x) => x.dataset.key);
     for (const k of keys) { selectFinding(k); await wait(25); where = 'Befund'; collect(bad); }
     for (const v of ['scan', 'dash', 'history', 'settings']) { showView(v); await wait(120); where = `Ansicht ${v}`; collect(bad); }
-    for (const g of ['general', 'checks', 'web', 'advanced']) { setGroup(g); await wait(120); where = `Einstellungen ${g}`; collect(bad); }
+    for (const g of ['general', 'ai', 'checks', 'web', 'auto', 'advanced']) { setGroup(g); await wait(120); where = `Einstellungen ${g}`; collect(bad); }
     showView('dash');
     for (const tab of document.querySelectorAll('.dash-tab')) { tab.click(); await wait(100); where = `Übersicht ${tab.dataset.tab || ''}`; collect(bad); }
     showView('scan');

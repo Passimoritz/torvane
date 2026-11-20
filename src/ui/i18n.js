@@ -4,6 +4,32 @@
 // Zurueckschalten ohne Neustart geht. Befundtexte aus der Pruefung bleiben vorerst Deutsch.
 (() => {
   const EN = {
+    // Neue Oberflaeche (November 2026): Ablauf, Tooltips, Fazit, Befund-Detail, Einstellungs-Bereiche
+    'Sicherheitsprüfung': 'Security check', 'Ziel wählen': 'Choose target', 'Prüfen': 'Check', 'Alle Einstellungen': 'All settings',
+    'Erklärung': 'Explanation', 'Ablauf der Prüfung': 'Scan steps',
+    'Noch leer': 'Empty so far', 'Nach dem Ziel': 'After the target', 'Keine KI nötig': 'No AI needed', 'KI bereit': 'AI ready', 'KI fehlt': 'AI missing',
+    'Läuft gerade': 'Running now', 'Erledigt': 'Done','Startklar': 'Ready to start', 'Noch nicht bereit': 'Not ready yet', 'Noch keins': 'None yet',
+    'Fazit': 'Summary', 'Nach Schwere filtern': 'Filter by severity',
+    'Fang oben in der Liste an – dort steht das Dringendste. Eine Stufe anklicken filtert die Liste.': 'Start at the top of the list – that’s where the most urgent items are. Click a level to filter the list.',
+    'Das Problem': 'The problem', 'Wie gefährlich?': 'How dangerous?', 'Weitere Hilfe': 'More help', 'Fundort': 'Location',
+    'Keine weitere Beschreibung vorhanden.': 'No further description available.',
+    'Für diesen Befund gibt es noch keine fertige Anleitung. Frag unten die KI nach einem Vorschlag.': 'There’s no ready-made guide for this finding yet. Ask the AI below for a suggestion.',
+    'KI & Datenschutz': 'AI & privacy', 'Analyse, Kosten, Schwärzen': 'Analysis, costs, redaction', 'Profil, Darstellung, Bericht': 'Profile, appearance, report',
+    'Schadsoftware, Tools, Zugänge': 'Malware, tools, credentials', 'Web & Login': 'Web & login', 'Automatisch prüfen': 'Automatic scans', 'Zeitpläne, Hintergrund': 'Schedules, background',
+    'Regeln, Netzwerk, REST-API, Daten': 'Rules, network, REST API, data', 'Einstellung suchen': 'Search settings', 'Keine Einstellung gefunden.': 'No setting found.',
+    'Einstellungen: KI & Datenschutz': 'Settings: AI & privacy', 'Einstellungen: Automatisch prüfen': 'Settings: Automatic scans',
+    'Geprüfte Ziele': 'Checked targets', 'Pakete suchen': 'Search packages',
+    // Zwischenschritte der Buehne und technische Details
+    'Archive werden entpackt': 'Unpacking archives', 'Dateien werden gelesen': 'Reading files', 'Alte Git-Versionen werden durchsucht': 'Searching old Git versions',
+    'Suche nach Schadsoftware': 'Looking for malware', 'Text in Bildern wird gelesen': 'Reading text in images', 'Code wird nach bekannten Mustern durchsucht': 'Searching the code for known patterns',
+    'Details zu den Lücken werden geholt': 'Fetching vulnerability details', 'Pakete werden mit der Lücken-Datenbank abgeglichen': 'Matching packages against the vulnerability database',
+    'Zertifikat und Verschlüsselung werden geprüft': 'Checking certificate and encryption', 'Unterseiten und Formulare werden durchgegangen': 'Going through subpages and forms',
+    'Anmeldung mit dem Testkonto wird geprüft': 'Checking the login with the test account', 'Seite wird im Browser geprüft': 'Checking the page in a browser',
+    'Server und offene Pfade werden geprüft': 'Checking the server and exposed paths', 'Suche nach Zugangsdaten': 'Looking for credentials', 'Code wird mit Regeln geprüft': 'Checking the code with rules',
+    'Abhängigkeiten werden geprüft': 'Checking dependencies', 'Container wird Schicht für Schicht geprüft': 'Checking the container layer by layer', 'Greenbone prüft den Server': 'Greenbone is checking the server',
+    'Dienste im Netz werden geprüft': 'Checking network services', 'Dateien werden nach Risiko sortiert': 'Sorting files by risk', 'Die KI liest den Code': 'The AI is reading the code',
+    'Funde werden gegengeprüft': 'Double-checking findings', 'Ablauf': 'Steps', 'Rohprotokoll': 'Raw log', 'Ansicht der Details': 'Details view', 'Zuletzt erledigt': 'Recently done',
+    'Noch keine Schritte': 'No steps yet', 'Meldungen': 'messages',
     // Dateien, Programme, Erkennungsdaten (Archive, Mails, YARA, Phishing-Listen, Ueberwachung, USB)
     'Neue Lücken in geprüften Paketen melden': 'Report new vulnerabilities in checked packages',
     'Alle 6 Stunden gleicht Vigil die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.': 'Every 6 hours Vigil compares the packages from stored scans with new OSV advisories (including the GitHub Advisory Database) and the security advisories of the German BSI – without a new scan. New items appear in the overview and as a Windows notification.',
@@ -324,6 +350,9 @@
   };
   // Teil-Uebersetzungen fuer zusammengesetzte Texte (Regex -> Ersatz)
   const PARTS = [
+    // Ablauf-Leiste
+    [/^1 Ziel$/, '1 target'], [/^(\d+) Ziele$/, '$1 targets'], [/^(\d+) offen$/, '$1 open'],
+    [/^Zwischenschritte? erledigt$/, 'steps done'],
     [/^Neu seit der letzten Prüfung \((\d+)\)$/, 'New since the last scan ($1)'], [/^(\d+) (Adressen|Meldungen|Vorlagen)$/, (m, n, u) => `${n} ${{ Adressen: 'addresses', Meldungen: 'advisories', Vorlagen: 'templates' }[u]}`],
     [/^(YARA ist (?:nicht )?installiert[^.]*\.) (\d+) eigene Regeldatei\(en\)\.$/, (m, a, n) => `${a === 'YARA ist installiert.' ? 'YARA is installed.' : 'YARA is not installed – the rules are skipped.'} ${n} custom rule file(s).`], [/^Vorrat: /, 'Stored: '],
     // KI & Behebung (zusammengesetzte Texte)
@@ -444,7 +473,11 @@
   const origAttr = new Map();  // Element -> { attr: original }
   let lang = 'de', observer = null;
 
-  const tr = (s) => {
+  // Umbenennung (brand.js): mit dem Originalnamen nachschlagen, danach den aktuellen Namen einsetzen
+  const unbrand = (s) => (window.unbrandText ? window.unbrandText(s) : s);
+  const rebrand = (s) => (s == null || !window.brandText ? s : window.brandText(s));
+  const tr = (s) => rebrand(trRaw(unbrand(s)));
+  const trRaw = (s) => {
     const key = String(s).replace(/\s+/g, ' ').trim();
     if (!key) return null;
     if (EN[key]) return String(s).replace(/\S[\s\S]*\S|\S/, EN[key]);

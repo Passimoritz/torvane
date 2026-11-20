@@ -23,6 +23,7 @@ function showView(v) {
   });
   closeMenus();
   document.querySelector('.main').scrollTop = 0;
+  if (typeof renderFlow === 'function' && (v === 'scan' || v === 'results')) renderFlow();
   if (v === 'dash') loadDashboard();
   if (v === 'history') loadHistory();
   if (v === 'settings') {
@@ -96,7 +97,7 @@ async function loadDashboard() {
   $('dashView').classList.toggle('dash-empty', !stats.targets.length);
   // Sicherheitswert
   const sc = $('dashScore');
-  const tone = stats.posture >= 78 ? 'var(--low)' : stats.posture >= 50 ? 'var(--med)' : 'var(--crit)';
+  const tone = stats.posture >= 78 ? 'var(--sev-low)' : stats.posture >= 50 ? 'var(--sev-med)' : 'var(--sev-crit)';
   sc.style.setProperty('--p', stats.posture); sc.style.setProperty('--tone', tone);
   $('dashGrade').textContent = stats.targets.length ? gradeOf(stats.posture) : '–';
   $('dashScoreLabel').textContent = stats.targets.length ? `${stats.posture} / 100` : 'noch kein Wert';
@@ -351,7 +352,7 @@ function openDashDetail(i, keepScroll) {
   if (fd) {
     const main = document.createElement('div'); main.className = 'dd-main';
     const side = document.createElement('aside'); side.className = 'dd-side';
-    [fd.querySelector('.solution'), fd.querySelector('.ask-sec')].forEach((n) => n && side.appendChild(n));
+    [fd.querySelector('.part-fix'), fd.querySelector('.fd-more')].forEach((n) => n && side.appendChild(n));
     while (fd.firstChild) main.appendChild(fd.firstChild);
     const linkedSec = body.querySelector(':scope > .f-sec');
     if (linkedSec) main.appendChild(linkedSec);

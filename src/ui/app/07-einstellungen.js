@@ -84,13 +84,48 @@ function renderWatch() {
 // Einstellungs-Bereiche: welche Karten gehoeren wohin (Reihenfolge = Anzeige)
 const SET_GROUPS = {
   general: ['presets', 'set-app', 'set-report'],
-  checks: ['set-analyse', 'set-privacy', 'set-malware', 'set-feeds', 'set-schedules', 'set-tools', 'set-greenbone', 'set-systems'],
+  ai: ['set-analyse', 'set-privacy'],
+  checks: ['set-malware', 'set-feeds', 'set-tools', 'set-greenbone', 'set-systems'],
   web: ['set-scope', 'set-deep', 'set-login', 'set-matrix'],
+  auto: ['set-schedules'],
   advanced: ['set-rules', 'set-network', 'set-providers', 'set-rest', 'set-data'],
 };
+// Suche ueber alle Einstellungen: zeigt passende Zeilen aus allen Bereichen (Titel und Erklaerung)
+function filterSettings(q) {
+  const view = $('settingsView');
+  const body = document.querySelector('#settingsView .set-body');
+  const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  view.classList.toggle('searching', words.length > 0);
+  const sections = [...body.querySelectorAll(':scope > section')];
+  if (!words.length) {
+    body.querySelectorAll('.set-row[data-search-hidden]').forEach((r) => { r.hidden = false; delete r.dataset.searchHidden; });
+    $('setSearchEmpty').hidden = true;
+    setGroup(state.setGroup || 'general');
+    return;
+  }
+  const hit = (el) => { const t = el.textContent.toLowerCase(); return words.every((w) => t.includes(w)); };
+  let any = 0;
+  for (const sec of sections) {
+    const head = sec.querySelector(':scope > h2, :scope > .block-head, :scope > .presets-head');
+    const headHit = head && hit(head);
+    const rows = [...sec.querySelectorAll(':scope > .set-row')];
+    let n = 0;
+    for (const r of rows) {
+      const show = headHit || hit(r);
+      r.hidden = !show;
+      if (show) { delete r.dataset.searchHidden; n++; } else r.dataset.searchHidden = '1';
+    }
+    const show = headHit || n > 0 || (!rows.length && hit(sec));
+    sec.hidden = !show;
+    if (show) any++;
+  }
+  $('setSearchEmpty').hidden = any > 0;
+}
 function setGroup(name) {
   state.setGroup = SET_GROUPS[name] ? name : 'general';
+  if ($('setSearch') && $('setSearch').value) { $('setSearch').value = ''; $('settingsView').classList.remove('searching'); $('setSearchEmpty').hidden = true; }
   const body = document.querySelector('#settingsView .set-body');
+  body.querySelectorAll('.set-row[data-search-hidden]').forEach((r) => { r.hidden = false; delete r.dataset.searchHidden; });
   const show = new Set(SET_GROUPS[state.setGroup]);
   body.querySelectorAll(':scope > section').forEach((sec) => { const id = sec.id || (sec.classList.contains('presets') ? 'presets' : ''); sec.hidden = !show.has(id); });
   // Karten in der festgelegten Reihenfolge anordnen

@@ -63,7 +63,7 @@ function runApp(script, label) {
     const sc = await require('./scroll-audit').run();
     check('Mausrad: scrollt überall', !!sc && Array.isArray(sc.dead) && sc.dead.length === 0, sc && sc.dead ? sc.dead.slice(0, 6).join(' | ') : JSON.stringify(sc));
     check('Mausrad: fokussiertes Auswahlfeld scrollt die Seite, Wert bleibt', !!sc && sc.focusOk);
-    check('Protokoll: folgt unten, bleibt beim Hochscrollen stehen', !!sc && sc.follows && sc.stays);
+    check('Protokoll: neueste Zeile oben, bleibt beim Herunterscrollen stehen', !!sc && sc.follows && sc.stays);
     const ra = await require('./resume-audit').run();
     check('Pausieren: Stand liegt verschlüsselt auf der Platte', !!ra && ra.onDisk && ra.encrypted && ra.p1 && ra.p1.paused);
     check('Neustart: Lauf gilt als pausiert, Hinweis sichtbar', !!ra && ra.p2 && ra.p2.runBefore === 'PAUSED' && !!ra.p2.banner);

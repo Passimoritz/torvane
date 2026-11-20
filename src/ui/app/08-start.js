@@ -67,10 +67,8 @@ async function init() {
   $('runBtn').onclick = runAudit;
   $('findingSearch').addEventListener('input', () => { state.query = $('findingSearch').value; renderFindings(); });
   $('cancelBtn').onclick = async () => { $('cancelBtn').disabled = true; $('progressTitle').textContent = 'Wird abgebrochen …'; await window.vigil.cancelAudit(); };
-  $('logToggle').onclick = () => {
-    const log = $('log'); log.hidden = !log.hidden;
-    $('logToggle').setAttribute('aria-expanded', log.hidden ? 'false' : 'true');
-  };
+  // Technische Details: Zeitleiste der Zwischenschritte, Rohprotokoll per Umschalter
+  $('techSeg').querySelectorAll('[data-tech]').forEach((b) => b.onclick = () => setTechView(b.dataset.tech));
   const exportAs = (fmt) => async () => {
     closeMenus();
     if (fmt === 'pdf' || fmt === 'auditzip') flash(fmt === 'pdf' ? 'Erzeuge PDF …' : 'Erzeuge Audit-Paket …');
@@ -123,6 +121,11 @@ async function init() {
   ['depthSelect', 'validateChk', 'cveChk', 'activeChk', 'domChk', 'malwareChk', 'crawlChk'].forEach((id) => $(id).addEventListener('change', () => { collectSettings(); renderPresets(); }));
   // Einstellungen: vier Bereiche statt einer langen Seite
   $('setNav').querySelectorAll('[data-group]').forEach((b) => b.onclick = () => setGroup(b.dataset.group));
+  $('setSearch').addEventListener('input', () => filterSettings($('setSearch').value));
+  $('setSearch').addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('setSearch').value) { e.stopPropagation(); $('setSearch').value = ''; filterSettings(''); } });
+  $('openAllSettings').onclick = () => { showView('settings'); setGroup('ai'); };
+  setupFlow();
+  setupTips();
   $('exportMenu').querySelectorAll('[data-fmt]').forEach((b) => b.onclick = exportAs(b.dataset.fmt));
   $('verifyReportBtn').onclick = () => { closeMenus(); verifyReportUi(); };
   setupExtras();
@@ -193,8 +196,12 @@ function toast(msg, kind = 'info') {
   el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
   el.textContent = msg;
   box.appendChild(el);
-  setTimeout(() => el.classList.add('out'), 3800);
-  setTimeout(() => el.remove(), 4300);
+  // Bleibt stehen, solange die Maus darauf ist (WCAG 2.2.1), danach laeuft die Restzeit weiter
+  let left = 3800, started = Date.now(), timer = null;
+  const arm = () => { started = Date.now(); timer = setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, left); };
+  el.addEventListener('mouseenter', () => { clearTimeout(timer); left = Math.max(800, left - (Date.now() - started)); });
+  el.addEventListener('mouseleave', arm);
+  arm();
 }
 function flash(msg) {
   if (!msg) return;

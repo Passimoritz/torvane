@@ -20,21 +20,23 @@
       if (!scrolled()) { const e = document.elementFromPoint(x, y); dead.push(name + ' @' + x + ',' + y + ' ' + (e ? e.tagName + '#' + e.id : '')); }
     }
   };
-  for (const g of ['general', 'checks', 'web', 'advanced']) { showView('settings'); setGroup(g); await sweep('Einstellungen ' + g); }
+  for (const g of ['general', 'ai', 'checks', 'web', 'auto', 'advanced']) { showView('settings'); setGroup(g); await sweep('Einstellungen ' + g); }
   showView('results'); $('emptyState').hidden = true; renderResult((await window.vigil.sampleDemo()).result); await sweep('Ergebnis');
   showView('scan'); await sweep('Neue Prüfung');
   // Fokussiertes Auswahlfeld: Das Rad scrollt die Seite und aendert den Wert nicht
-  showView('settings'); setGroup('checks'); await wait(300); reset();
+  showView('settings'); setGroup('ai'); await wait(300); reset();
   const sel = [...document.querySelectorAll('#settingsView select')].find((e) => { const r = e.getBoundingClientRect(); return e.offsetParent && r.top > 60 && r.bottom < innerHeight - 30; });
   sel.focus(); const before = sel.value; const box = sel.getBoundingClientRect();
   await window.vigil.e2eWheel(box.left + box.width / 2, box.top + box.height / 2, 240); await wait(250);
   const focusOk = scrolled() && sel.value === before;
-  // Protokoll: Wer nach oben gescrollt hat, bleibt dort, auch wenn neue Zeilen kommen
-  const log = $('log'); $('progressPanel').hidden = false; log.hidden = false; showView('results');
-  log.textContent = Array.from({ length: 300 }, (_, i) => 'Zeile ' + i).join('\n') + '\n';
-  log.scrollTop = log.scrollHeight; await wait(50);
-  const follows = (() => { const t = log.scrollTop; appendRunLog('neu\n'); return log.scrollTop > t; })();
+  // Protokoll: neueste Zeile oben. Wer oben steht, sieht sie sofort; wer nach unten gescrollt hat,
+  // behaelt seine Zeilen im Blick (die Position waechst um die neue Zeile mit).
+  const log = $('log'); $('progressPanel').hidden = false; $('tech').hidden = false; setTechView('raw'); showView('results');
+  log.textContent = Array.from({ length: 300 }, (_, i) => 'Zeile ' + (299 - i)).join('\n') + '\n';
+  log.scrollTop = 0; await wait(50);
+  const follows = (() => { appendRunLog('neu\n'); return log.scrollTop === 0 && log.textContent.startsWith('neu\n'); })();
   log.scrollTop = 200; appendRunLog('noch eine\n');
-  const stays = log.scrollTop === 200;
+  const stays = log.scrollTop > 200;
+  setTechView('timeline');
   return { ok: true, results: [{ name: 'scroll', ok: true, dead, focusOk, follows, stays }] };
 })();

@@ -51,7 +51,8 @@
   await t('KI-Hilfe: Erklärstufen und Fix-Knopf im Detail', async () => {
     const row = [...document.querySelectorAll('#findings .frow')].find((r) => { r.click(); return !!document.querySelector('#findingDetail .gen-patch'); });
     const lv = document.querySelectorAll('#findingDetail .lvl-seg button').length;
-    return (row && lv === 3 && /Vigil ändert keine Datei/.test(document.querySelector('#findingDetail .ai-help').textContent)) || `Stufen ${lv}, Fix-Knopf ${!!row}`;
+    await wait(30); // Anzeigename (brand.js) wird per MutationObserver eingesetzt
+    return (row && lv === 3 && new RegExp((window.APP_BRAND ? window.APP_BRAND.name : 'Vigil') + ' ändert keine Datei').test(document.querySelector('#findingDetail .ai-help').textContent)) || `Stufen ${lv}, Fix-Knopf ${!!row}`;
   });
   await t('Bedrohungsmodell: STRIDE-Karten werden angezeigt', async () => {
     state.lastResult.meta = { ...(state.lastResult.meta || {}), threatModel: { source: 'rules', at: new Date().toISOString(), summary: 'Test', assets: ['Daten'], entryPoints: [], assumptions: [], threats: [{ stride: 'T', category: 'Manipulation', title: 'SQL', asset: '', description: 'd', likelihood: 'high', impact: 'high', mitigations: ['Parameter binden'], findings: [] }] } };
@@ -120,13 +121,14 @@
       const cs = getComputedStyle(document.documentElement);
       const probe = document.createElement('div'); document.body.appendChild(probe);
       const col = (v) => { probe.style.color = cs.getPropertyValue(v).trim(); return getComputedStyle(probe).color; };
-      const pairs = [['--text', '--panel'], ['--text', '--bg'], ['--muted', '--panel'], ['--muted', '--panel-2'], ['--accent', '--panel'], ['--accent-ink', '--accent-strong']];
+      const pairs = [['--text', '--surface'], ['--text', '--bg'], ['--muted', '--surface'], ['--muted', '--surface-2'], ['--accent-text', '--surface'], ['--accent-text', '--accent-soft'], ['--accent-ink', '--accent'], ['--sev-crit', '--surface'], ['--sev-high', '--surface'], ['--sev-med', '--surface'], ['--sev-low', '--surface'], ['--sev-note', '--surface'], ['--ok', '--surface']];
       const low = pairs.map(([f, b]) => [f, b, ratio(col(f), col(b))]).filter((p) => p[2] < 4.5);
       probe.remove(); delete document.documentElement.dataset.theme;
       return low.length ? low.map((p) => `${p[0]} auf ${p[1]}: ${p[2].toFixed(2)}`).join('; ') : true;
     });
   }
-  await t('Barrierefreiheit: Tastaturfokus sichtbar', () => { showView('scan'); const b = $('addTargetBtn'); b.focus(); const s = getComputedStyle(b); return (document.activeElement === b && (s.outlineStyle !== 'none' || s.boxShadow !== 'none')) || 'kein sichtbarer Fokusrahmen'; });
+  // Chrome zeigt :focus-visible bei Skript-Fokus nur, wenn der vorige Fokus es auch tat – deshalb vorher loesen
+  await t('Barrierefreiheit: Tastaturfokus sichtbar', () => { showView('scan'); if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); const b = $('addTargetBtn'); b.focus(); const s = getComputedStyle(b); return (document.activeElement === b && (s.outlineStyle !== 'none' || s.boxShadow !== 'none')) || 'kein sichtbarer Fokusrahmen'; });
 
 
   // --- Erweiterungen: Palette, Gruppierung, Layout, Notizen, Rueckgaengig, Glossar, Vergleich, Branding ---
@@ -271,7 +273,7 @@
     document.querySelector('#findings .frow').click(); await wait(100);
     const txt = document.querySelector('#findingDetail').textContent;
     state.config.lang = 'de'; window.applyLanguage('de');
-    return (!!window.VigilFindingsI18n && /What is wrong\?/.test(txt) && !/Im Code steht|Wer den Code sieht/.test(txt)) || txt.slice(0, 160);
+    return (!!window.VigilFindingsI18n && /The problem/.test(txt) && !/Im Code steht|Wer den Code sieht/.test(txt)) || txt.slice(0, 160);
   });
 
   return { ok: results.every((r) => r.ok), results };

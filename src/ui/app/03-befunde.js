@@ -137,12 +137,9 @@ function findingDetail(f) {
   const srcNames = srcs.map(sourceLabel).join(', ');
   const ev = EVIDENCE[f.assurance];
   const risk = riskOf(f);
+  // Kopf: Schwere, Neuigkeit und Einordnung. Alles zur Gefahr steht unten unter "Wie gefährlich?".
   const chips = [
     `<span class="sev-tag sev-${f.severity}" title="${esc(SEV_HELP[f.severity])}">${SEV_LABEL[f.severity]}</span>`,
-    risk != null ? `<span class="risk risk-${riskCls(risk)}" title="Kontext-Risiko 0–100${f.cvss != null ? ' · CVSS ' + Number(f.cvss).toFixed(1) : ''}">Risiko ${Math.round(risk)}</span>` : '',
-    ev ? `<span class="chip ${ev.cls}" title="${esc(ev.help)}">${ev.label}</span>` : '',
-    f.inCisaKev ? '<span class="chip badge-kev" title="Steht im CISA-Katalog aktiv ausgenutzter Lücken">aktiv ausgenutzt</span>' : '',
-    f.epssScore >= 0.1 ? `<span class="chip badge-epss" title="Wahrscheinlichkeit einer Ausnutzung in 30 Tagen">EPSS ${Math.round(f.epssScore * 100)} %</span>` : '',
     f.isNew && state.lastResult && state.lastResult.hasBaseline ? '<span class="chip badge-new">neu</span>' : '',
     f.regression ? '<span class="chip badge-reg" title="War als behoben markiert und ist wieder da">wieder da</span>' : '',
     `<span class="chip">${esc(CATEGORY_LABEL[f.category] || f.category)}</span>`,
@@ -153,9 +150,17 @@ function findingDetail(f) {
   ].filter(Boolean).join('');
   const ctx = (f.context || []).filter((c) => CONTEXT[c]);
   const danger = [f.impact, f.reachability].filter(Boolean).join(' ');
-  const secs = [
-    f.description && !f.chain && `<div class="f-sec${danger ? '' : ' full'}"><h4>Was ist los?</h4><p>${glossify(esc(f.description))}</p></div>`,
-    danger && `<div class="f-sec${f.description && !f.chain ? '' : ' full'}"><h4>Was kann passieren?</h4><p>${glossify(esc(danger))}</p></div>`,
+  // Gefahr auf einen Blick: Schwere in Alltagssprache, Kontext-Risiko, Beleg, Ausnutzung in freier Wildbahn
+  const dangerChips = [
+    risk != null ? `<span class="risk risk-${riskCls(risk)}" title="Kontext-Risiko 0–100${f.cvss != null ? ' · CVSS ' + Number(f.cvss).toFixed(1) : ''}">Risiko ${Math.round(risk)}</span>` : '',
+    ev ? `<span class="chip ${ev.cls}" title="${esc(ev.help)}">${ev.label}</span>` : '',
+    f.inCisaKev ? '<span class="chip badge-kev" title="Steht im CISA-Katalog aktiv ausgenutzter Lücken">aktiv ausgenutzt</span>' : '',
+    f.epssScore >= 0.1 ? `<span class="chip badge-epss" title="Wahrscheinlichkeit einer Ausnutzung in 30 Tagen">EPSS ${Math.round(f.epssScore * 100)} %</span>` : '',
+  ].filter(Boolean).join('');
+  const problemText = f.description && !f.chain ? `<p>${glossify(esc(f.description))}</p>` : '';
+  const dangerText = [
+    danger && `<div class="f-sec"><h4>Was kann passieren?</h4><p>${glossify(esc(danger))}</p></div>`,
+    f.explanation && `<div class="f-sec sol-why"><h4>Warum das wichtig ist</h4><p>${glossify(esc(f.explanation))}</p></div>`,
   ].filter(Boolean).join('');
   const check = f.validation && f.validation.reason
     ? `<div class="f-sec check-sec"><h4>${f.validation.by === 'ai-review' ? 'KI-Gegencheck' : 'Gegenprüfung'}: ${f.validation.verdict === 'confirmed' ? 'bestätigt' : f.validation.verdict === 'doubted' ? 'wahrscheinlich Fehlalarm' : 'nicht eindeutig'}</h4><p>${esc(f.validation.reason)}${f.severityOriginal ? ` <span class="muted">(Schwere von „${esc(SEV_LABEL[f.severityOriginal] || f.severityOriginal)}“ herabgestuft)</span>` : ''}</p></div>` : '';
@@ -173,15 +178,32 @@ function findingDetail(f) {
       </div>
     </header>
     <div class="fd-body">
-      ${f.locationDetail ? `<p class="loc-detail"><span>Fundort</span>${esc(f.locationDetail)}</p>` : ''}
-      ${ctx.length ? `<div class="ctx-row">${ctx.map((c) => `<span class="ctx-chip ctx-${c}">${CONTEXT[c]}</span>`).join('')}</div>` : ''}
-      ${f.chain ? linkedHtml : ''}
-      ${secs ? `<div class="f-cols">${secs}</div>` : ''}
-      ${f.chain ? '' : linkedHtml}
-      ${check}
-      ${f.evidence ? `<div class="f-sec evidence"><h4>Fundstelle</h4><code>${esc(f.evidence)}</code></div>` : ''}
-      ${/:\d+(:\d+)?$/.test(f.location || '') && !/^https?:/i.test(f.location || '') ? '<div class="f-sec code-sec" hidden><h4>Betroffener Code</h4><div class="code-view"></div></div>' : ''}
-      ${solutionBlock(f)}
+      <section class="fd-part part-problem" aria-label="Das Problem">
+        <h3 data-n="1">Das Problem</h3>
+        ${problemText}
+        ${f.locationDetail ? `<p class="loc-detail"><span>Fundort</span>${esc(f.locationDetail)}</p>` : ''}
+        ${f.chain ? linkedHtml : ''}
+        ${f.chain ? '' : linkedHtml}
+        ${f.evidence ? `<div class="f-sec evidence"><h4>Fundstelle</h4><code>${esc(f.evidence)}</code></div>` : ''}
+        ${/:\d+(:\d+)?$/.test(f.location || '') && !/^https?:/i.test(f.location || '') ? '<div class="f-sec code-sec" hidden><h4>Betroffener Code</h4><div class="code-view"></div></div>' : ''}
+        ${!problemText && !f.chain && !linkedHtml && !f.evidence && !f.locationDetail ? '<p class="muted">Keine weitere Beschreibung vorhanden.</p>' : ''}
+      </section>
+      <section class="fd-part part-danger sev-${f.severity}" aria-label="Wie gefährlich?">
+        <h3 data-n="2">Wie gefährlich?</h3>
+        <div class="danger-box">
+          <div class="danger-line"><span class="sev-tag sev-${f.severity}">${SEV_LABEL[f.severity]}</span><span class="sev-help">${esc(SEV_HELP[f.severity])}</span></div>
+          ${dangerChips ? `<div class="danger-line">${dangerChips}</div>` : ''}
+          ${ctx.length ? `<div class="ctx-row">${ctx.map((c) => `<span class="ctx-chip ctx-${c}">${CONTEXT[c]}</span>`).join('')}</div>` : ''}
+        </div>
+        ${dangerText}
+        ${check}
+      </section>
+      <section class="fd-part part-fix" aria-label="So behebst du es">
+        <h3 data-n="3">So behebst du es</h3>
+        ${solutionBlock(f) || '<p class="muted">Für diesen Befund gibt es noch keine fertige Anleitung. Frag unten die KI nach einem Vorschlag.</p>'}
+      </section>
+      <section class="fd-more" aria-label="Weitere Hilfe">
+        <h3>Weitere Hilfe</h3>
       ${aiHelpBlock(f)}
       ${noteBlock(f)}
       <div class="f-sec ask-sec">
@@ -194,6 +216,7 @@ function findingDetail(f) {
         </div>
         <form class="ask-form"><input type="text" class="ask-input" placeholder="Eigene Frage zu diesem Befund …" aria-label="Frage zu diesem Befund" maxlength="2000" /><button type="submit" class="btn primary tiny">Fragen</button></form>
       </div>
+      </section>
     </div>`;
 }
 
@@ -386,10 +409,10 @@ const LINK_ICON = { doc: '📘', news: '📰', video: '▶' };
 const SNIP_LABEL = { nginx: 'nginx', apache: 'Apache', caddy: 'Caddy', express: 'Node/Express', node: 'Node.js', php: 'PHP', compose: 'docker-compose', dockerfile: 'Dockerfile', yaml: 'GitHub Actions', sshd_config: 'sshd_config', shell: 'Shell', ufw: 'ufw', fail2ban: 'fail2ban', dns: 'DNS-Eintrag', prisma: 'Prisma', sql: 'SQL', html: 'HTML', vite: 'Vite', webpack: 'webpack', npmrc: '.npmrc', ci: 'CI', certbot: 'certbot', csp: 'CSP', http: 'HTTP', apollo: 'Apollo', yoga: 'GraphQL Yoga', terser: 'terser' };
 function copyBtn(text) { return `<button type="button" class="btn tiny copy-btn" data-copy="${esc(text)}">Kopieren</button>`; }
 function solutionBlock(f) {
+  // "Warum das wichtig ist" steht im Detail unter "Wie gefährlich?"
   const parts = [];
-  if (f.explanation) parts.push(`<div class="sol-why"><h4>Warum das wichtig ist</h4><p>${glossify(esc(f.explanation))}</p></div>`);
   const steps = f.steps && f.steps.length ? f.steps : (f.remediation ? [f.remediation] : []);
-  if (steps.length) parts.push(`<div class="sol-steps"><h4>So behebst du es</h4><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>${f.remediation && f.steps && f.steps.length && !f.steps.includes(f.remediation) && !/^Siehe /.test(f.remediation) ? `<p class="muted small">Für diesen Fund: ${esc(f.remediation)}</p>` : ''}</div>`);
+  if (steps.length) parts.push(`<div class="sol-steps"><ol>${steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>${f.remediation && f.steps && f.steps.length && !f.steps.includes(f.remediation) && !/^Siehe /.test(f.remediation) ? `<p class="muted small">Für diesen Fund: ${esc(f.remediation)}</p>` : ''}</div>`);
   if (f.versionPatch) {
     const vp = f.versionPatch;
     const code = [vp.command, vp.manifest].filter(Boolean).join('\n\n');
