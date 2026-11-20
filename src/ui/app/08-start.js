@@ -67,10 +67,9 @@ async function init() {
   $('runBtn').onclick = runAudit;
   $('findingSearch').addEventListener('input', () => { state.query = $('findingSearch').value; renderFindings(); });
   $('cancelBtn').onclick = async () => { $('cancelBtn').disabled = true; $('progressTitle').textContent = 'Wird abgebrochen …'; await window.vigil.cancelAudit(); };
-  $('logToggle').onclick = () => {
-    const log = $('log'); log.hidden = !log.hidden;
-    $('logToggle').setAttribute('aria-expanded', log.hidden ? 'false' : 'true');
-  };
+  // Technische Details: Zeitleiste der Zwischenschritte, Rohprotokoll per Umschalter
+  $('techSeg').querySelectorAll('[data-tech]').forEach((b) => b.onclick = () => setTechView(b.dataset.tech));
+  $('logToggle').onclick = () => showTech($('tech').hidden);
   const exportAs = (fmt) => async () => {
     closeMenus();
     if (fmt === 'pdf' || fmt === 'auditzip') flash(fmt === 'pdf' ? 'Erzeuge PDF …' : 'Erzeuge Audit-Paket …');

@@ -30,7 +30,7 @@
   await window.vigil.e2eWheel(box.left + box.width / 2, box.top + box.height / 2, 240); await wait(250);
   const focusOk = scrolled() && sel.value === before;
   // Protokoll: Wer nach oben gescrollt hat, bleibt dort, auch wenn neue Zeilen kommen
-  const log = $('log'); $('progressPanel').hidden = false; log.hidden = false; showView('results');
+  const log = $('log'); $('progressPanel').hidden = false; $('tech').hidden = false; log.hidden = false; showView('results');
   log.textContent = Array.from({ length: 300 }, (_, i) => 'Zeile ' + i).join('\n') + '\n';
   log.scrollTop = log.scrollHeight; await wait(50);
   const follows = (() => { const t = log.scrollTop; appendRunLog('neu\n'); return log.scrollTop > t; })();

@@ -173,6 +173,7 @@ async function runAudit(opts = {}) {
   loadKnown();
   unsub();
   clearInterval(state.elapsedTimer);
+  closeTimeline();
   state.gbChoice = null; // Die Wahl gilt nur fuer diese eine Pruefung
   state.running = false; updateRunState(); setRunEta();
   $('cancelBtn').hidden = true;
@@ -184,7 +185,7 @@ async function runAudit(opts = {}) {
     $('progressSub').textContent = res.error;
     $('progressPanel').classList.add('failed');
     renderStepper('');
-    $('log').hidden = false; $('logToggle').setAttribute('aria-expanded', 'true');
+    showTech(true, 'raw');
     $('log').textContent += '\nFEHLER: ' + res.error + '\n';
     toast('Prüfung fehlgeschlagen: ' + res.error, 'err');
     return;
@@ -201,20 +202,65 @@ async function runAudit(opts = {}) {
     toast(res.canceled ? 'Abgebrochen – Teilergebnis geladen' : `Fertig: ${n} ${n === 1 ? 'Befund' : 'Befunde'} in ${took}`, 'ok');
   }
 }
-// Buehne: je Schritt eine eigene Szene (data-phase), der Ring zeigt den Fortschritt des Schritts
-function setStageScene(phase, pct) {
+// --- Buehne und Zwischenschritte ------------------------------------------------------
+// Jeder Schritt hat eine Szene; innerhalb des Schritts waehlt die laufende Meldung einen Zwischenschritt
+// mit eigener Szene (Werkzeug, Server-Check, KI-Block …). Erste passende Regel gewinnt, die Meldungen
+// kommen deutsch aus dem Kern. Ohne eigene Szene bleibt die des Schritts. Entwurf: Design-Leinwand.
+const SUBSTEPS = [
+  ['ingest', /Entpacke/, 'unpack', 'Archive werden entpackt'],
+  ['ingest', null, 'ingest', 'Dateien werden gelesen'],
+  ['prescan', /Git-Historie/, 'git', 'Alte Git-Versionen werden durchsucht'],
+  ['prescan', /Schadsoftware|Defender|YARA/, 'malware', 'Suche nach Schadsoftware'],
+  ['prescan', /Texterkennung/, 'ocr', 'Text in Bildern wird gelesen'],
+  ['prescan', null, 'prescan', 'Code wird nach bekannten Mustern durchsucht'],
+  ['cve', /Details/, 'cvedetails', 'Details zu den Lücken werden geholt'],
+  ['cve', null, 'cve', 'Pakete werden mit der Lücken-Datenbank abgeglichen'],
+  ['webscan', /TLS|Zertifikat/, 'tls', 'Zertifikat und Verschlüsselung werden geprüft'],
+  ['webscan', /Unterseiten|Formulare/, 'crawl', 'Unterseiten und Formulare werden durchgegangen'],
+  ['webscan', /Login/, 'login', 'Anmeldung mit dem Testkonto wird geprüft'],
+  ['webscan', /Browser|API-Rechtematrix/, 'browser', 'Seite wird im Browser geprüft'],
+  ['webscan', null, 'webscan', 'Server und offene Pfade werden geprüft'],
+  ['active', /gitleaks|trufflehog/, 'secrets', 'Suche nach Zugangsdaten'],
+  ['active', /semgrep|bandit|checkov|hadolint/, 'sast', 'Code wird mit Regeln geprüft'],
+  ['active', /osv-scanner|grype|retire/, 'deps', 'Abhängigkeiten werden geprüft'],
+  ['active', /trivy/, 'container', 'Container wird Schicht für Schicht geprüft'],
+  ['active', /Greenbone/, 'greenbone', 'Greenbone prüft den Server'],
+  ['active', null, 'active', 'Dienste im Netz werden geprüft'],
+  ['analyze', /Ordne|Vorsortierung/, 'sort', 'Dateien werden nach Risiko sortiert'],
+  ['analyze', null, 'analyze', 'Die KI liest den Code'],
+  ['validate', null, 'validate', 'Funde werden gegengeprüft'],
+  ['done', null, 'done', 'Fertig'],
+];
+const TOOL_RE = /^(gitleaks|trufflehog|trivy|grype|semgrep|bandit|checkov|retire\.js|hadolint|osv-scanner|nmap|nuclei|YARA)\b/i;
+function classifySub(p) {
+  const msg = String(p.message || '');
+  const hit = SUBSTEPS.find(([ph, re]) => ph === p.phase && (!re || re.test(msg))) || [p.phase, null, p.phase, msg];
+  const gb = p.gb ? SUBSTEPS.find((s) => s[2] === 'greenbone') : null;
+  const [, , key, label] = gb || hit;
+  const tool = (msg.match(TOOL_RE) || [])[1] || (gb ? 'Greenbone' : '');
+  return { phase: p.phase, key, label, tool };
+}
+function setStageScene(key, pct) {
   const v = $('stageVisual');
   if (!v) return;
-  if (phase) v.dataset.phase = phase;
+  if (key) {
+    const want = v.querySelector(`.scene[data-scene="${key}"]`) ? key : null;
+    if (want) v.querySelectorAll('.scene').forEach((g) => g.classList.toggle('on', g.dataset.scene === want));
+  }
   if (pct != null) $('stageRing').style.strokeDashoffset = String(100 - Math.max(0, Math.min(100, pct)));
 }
 function resetStage() {
   state.stagePhase = null;
+  state.timeline = [];
   setStageScene('ingest', 0);
   $('stagePhase').textContent = state.runPhases[0].label;
   $('stageStep').textContent = `Schritt 1 von ${state.runPhases.length}`;
   $('stageMsg').textContent = 'Starte …';
   $('stagePct').textContent = '0 %';
+  $('stageSubLabel').textContent = SUBSTEPS[1][3];
+  $('stageSubTool').hidden = true;
+  $('stageTrail').innerHTML = '';
+  renderTimeline();
 }
 function updateStage(p) {
   const phases = state.runPhases;
@@ -225,12 +271,75 @@ function updateStage(p) {
     el.textContent = phases[i].label;
     el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');
     $('stageStep').textContent = `Schritt ${i + 1} von ${phases.length}`;
-    setStageScene(p.phase, p.phase === 'done' ? 100 : 0);
+    setStageScene(null, p.phase === 'done' ? 100 : 0);
   }
   if (p.message) $('stageMsg').textContent = p.message;
   const pct = p.total ? Math.round((p.done / p.total) * 100) : null;
   $('stagePct').textContent = pct != null ? pct + ' %' : '–';
-  if (pct != null) setStageScene(null, pct);
+  const sub = trackSub(p);
+  setStageScene(sub.key, pct);
+  $('stageSubLabel').textContent = sub.label;
+  $('stageSubTool').hidden = !sub.tool;
+  $('stageSubTool').textContent = sub.tool;
+  // Die letzten erledigten Zwischenschritte als kleine Haken-Pillen
+  const doneSubs = state.timeline.filter((e) => e.end).slice(-3);
+  $('stageTrail').innerHTML = doneSubs.map((e) => `<li>${esc(e.tool || e.label)}</li>`).join('');
+}
+
+// Zeitleiste fuer "Technische Details": aufeinanderfolgende Meldungen desselben Zwischenschritts
+// (gleiche Szene, gleiches Werkzeug) bilden eine Zeile, deren Fortschritt mitlaeuft.
+function trackSub(p, now = Date.now()) {
+  const sub = classifySub(p);
+  const tl = state.timeline || (state.timeline = []);
+  const last = tl[tl.length - 1];
+  if (last && !last.end && last.key === sub.key && last.tool === sub.tool && last.phase === sub.phase) {
+    last.detail = p.message || last.detail; last.count++;
+    if (p.total) { last.done = p.done; last.total = p.total; }
+  } else {
+    if (last && !last.end) last.end = now;
+    tl.push({ ...sub, detail: p.message || '', start: now, end: p.phase === 'done' ? now : null, count: 1, done: p.total ? p.done : null, total: p.total || null });
+  }
+  scheduleTimeline();
+  return sub;
+}
+function closeTimeline(now = Date.now()) {
+  for (const e of state.timeline || []) if (!e.end) e.end = now;
+  renderTimeline();
+}
+let tlFrame = 0;
+function scheduleTimeline() { if (!tlFrame) tlFrame = requestAnimationFrame(() => { tlFrame = 0; renderTimeline(); }); }
+const fmtClock = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+function renderTimeline() {
+  const box = $('timeline');
+  if (!box) return;
+  const tl = state.timeline || [];
+  const t0 = state.runStartedAt || (tl[0] && tl[0].start) || Date.now();
+  const labelOf = (ph) => (PHASES.find((x) => x.key === ph) || { label: ph }).label;
+  let html = '', phase = null;
+  for (const e of tl) {
+    if (e.phase !== phase) { phase = e.phase; html += `<li class="tl-phase">${esc(labelOf(phase))}</li>`; }
+    const pct = e.total ? Math.round((e.done / e.total) * 100) : null;
+    const side = pct != null ? `<span class="tl-bar"><i style="width:${pct}%"></i></span><span class="tl-count">${e.done}/${e.total}</span>`
+      : e.end ? `<span class="tl-dur">${esc(fmtElapsed(e.end - e.start))}</span>` : '';
+    html += `<li class="tl-row ${e.end ? 'done' : 'now'}"><span class="tl-time">${fmtClock(e.start - t0)}</span><span class="tl-state" aria-hidden="true">${e.end ? '✓' : ''}</span><span class="tl-main"><span class="tl-label">${esc(e.label)}</span><span class="tl-detail" data-no-i18n title="${esc(e.detail)}">${esc(e.detail)}</span></span><span class="tl-side">${side}</span></li>`;
+  }
+  const follow = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
+  box.innerHTML = html || '<li class="tl-phase">Noch keine Schritte</li>';
+  if (follow) box.scrollTop = box.scrollHeight;
+  const steps = tl.filter((e) => e.end).length;
+  const msgs = tl.reduce((n, e) => n + e.count, 0);
+  $('techStats').innerHTML = `<span><b>${steps}</b> ${steps === 1 ? 'Zwischenschritt' : 'Zwischenschritte'} erledigt</span><span><b>${msgs}</b> Meldungen</span>`;
+}
+// Ansicht der technischen Details: Ablauf (Zeitleiste) oder Rohprotokoll
+function setTechView(v) {
+  const raw = v === 'raw';
+  $('timeline').hidden = raw; $('log').hidden = !raw;
+  $('techSeg').querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.tech === v)));
+}
+function showTech(open, view) {
+  $('tech').hidden = !open;
+  $('logToggle').setAttribute('aria-expanded', String(open));
+  if (view) setTechView(view);
 }
 const fmtElapsed = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`; };
 
@@ -345,7 +454,7 @@ function renderResult(result) {
   badge.classList.toggle('alarm', open.some((f) => f.severity === 'critical' || f.severity === 'high'));
 
   if (result.errors && result.errors.length) {
-    $('log').hidden = false; $('logToggle').setAttribute('aria-expanded', 'true');
+    showTech(true, 'raw');
     $('log').textContent += '\nHinweise:\n' + result.errors.map((e) => '  - ' + e).join('\n') + '\n';
   }
   refreshResultView();

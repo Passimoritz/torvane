@@ -19,6 +19,17 @@
     'Regeln, Netzwerk, REST-API, Daten': 'Rules, network, REST API, data', 'Einstellung suchen': 'Search settings', 'Keine Einstellung gefunden.': 'No setting found.',
     'Einstellungen: KI & Datenschutz': 'Settings: AI & privacy', 'Einstellungen: Automatisch prüfen': 'Settings: Automatic scans',
     'Geprüfte Ziele': 'Checked targets', 'Pakete suchen': 'Search packages',
+    // Zwischenschritte der Buehne und technische Details
+    'Archive werden entpackt': 'Unpacking archives', 'Dateien werden gelesen': 'Reading files', 'Alte Git-Versionen werden durchsucht': 'Searching old Git versions',
+    'Suche nach Schadsoftware': 'Looking for malware', 'Text in Bildern wird gelesen': 'Reading text in images', 'Code wird nach bekannten Mustern durchsucht': 'Searching the code for known patterns',
+    'Details zu den Lücken werden geholt': 'Fetching vulnerability details', 'Pakete werden mit der Lücken-Datenbank abgeglichen': 'Matching packages against the vulnerability database',
+    'Zertifikat und Verschlüsselung werden geprüft': 'Checking certificate and encryption', 'Unterseiten und Formulare werden durchgegangen': 'Going through subpages and forms',
+    'Anmeldung mit dem Testkonto wird geprüft': 'Checking the login with the test account', 'Seite wird im Browser geprüft': 'Checking the page in a browser',
+    'Server und offene Pfade werden geprüft': 'Checking the server and exposed paths', 'Suche nach Zugangsdaten': 'Looking for credentials', 'Code wird mit Regeln geprüft': 'Checking the code with rules',
+    'Abhängigkeiten werden geprüft': 'Checking dependencies', 'Container wird Schicht für Schicht geprüft': 'Checking the container layer by layer', 'Greenbone prüft den Server': 'Greenbone is checking the server',
+    'Dienste im Netz werden geprüft': 'Checking network services', 'Dateien werden nach Risiko sortiert': 'Sorting files by risk', 'Die KI liest den Code': 'The AI is reading the code',
+    'Funde werden gegengeprüft': 'Double-checking findings', 'Ablauf': 'Steps', 'Rohprotokoll': 'Raw log', 'Ansicht der Details': 'Details view', 'Zuletzt erledigt': 'Recently done',
+    'Noch keine Schritte': 'No steps yet', 'Meldungen': 'messages',
     // Dateien, Programme, Erkennungsdaten (Archive, Mails, YARA, Phishing-Listen, Ueberwachung, USB)
     'Neue Lücken in geprüften Paketen melden': 'Report new vulnerabilities in checked packages',
     'Alle 6 Stunden gleicht Vigil die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.': 'Every 6 hours Vigil compares the packages from stored scans with new OSV advisories (including the GitHub Advisory Database) and the security advisories of the German BSI – without a new scan. New items appear in the overview and as a Windows notification.',
@@ -341,6 +352,7 @@
   const PARTS = [
     // Ablauf-Leiste
     [/^1 Ziel$/, '1 target'], [/^(\d+) Ziele$/, '$1 targets'], [/^(\d+) offen$/, '$1 open'],
+    [/^Zwischenschritte? erledigt$/, 'steps done'],
     [/^Neu seit der letzten Prüfung \((\d+)\)$/, 'New since the last scan ($1)'], [/^(\d+) (Adressen|Meldungen|Vorlagen)$/, (m, n, u) => `${n} ${{ Adressen: 'addresses', Meldungen: 'advisories', Vorlagen: 'templates' }[u]}`],
     [/^(YARA ist (?:nicht )?installiert[^.]*\.) (\d+) eigene Regeldatei\(en\)\.$/, (m, a, n) => `${a === 'YARA ist installiert.' ? 'YARA is installed.' : 'YARA is not installed – the rules are skipped.'} ${n} custom rule file(s).`], [/^Vorrat: /, 'Stored: '],
     // KI & Behebung (zusammengesetzte Texte)

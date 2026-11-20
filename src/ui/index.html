@@ -335,12 +335,12 @@
     <section class="card progress" id="progressPanel" hidden aria-live="polite">
       <div class="scan-stage" id="scanStage" aria-hidden="true">
         <!-- Buehne: je Pruefschritt eine eigene Szene (Entwurf: Design-Leinwand "Eine Animation je Pruefschritt"), Ring = Fortschritt des Schritts -->
-        <div class="stage-visual" id="stageVisual" data-phase="ingest">
+        <div class="stage-visual" id="stageVisual">
           <svg viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="88" class="sv-bg"/>
             <circle cx="100" cy="100" r="94" class="sv-track" pathLength="100"/>
             <circle cx="100" cy="100" r="94" class="sv-ring" id="stageRing" pathLength="100"/>
-            <g class="scene" data-scene="ingest"><path d="M58 128v18a6 6 0 0 0 6 6h72a6 6 0 0 0 6-6v-18" class="sv-line"/><path d="M58 128h24l6 10h24l6-10h24" class="sv-line"/><rect class="tv-drop tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d2 tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d3 tvb" x="86" y="92" width="28" height="34" rx="4"/></g>
+            <g class="scene on" data-scene="ingest"><path d="M58 128v18a6 6 0 0 0 6 6h72a6 6 0 0 0 6-6v-18" class="sv-line"/><path d="M58 128h24l6 10h24l6-10h24" class="sv-line"/><rect class="tv-drop tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d2 tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d3 tvb" x="86" y="92" width="28" height="34" rx="4"/></g>
             <g class="scene" data-scene="prescan"><rect x="64" y="48" width="72" height="104" rx="8" class="sv-line"/><path d="M80 74h40M80 90h40M80 106h28M80 122h40" class="sv-line sv-soft"/><rect class="tv-scan tvaf" x="56" y="54" width="88" height="5" rx="2.5"/></g>
             <g class="scene" data-scene="cve"><ellipse cx="100" cy="62" rx="38" ry="12" class="sv-line"/><path d="M62 62v76c0 6.6 17 12 38 12s38-5.4 38-12V62M62 88c0 6.6 17 12 38 12s38-5.4 38-12M62 113c0 6.6 17 12 38 12s38-5.4 38-12" class="sv-line"/><path class="tv-hit tvbs" d="M62 88c0 6.6 17 12 38 12s38-5.4 38-12"/><path class="tv-hit d2 tvbs" d="M62 113c0 6.6 17 12 38 12s38-5.4 38-12"/></g>
             <g class="scene" data-scene="webscan"><circle cx="100" cy="100" r="40" class="sv-line"/><ellipse cx="100" cy="100" rx="16" ry="40" class="sv-line"/><path d="M60 100h80" class="sv-line"/><g class="tv-orbit"><circle class="tvb" cx="100" cy="44" r="7"/></g></g>
@@ -348,12 +348,29 @@
             <g class="scene" data-scene="analyze"><g class="tv-wind tva"><path d="M30 70h70"/><path d="M40 104h60"/><path d="M26 136h70"/></g><path class="tvb" d="M96.5 89h7v26l-3.5 7-3.5-7z"/><g class="tv-vane tvb"><g transform="translate(68 64)"><path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/></g></g></g>
             <g class="scene" data-scene="validate"><path d="M100 74v62M82 140h36" class="sv-line"/><g class="tv-tilt"><path d="M58 74h84" class="sv-line"/><path d="M58 74l-12 28h24zM142 74l-12 28h24z" class="sv-line sv-thin"/><path class="tvb" d="M46 102a12 7 0 0 0 24 0z"/><path class="tvaf" d="M130 102a12 7 0 0 0 24 0z"/></g><circle cx="100" cy="72" r="6" class="sv-dot"/></g>
             <g class="scene" data-scene="done"><circle cx="100" cy="100" r="42" class="tvo"/><path class="tv-draw tvo sv-check" d="M80 101l14 14 28-30"/></g>
+            <g class="scene" data-scene="unpack"><rect x="62" y="98" width="76" height="50" rx="6" class="sv-line"/><path d="M92 108h16M92 120h16M92 132h16" class="sv-line sv-thin sv-soft"/><rect class="tv-popup tvb" x="88" y="84" width="24" height="28" rx="3"/><g class="tv-lid"><path d="M58 98h84l-6-16H64z" class="sv-line sv-filled"/></g></g>
+            <g class="scene" data-scene="git"><path d="M40 100h120" class="sv-line sv-soft"/><circle cx="52" cy="100" r="7" class="sv-line sv-filled"/><circle cx="84" cy="100" r="7" class="sv-line sv-filled"/><circle cx="116" cy="100" r="7" class="sv-line sv-filled"/><circle cx="148" cy="100" r="7" class="sv-line sv-filled"/><circle class="tv-hit tvb" cx="116" cy="100" r="7"/><circle class="tv-hit d3 tvb" cx="52" cy="100" r="7"/><g class="tv-move"><circle cx="52" cy="100" r="15" class="tva"/></g></g>
+            <g class="scene" data-scene="malware"><circle class="tv-ping tva" cx="100" cy="100" r="22"/><circle class="tv-ping d2 tva" cx="100" cy="100" r="22"/><ellipse cx="100" cy="110" rx="17" ry="23" class="sv-line sv-filled"/><circle cx="100" cy="80" r="9" class="sv-line sv-filled"/><path d="M83 102H70M83 116H70M117 102h13M117 116h13M91 86l-8-8M109 86l8-8M100 92v40" class="sv-line sv-thin"/><circle class="tv-hit tvb" cx="93" cy="108" r="3.5"/><circle class="tv-hit d2 tvb" cx="107" cy="118" r="3.5"/></g>
+            <g class="scene" data-scene="ocr"><rect x="56" y="56" width="88" height="88" rx="8" class="sv-line"/><path d="M64 134l22-26 14 14 10-10 18 22" class="sv-line sv-thin sv-soft"/><circle cx="124" cy="74" r="6" class="sv-line sv-thin sv-soft"/><rect class="tv-type tvaf" x="68" y="70" width="44" height="6" rx="3"/><rect class="tv-type d2 tvaf" x="68" y="84" width="30" height="6" rx="3"/></g>
+            <g class="scene" data-scene="cvedetails"><rect x="76" y="50" width="64" height="86" rx="8" class="sv-line sv-filled sv-soft"/><rect x="62" y="62" width="64" height="86" rx="8" class="sv-line sv-filled"/><path d="M74 82h40M74 96h40M74 110h24" class="sv-line sv-thin"/><rect class="tv-type tvb" x="74" y="122" width="36" height="7" rx="3.5"/></g>
+            <g class="scene" data-scene="tls"><g class="tv-shackle"><path d="M80 98V82a20 20 0 0 1 40 0v16" class="sv-line"/></g><rect x="68" y="96" width="64" height="52" rx="9" class="sv-line sv-filled"/><circle cx="100" cy="118" r="6" class="tvb"/><path d="M100 122v10" class="tvbs"/></g>
+            <g class="scene" data-scene="crawl"><path d="M100 69v26M100 69L64 95M100 69l36 26M64 113v22M136 113v22" class="sv-line sv-thin sv-soft"/><circle cx="100" cy="60" r="9" class="sv-line sv-filled"/><circle cx="64" cy="104" r="9" class="sv-line sv-filled"/><circle cx="100" cy="104" r="9" class="sv-line sv-filled"/><circle cx="136" cy="104" r="9" class="sv-line sv-filled"/><circle cx="64" cy="144" r="9" class="sv-line sv-filled"/><circle cx="136" cy="144" r="9" class="sv-line sv-filled"/><circle class="tv-hit d5 tvb" cx="100" cy="60" r="6"/><circle class="tv-hit d3 tvb" cx="64" cy="104" r="6"/><circle class="tv-hit tvb" cx="100" cy="104" r="6"/><circle class="tv-hit d2 tvb" cx="136" cy="104" r="6"/><circle class="tv-hit d4 tvb" cx="64" cy="144" r="6"/><circle class="tv-hit d2 tvb" cx="136" cy="144" r="6"/></g>
+            <g class="scene" data-scene="login"><rect x="60" y="54" width="80" height="94" rx="9" class="sv-line"/><circle cx="100" cy="76" r="9" class="sv-line sv-thin"/><rect x="72" y="94" width="56" height="13" rx="4" class="sv-line sv-thin"/><rect x="72" y="113" width="56" height="13" rx="4" class="sv-line sv-thin"/><circle class="tv-hit d5 tvb" cx="81" cy="119.5" r="2.8"/><circle class="tv-hit d3 tvb" cx="90" cy="119.5" r="2.8"/><circle class="tv-hit tvb" cx="99" cy="119.5" r="2.8"/><circle class="tv-hit d4 tvb" cx="108" cy="119.5" r="2.8"/><rect x="80" y="134" width="40" height="7" rx="3.5" class="tvaf"/></g>
+            <g class="scene" data-scene="browser"><rect x="50" y="60" width="100" height="80" rx="8" class="sv-line"/><path d="M50 76h100" class="sv-line sv-thin"/><path d="M60 68h.01M68 68h.01M76 68h.01" class="sv-line sv-dots"/><path d="M62 92h44M62 104h60M62 116h32" class="sv-line sv-thin sv-soft"/><g class="tv-cursor"><path d="M0 0v20l5.5-5.5 4.5 10 4.5-2-4.5-10H18z" class="tvb"/></g></g>
+            <g class="scene" data-scene="secrets"><circle cx="78" cy="104" r="15" class="sv-line"/><path d="M93 104h50M130 104v12M141 104v9" class="sv-line"/><g class="tv-glide"><circle cx="0" cy="0" r="16" class="tva"/><path d="M11 11l12 12" class="tva"/></g></g>
+            <g class="scene" data-scene="sast"><path d="M78 74l-22 26 22 26M122 74l22 26-22 26M108 68l-16 64" class="sv-line"/><rect class="tv-scan tvaf" x="48" y="58" width="104" height="5" rx="2.5"/></g>
+            <g class="scene" data-scene="deps"><path d="M58 72l28 22M142 72l-28 22M58 132l28-20M142 132l-28-20" class="sv-line sv-thin sv-soft"/><path d="M100 76l22 12v24l-22 12-22-12V88zM78 88l22 12 22-12M100 100v24" class="sv-line sv-filled"/><circle cx="52" cy="68" r="8" class="sv-line sv-filled"/><circle cx="148" cy="68" r="8" class="sv-line sv-filled"/><circle cx="52" cy="136" r="8" class="sv-line sv-filled"/><circle cx="148" cy="136" r="8" class="sv-line sv-filled"/><circle class="tv-hit tvb" cx="52" cy="68" r="5"/><circle class="tv-hit d2 tvb" cx="148" cy="136" r="5"/><circle class="tv-hit d3 tvb" cx="148" cy="68" r="5"/><circle class="tv-hit d4 tvb" cx="52" cy="136" r="5"/></g>
+            <g class="scene" data-scene="container"><g class="tv-float d3"><path d="M100 110l38 19-38 19-38-19z" class="sv-line sv-filled"/></g><g class="tv-float d2"><path d="M100 88l38 19-38 19-38-19z" class="sv-line sv-filled"/></g><g class="tv-float"><path d="M100 66l38 19-38 19-38-19z" class="sv-line sv-filled"/><path d="M100 79l12 6-12 6-12-6z" class="tvb"/></g></g>
+            <g class="scene" data-scene="greenbone"><path d="M100 50l38 14v27c0 24-16 42-38 51-22-9-38-27-38-51V64z" class="sv-line sv-filled"/><rect class="tv-scan tvaf" x="70" y="66" width="60" height="5" rx="2.5"/><path d="M88 102l8 8 18-18" class="tvo sv-check sv-soft"/></g>
+            <g class="scene" data-scene="sort"><path d="M56 146h88" class="sv-line"/><rect class="tv-bar tvaf" x="62" y="70" width="14" height="72" rx="3"/><rect class="tv-bar d2 tvb" x="84" y="70" width="14" height="72" rx="3"/><rect class="tv-bar d3 tvaf" x="106" y="70" width="14" height="72" rx="3"/><rect class="tv-bar d4 tvaf" x="128" y="70" width="14" height="72" rx="3"/></g>
           </svg>
         </div>
         <div class="stage-info">
           <span class="eyebrow" id="stageStep">Schritt 1 von 8</span>
           <strong class="stage-phase" id="stagePhase">Sammeln</strong>
+          <div class="stage-sub"><span class="stage-sub-label" id="stageSubLabel">Dateien werden gelesen</span><span class="stage-sub-tool" id="stageSubTool" hidden></span></div>
           <span class="stage-msg" id="stageMsg">Starte …</span>
+          <ul class="stage-trail" id="stageTrail" aria-label="Zuletzt erledigt"></ul>
           <div class="stage-stats">
             <div><span class="stage-n" id="stageElapsed">0 s</span><span class="stage-l">vergangen</span></div>
             <div><span class="stage-n" id="stageEta">–</span><span class="stage-l">noch etwa</span></div>
@@ -371,7 +388,14 @@
       <div class="bar"><div id="barFill" class="bar-fill"></div></div>
       <div id="stepper" class="stepper"></div>
       <button id="logToggle" class="adv-toggle" aria-expanded="false">Technische Details</button>
-      <pre id="log" class="log" hidden></pre>
+      <div id="tech" class="tech" hidden>
+        <div class="tech-head">
+          <div class="tech-stats" id="techStats"></div>
+          <span class="seg" role="radiogroup" aria-label="Ansicht der Details" id="techSeg"><button type="button" role="radio" aria-checked="true" data-tech="timeline">Ablauf</button><button type="button" role="radio" aria-checked="false" data-tech="raw">Rohprotokoll</button></span>
+        </div>
+        <ol id="timeline" class="timeline" aria-label="Ablauf der Prüfung"></ol>
+        <pre id="log" class="log" hidden></pre>
+      </div>
     </section>
 
     <!-- Ergebnis -->
