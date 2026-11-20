@@ -201,10 +201,16 @@ async function runAudit(opts = {}) {
     toast(res.canceled ? 'Abgebrochen – Teilergebnis geladen' : `Fertig: ${n} ${n === 1 ? 'Befund' : 'Befunde'} in ${took}`, 'ok');
   }
 }
-// Radar-Buehne: Phase, Meldung, Fortschritt und ein Leuchtpunkt je Ereignis
+// Buehne: je Schritt eine eigene Szene (data-phase), der Ring zeigt den Fortschritt des Schritts
+function setStageScene(phase, pct) {
+  const v = $('stageVisual');
+  if (!v) return;
+  if (phase) v.dataset.phase = phase;
+  if (pct != null) $('stageRing').style.strokeDashoffset = String(100 - Math.max(0, Math.min(100, pct)));
+}
 function resetStage() {
   state.stagePhase = null;
-  $('radarBlips').innerHTML = '';
+  setStageScene('ingest', 0);
   $('stagePhase').textContent = state.runPhases[0].label;
   $('stageStep').textContent = `Schritt 1 von ${state.runPhases.length}`;
   $('stageMsg').textContent = 'Starte …';
@@ -219,19 +225,12 @@ function updateStage(p) {
     el.textContent = phases[i].label;
     el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');
     $('stageStep').textContent = `Schritt ${i + 1} von ${phases.length}`;
+    setStageScene(p.phase, p.phase === 'done' ? 100 : 0);
   }
   if (p.message) $('stageMsg').textContent = p.message;
-  $('stagePct').textContent = p.total ? Math.round((p.done / p.total) * 100) + ' %' : '–';
-  // Leuchtpunkt an zufaelliger Stelle im Radar (hoechstens 14 sichtbar)
-  const box = $('radarBlips');
-  const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 50;
-  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  c.setAttribute('cx', (100 + Math.cos(a) * r).toFixed(1));
-  c.setAttribute('cy', (100 + Math.sin(a) * r).toFixed(1));
-  c.setAttribute('r', '3');
-  c.setAttribute('class', Math.random() < 0.2 ? 'blip alt' : 'blip');
-  box.appendChild(c);
-  while (box.childNodes.length > 14) box.firstChild.remove();
+  const pct = p.total ? Math.round((p.done / p.total) * 100) : null;
+  $('stagePct').textContent = pct != null ? pct + ' %' : '–';
+  if (pct != null) setStageScene(null, pct);
 }
 const fmtElapsed = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`; };
 

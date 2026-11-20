@@ -198,8 +198,12 @@ function toast(msg, kind = 'info') {
   el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
   el.textContent = msg;
   box.appendChild(el);
-  setTimeout(() => el.classList.add('out'), 3800);
-  setTimeout(() => el.remove(), 4300);
+  // Bleibt stehen, solange die Maus darauf ist (WCAG 2.2.1), danach laeuft die Restzeit weiter
+  let left = 3800, started = Date.now(), timer = null;
+  const arm = () => { started = Date.now(); timer = setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, left); };
+  el.addEventListener('mouseenter', () => { clearTimeout(timer); left = Math.max(800, left - (Date.now() - started)); });
+  el.addEventListener('mouseleave', arm);
+  arm();
 }
 function flash(msg) {
   if (!msg) return;

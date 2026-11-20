@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Fassung fuer 16–32 px: Schild etwas groesser, V-Ausschnitt breiter, damit er bei 16 px offen bleibt -->
-  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="#0f1b2d"/>
-  <path fill="#f2b23a" d="M216 208 L380 208 L512 540 L644 208 L808 208 L808 492 C808 676 692 808 512 892 C332 808 216 676 216 492 Z"/>
+  <!-- Fassung fuer 16–32 px: Fahne groesser, damit Mast und Pfeil bei 16 px offen bleiben -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="#121a2a"/>
+  <g transform="translate(64 36) scale(14)" fill="#f2b23a">
+    <path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/><path d="M28.5 25h7v24l-3.5 7-3.5-7z"/>
+  </g>
 </svg>

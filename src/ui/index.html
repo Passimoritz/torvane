@@ -334,21 +334,20 @@
     <!-- Fortschritt -->
     <section class="card progress" id="progressPanel" hidden aria-live="polite">
       <div class="scan-stage" id="scanStage" aria-hidden="true">
-        <div class="radar">
+        <!-- Buehne: je Pruefschritt eine eigene Szene (Entwurf: Design-Leinwand "Eine Animation je Pruefschritt"), Ring = Fortschritt des Schritts -->
+        <div class="stage-visual" id="stageVisual" data-phase="ingest">
           <svg viewBox="0 0 200 200">
-            <defs>
-              <radialGradient id="radarSweep" cx="0" cy="1" r="1"><stop offset="0" class="rs-a"/><stop offset="1" class="rs-b"/></radialGradient>
-            </defs>
-            <circle cx="100" cy="100" r="98" class="radar-bg"/>
-            <g fill="none" class="radar-rings">
-              <circle cx="100" cy="100" r="34" stroke-opacity=".45"/>
-              <circle cx="100" cy="100" r="60" stroke-opacity=".3"/>
-              <circle cx="100" cy="100" r="86" stroke-opacity=".18"/>
-              <path d="M100 6v188M6 100h188" stroke-opacity=".12"/>
-            </g>
-            <g class="radar-sweep"><path d="M100 100 L100 6 A94 94 0 0 1 181 53 Z" fill="url(#radarSweep)"/><path d="M100 100 L181 53" class="radar-arm" stroke-width="1.5"/></g>
-            <g id="radarBlips"></g>
-            <g class="radar-shield"><g transform="translate(76 74) scale(.75)"><path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/><path d="M28.5 25h7v24l-3.5 7-3.5-7z"/></g></g>
+            <circle cx="100" cy="100" r="88" class="sv-bg"/>
+            <circle cx="100" cy="100" r="94" class="sv-track" pathLength="100"/>
+            <circle cx="100" cy="100" r="94" class="sv-ring" id="stageRing" pathLength="100"/>
+            <g class="scene" data-scene="ingest"><path d="M58 128v18a6 6 0 0 0 6 6h72a6 6 0 0 0 6-6v-18" class="sv-line"/><path d="M58 128h24l6 10h24l6-10h24" class="sv-line"/><rect class="tv-drop tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d2 tvb" x="86" y="92" width="28" height="34" rx="4"/><rect class="tv-drop d3 tvb" x="86" y="92" width="28" height="34" rx="4"/></g>
+            <g class="scene" data-scene="prescan"><rect x="64" y="48" width="72" height="104" rx="8" class="sv-line"/><path d="M80 74h40M80 90h40M80 106h28M80 122h40" class="sv-line sv-soft"/><rect class="tv-scan tvaf" x="56" y="54" width="88" height="5" rx="2.5"/></g>
+            <g class="scene" data-scene="cve"><ellipse cx="100" cy="62" rx="38" ry="12" class="sv-line"/><path d="M62 62v76c0 6.6 17 12 38 12s38-5.4 38-12V62M62 88c0 6.6 17 12 38 12s38-5.4 38-12M62 113c0 6.6 17 12 38 12s38-5.4 38-12" class="sv-line"/><path class="tv-hit tvbs" d="M62 88c0 6.6 17 12 38 12s38-5.4 38-12"/><path class="tv-hit d2 tvbs" d="M62 113c0 6.6 17 12 38 12s38-5.4 38-12"/></g>
+            <g class="scene" data-scene="webscan"><circle cx="100" cy="100" r="40" class="sv-line"/><ellipse cx="100" cy="100" rx="16" ry="40" class="sv-line"/><path d="M60 100h80" class="sv-line"/><g class="tv-orbit"><circle class="tvb" cx="100" cy="44" r="7"/></g></g>
+            <g class="scene" data-scene="active"><circle class="tv-ping tva" cx="100" cy="100" r="22"/><circle class="tv-ping d2 tva" cx="100" cy="100" r="22"/><circle class="tv-ping d3 tva" cx="100" cy="100" r="22"/><rect x="80" y="86" width="40" height="28" rx="5" class="sv-line sv-filled"/><path d="M90 100h.01M101 100h.01" class="tvbs sv-dots"/></g>
+            <g class="scene" data-scene="analyze"><g class="tv-wind tva"><path d="M30 70h70"/><path d="M40 104h60"/><path d="M26 136h70"/></g><path class="tvb" d="M96.5 89h7v26l-3.5 7-3.5-7z"/><g class="tv-vane tvb"><g transform="translate(68 64)"><path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/></g></g></g>
+            <g class="scene" data-scene="validate"><path d="M100 74v62M82 140h36" class="sv-line"/><g class="tv-tilt"><path d="M58 74h84" class="sv-line"/><path d="M58 74l-12 28h24zM142 74l-12 28h24z" class="sv-line sv-thin"/><path class="tvb" d="M46 102a12 7 0 0 0 24 0z"/><path class="tvaf" d="M130 102a12 7 0 0 0 24 0z"/></g><circle cx="100" cy="72" r="6" class="sv-dot"/></g>
+            <g class="scene" data-scene="done"><circle cx="100" cy="100" r="42" class="tvo"/><path class="tv-draw tvo sv-check" d="M80 101l14 14 28-30"/></g>
           </svg>
         </div>
         <div class="stage-info">

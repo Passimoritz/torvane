@@ -69,6 +69,10 @@
   --shadow-pop: 0 16px 48px -12px rgba(16, 24, 40, .28), 0 0 0 1px var(--line);
   --ring: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent);
   --ease: cubic-bezier(.2, .7, .2, 1);
+  /* Bewegung: kurz fuer Rueckmeldung, mittel fuer Einblenden, lang fuer Seitenwechsel */
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 320ms;
   color-scheme: light;
 }
 /* Dunkel: folgt Windows, ausser in den Einstellungen ist fest Hell oder Dunkel gewaehlt */
@@ -138,7 +142,7 @@ kbd {
 /* --- App-Rahmen ------------------------------------------------------------ */
 .app { display: grid; grid-template-columns: 244px minmax(0, 1fr); height: 100vh; }
 .main { overflow-y: auto; overflow-x: hidden; scroll-behavior: auto; }
-.view { max-width: 1320px; margin: 0 auto; padding: var(--sp-8) var(--sp-10) 56px; animation: viewIn .2s var(--ease); }
+.view { max-width: 1320px; margin: 0 auto; padding: var(--sp-8) var(--sp-10) 56px; animation: viewIn var(--dur-slow) var(--ease); }
 @keyframes viewIn { from { opacity: 0; transform: translateY(4px); } }
 @keyframes fadeIn { from { opacity: 0; } }
 
@@ -209,7 +213,8 @@ kbd {
 .flow-label b { font-size: var(--fs-sm); color: inherit; font-weight: var(--fw-semi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .flow-label small { font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .flow-step.done { color: var(--text-strong); }
-.flow-step.done .flow-num { color: var(--surface); background: var(--ok); }
+.flow-step.done .flow-num { color: var(--surface); background: var(--ok); animation: flowPop var(--dur-slow) var(--ease); }
+@keyframes flowPop { 0% { transform: scale(.6); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 .flow-step.current { color: var(--text-strong); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .flow-step.current .flow-num { color: var(--accent-ink); background: var(--accent); }
 
@@ -244,7 +249,7 @@ kbd {
   width: max-content; max-width: min(340px, 78vw); padding: 10px 12px; border-radius: var(--r);
   font: 400 var(--fs-sm)/1.5 var(--font); text-align: left; letter-spacing: 0; text-transform: none; white-space: normal;
   color: var(--text); background: var(--surface); box-shadow: var(--shadow-pop); cursor: auto;
-  visibility: hidden; opacity: 0; transition: opacity .12s, visibility .12s;
+  visibility: hidden; opacity: 0; transition: opacity var(--dur), visibility var(--dur);
 }
 .tip-body b { color: var(--text-strong); }
 .tip.align-start .tip-body { left: -6px; transform: none; }
@@ -539,21 +544,46 @@ input[type=range] { accent-color: var(--accent); }
 .progress.done .log { flex-basis: 100%; }
 #pauseBtn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-text); }
 .scan-stage { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--sp-8); align-items: center; padding: 4px 4px 20px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
-.radar { position: relative; width: 180px; height: 180px; color: var(--accent); }
-.radar svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.radar-bg { fill: var(--surface-2); }
-.radar-rings { stroke: currentColor; }
-.radar-arm { stroke: currentColor; stroke-opacity: .8; }
-.rs-a { stop-color: var(--accent); stop-opacity: .38; }
-.rs-b { stop-color: var(--accent); stop-opacity: 0; }
-.radar-sweep { transform-origin: 100px 100px; animation: sweep 3.2s linear infinite; }
-@keyframes sweep { to { transform: rotate(360deg); } }
-.radar-shield { fill: var(--brand); }
-.radar-shield { transform-origin: 100px 96px; animation: breathe 2.4s ease-in-out infinite; }
-@keyframes breathe { 50% { transform: scale(1.06); } }
-.blip { fill: var(--accent); animation: blipIn 2.8s ease-out forwards; transform-box: fill-box; transform-origin: center; }
-.blip.alt { fill: var(--brand); }
-@keyframes blipIn { 0% { opacity: 0; transform: scale(2.4); } 12% { opacity: 1; transform: scale(1); } 100% { opacity: .35; transform: scale(1); } }
+/* Buehne: je Pruefschritt eine Szene, Ring = Fortschritt des Schritts (Entwurf: Design-Leinwand) */
+.stage-visual { position: relative; width: 180px; height: 180px; color: var(--text); }
+.stage-visual svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.sv-bg { fill: var(--surface-2); }
+.sv-track, .sv-ring { fill: none; stroke-width: 5; transform: rotate(-90deg); transform-origin: 100px 100px; }
+.sv-track { stroke: var(--surface-3); }
+.sv-ring { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset var(--dur-slow) var(--ease); }
+.sv-line { fill: none; stroke: currentColor; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.sv-thin { stroke-width: 4; } .sv-soft { opacity: .5; } .sv-filled { fill: var(--surface-2); }
+.sv-dot { fill: currentColor; }
+.sv-dots { stroke-width: 7; stroke-linecap: round; }
+.tvb { fill: var(--brand); } .tvbs { fill: none; stroke: var(--brand); stroke-width: 6; }
+.tva { fill: none; stroke: var(--accent); stroke-width: 4; } .tvaf { fill: var(--accent); }
+.tvo { fill: none; stroke: var(--ok); stroke-width: 5; } .sv-check { stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.tv-wind { stroke-width: 3; stroke-linecap: round; }
+.scene { display: none; }
+.stage-visual[data-phase="ingest"] [data-scene="ingest"], .stage-visual[data-phase="prescan"] [data-scene="prescan"],
+.stage-visual[data-phase="cve"] [data-scene="cve"], .stage-visual[data-phase="webscan"] [data-scene="webscan"],
+.stage-visual[data-phase="active"] [data-scene="active"], .stage-visual[data-phase="analyze"] [data-scene="analyze"],
+.stage-visual[data-phase="validate"] [data-scene="validate"], .stage-visual[data-phase="done"] [data-scene="done"] { display: inline; animation: sceneIn var(--dur-slow) var(--ease); }
+@keyframes sceneIn { from { opacity: 0; } }
+@keyframes tv-drop { 0% { transform: translateY(-56px); opacity: 0; } 25% { opacity: 1; } 55% { transform: translateY(0); opacity: 1; } 80%, 100% { transform: translateY(10px); opacity: 0; } }
+@keyframes tv-scan { from { transform: translateY(0); } to { transform: translateY(86px); } }
+@keyframes tv-hit { 0%, 100% { opacity: 0; } 30%, 55% { opacity: 1; } }
+@keyframes tv-spin { to { transform: rotate(360deg); } }
+@keyframes tv-ping { 0% { transform: scale(.7); opacity: .8; } 100% { transform: scale(2.7); opacity: 0; } }
+@keyframes tv-sway { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes tv-wind { 0% { stroke-dashoffset: 60; opacity: 0; } 20% { opacity: .8; } 100% { stroke-dashoffset: -60; opacity: 0; } }
+@keyframes tv-tilt { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg); } }
+@keyframes tv-draw { 0% { stroke-dashoffset: 64; } 100% { stroke-dashoffset: 0; } }
+.tv-drop { animation: tv-drop 2.4s var(--ease) infinite; } .tv-drop.d2 { animation-delay: .8s; } .tv-drop.d3 { animation-delay: 1.6s; }
+.tv-scan { animation: tv-scan 1.6s ease-in-out infinite alternate; }
+.tv-hit { animation: tv-hit 2.4s ease-in-out infinite; } .tv-hit.d2 { animation-delay: 1.2s; }
+.tv-orbit { transform-origin: 100px 100px; animation: tv-spin 3.2s linear infinite; }
+.tv-ping { transform-origin: 100px 100px; animation: tv-ping 2.4s ease-out infinite; } .tv-ping.d2 { animation-delay: .8s; } .tv-ping.d3 { animation-delay: 1.6s; }
+.tv-vane { transform-origin: 100px 86px; animation: tv-sway 3.6s ease-in-out infinite; }
+.tv-wind path { stroke-dasharray: 30 90; animation: tv-wind 2.4s linear infinite; } .tv-wind path:nth-child(2) { animation-delay: .8s; } .tv-wind path:nth-child(3) { animation-delay: 1.6s; }
+.tv-tilt { transform-origin: 100px 74px; animation: tv-tilt 3s ease-in-out infinite; }
+.tv-draw { stroke-dasharray: 64; animation: tv-draw .9s var(--ease) both; }
+.progress.paused .scene * { animation-play-state: paused !important; }
 .stage-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .stage-phase { font-size: var(--fs-2xl); font-weight: var(--fw-bold); letter-spacing: -.02em; color: var(--text-strong); line-height: 1.2; }
 .stage-phase.swap { animation: phaseIn .4s var(--ease); }
@@ -939,7 +969,7 @@ abbr.gloss:focus-visible { border-radius: 3px; }
 
 /* Toasts */
 .toasts { position: fixed; bottom: 20px; right: 20px; z-index: 90; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: min(420px, calc(100vw - 40px)); }
-.toast { pointer-events: auto; padding: 11px 14px 11px 42px; border-radius: var(--r); font-size: var(--fs-sm); line-height: 1.45; color: var(--text-strong); background: var(--surface); box-shadow: var(--shadow-pop); position: relative; animation: toastIn .22s var(--ease); overflow-wrap: anywhere; }
+.toast { pointer-events: auto; padding: 11px 14px 11px 42px; border-radius: var(--r); font-size: var(--fs-sm); line-height: 1.45; color: var(--text-strong); background: var(--surface); box-shadow: var(--shadow-pop); position: relative; animation: toastIn var(--dur) var(--ease); overflow-wrap: anywhere; }
 .toast::before { content: "i"; position: absolute; left: 12px; top: 11px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--accent-ink); background: var(--accent); }
 .toast.ok::before { content: "✓"; color: var(--surface); background: var(--ok); }
 .toast.err::before { content: "!"; color: var(--surface); background: var(--danger); }

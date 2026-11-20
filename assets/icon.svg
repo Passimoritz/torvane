@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Vigil – "V-Schild": randlose Kachel in Tintenblau, Schild in Signal-Bernstein mit ausgeschnittenem V -->
-  <rect x="16" y="16" width="992" height="992" rx="224" fill="#0f1b2d"/>
+  <!-- Torvane – "T-Fahne": randlose Kachel in Nachtblau, Wetterfahne (Schweif, Pfeil, Mast) in Signal-Bernstein -->
+  <rect x="16" y="16" width="992" height="992" rx="224" fill="#121a2a"/>
   <rect x="16" y="16" width="992" height="992" rx="224" fill="none" stroke="#ffffff" stroke-opacity=".08" stroke-width="8"/>
-  <path fill="#f2b23a" d="M272 252 L392 252 L512 560 L632 252 L752 252 L752 500 C752 660 652 776 512 852 C372 776 272 660 272 500 Z"/>
+  <g transform="translate(128 104) scale(12)" fill="#f2b23a">
+    <path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/><path d="M28.5 25h7v24l-3.5 7-3.5-7z"/>
+  </g>
 </svg>

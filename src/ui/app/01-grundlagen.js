@@ -245,13 +245,17 @@ function renderFlow() {
   for (const id of ['flowScan', 'flowResults']) {
     const nav = $(id);
     if (!nav) continue;
-    nav.innerHTML = `<ol>${FLOW.map((st, i) => {
+    // Nur neu zeichnen, wenn sich etwas aendert: sonst springt die Haken-Animation bei jedem Tastendruck
+    const html = `<ol>${FLOW.map((st, i) => {
       const cls = st.key === s.current ? 'current' : s.done[st.key] ? 'done' : '';
       const disabled = st.key === 'result' && !state.lastResult && !state.running;
       return `<li><button type="button" class="flow-step ${cls}" data-flow="${st.key}"${st.key === s.current ? ' aria-current="step"' : ''}${disabled ? ' disabled' : ''}>
         <span class="flow-num" aria-hidden="true">${s.done[st.key] && st.key !== s.current ? '✓' : i + 1}</span>
         <span class="flow-label"><b>${esc(st.label)}</b><small>${esc(s.sub[st.key])}</small></span></button></li>`;
     }).join('')}</ol>`;
+    if (nav.dataset.sig === html) continue;
+    nav.dataset.sig = html;
+    nav.innerHTML = html;
   }
 }
 function goFlow(key) {
