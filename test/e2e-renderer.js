@@ -51,7 +51,8 @@
   await t('KI-Hilfe: Erklärstufen und Fix-Knopf im Detail', async () => {
     const row = [...document.querySelectorAll('#findings .frow')].find((r) => { r.click(); return !!document.querySelector('#findingDetail .gen-patch'); });
     const lv = document.querySelectorAll('#findingDetail .lvl-seg button').length;
-    return (row && lv === 3 && /Vigil ändert keine Datei/.test(document.querySelector('#findingDetail .ai-help').textContent)) || `Stufen ${lv}, Fix-Knopf ${!!row}`;
+    await wait(30); // Anzeigename (brand.js) wird per MutationObserver eingesetzt
+    return (row && lv === 3 && new RegExp((window.APP_BRAND ? window.APP_BRAND.name : 'Vigil') + ' ändert keine Datei').test(document.querySelector('#findingDetail .ai-help').textContent)) || `Stufen ${lv}, Fix-Knopf ${!!row}`;
   });
   await t('Bedrohungsmodell: STRIDE-Karten werden angezeigt', async () => {
     state.lastResult.meta = { ...(state.lastResult.meta || {}), threatModel: { source: 'rules', at: new Date().toISOString(), summary: 'Test', assets: ['Daten'], entryPoints: [], assumptions: [], threats: [{ stride: 'T', category: 'Manipulation', title: 'SQL', asset: '', description: 'd', likelihood: 'high', impact: 'high', mitigations: ['Parameter binden'], findings: [] }] } };

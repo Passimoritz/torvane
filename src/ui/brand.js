@@ -6,7 +6,7 @@
 // - die englische Uebersetzung (i18n.js) schlaegt weiter mit "Vigil" nach und setzt danach den neuen Namen ein.
 // Interne Kennungen (window.vigil, Dateinamen, IPC) bleiben bewusst unveraendert.
 (() => {
-  const NAME = 'Vigil';
+  const NAME = 'Torvane';
   const TAGLINE = 'Sicherheitsprüfung';
   const ORIGINAL = 'Vigil';
   const brand = Object.freeze({ name: NAME, tagline: TAGLINE, original: ORIGINAL });
@@ -18,6 +18,12 @@
   // Umgekehrt fuer Woerterbuch-Nachschlagen: aktueller Name -> Originalname
   const BACK = new RegExp(`\\b${NAME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
   window.unbrandText = (s) => (NAME === ORIGINAL || s == null ? s : String(s).replace(BACK, ORIGINAL));
+
+  // Native Rueckfragen und Hinweise sind keine DOM-Texte
+  for (const fn of ['confirm', 'alert']) {
+    const native = window[fn];
+    if (native && NAME !== ORIGINAL) window[fn] = (m) => native.call(window, window.brandText(m));
+  }
 
   const ATTRS = ['placeholder', 'title', 'aria-label'];
   const has = (s) => { RE.lastIndex = 0; return RE.test(s); };
@@ -41,8 +47,14 @@
     apply(document.body);
     if (NAME === ORIGINAL) return;
     // Spaeter eingefuegte Inhalte ebenfalls umbenennen
-    new MutationObserver((muts) => { for (const m of muts) for (const n of m.addedNodes) apply(n); })
-      .observe(document.body, { childList: true, subtree: true });
+    // Spaeter eingefuegte Knoten, geaenderte Texte und Attribute; jede Ersetzung entfernt den alten Namen, also keine Schleife
+    new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type === 'childList') m.addedNodes.forEach(apply);
+        else if (m.type === 'characterData') apply(m.target);
+        else { const v = m.target.getAttribute(m.attributeName); if (v && has(v)) m.target.setAttribute(m.attributeName, window.brandText(v)); }
+      }
+    }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
