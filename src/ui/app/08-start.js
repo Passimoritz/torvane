@@ -69,7 +69,6 @@ async function init() {
   $('cancelBtn').onclick = async () => { $('cancelBtn').disabled = true; $('progressTitle').textContent = 'Wird abgebrochen …'; await window.vigil.cancelAudit(); };
   // Technische Details: Zeitleiste der Zwischenschritte, Rohprotokoll per Umschalter
   $('techSeg').querySelectorAll('[data-tech]').forEach((b) => b.onclick = () => setTechView(b.dataset.tech));
-  $('logToggle').onclick = () => showTech($('tech').hidden);
   const exportAs = (fmt) => async () => {
     closeMenus();
     if (fmt === 'pdf' || fmt === 'auditzip') flash(fmt === 'pdf' ? 'Erzeuge PDF …' : 'Erzeuge Audit-Paket …');

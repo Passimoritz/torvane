@@ -127,7 +127,8 @@
       return low.length ? low.map((p) => `${p[0]} auf ${p[1]}: ${p[2].toFixed(2)}`).join('; ') : true;
     });
   }
-  await t('Barrierefreiheit: Tastaturfokus sichtbar', () => { showView('scan'); const b = $('addTargetBtn'); b.focus(); const s = getComputedStyle(b); return (document.activeElement === b && (s.outlineStyle !== 'none' || s.boxShadow !== 'none')) || 'kein sichtbarer Fokusrahmen'; });
+  // Chrome zeigt :focus-visible bei Skript-Fokus nur, wenn der vorige Fokus es auch tat – deshalb vorher loesen
+  await t('Barrierefreiheit: Tastaturfokus sichtbar', () => { showView('scan'); if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); const b = $('addTargetBtn'); b.focus(); const s = getComputedStyle(b); return (document.activeElement === b && (s.outlineStyle !== 'none' || s.boxShadow !== 'none')) || 'kein sichtbarer Fokusrahmen'; });
 
 
   // --- Erweiterungen: Palette, Gruppierung, Layout, Notizen, Rueckgaengig, Glossar, Vergleich, Branding ---

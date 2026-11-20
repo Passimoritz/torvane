@@ -617,7 +617,7 @@ input[type=range] { accent-color: var(--accent); }
 .tech-stats { display: flex; gap: 8px; flex-wrap: wrap; }
 .tech-stats span { display: inline-flex; align-items: center; gap: 6px; height: var(--pill-h); padding: 0 10px; border-radius: var(--r-pill); font-size: var(--fs-xs); color: var(--muted); background: var(--surface-2); }
 .tech-stats b { color: var(--text-strong); font-variant-numeric: tabular-nums; }
-.timeline { list-style: none; margin: 0; padding: 0; max-height: 340px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--r); }
+.timeline { list-style: none; margin: 0; padding: 0; height: 300px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: var(--r); }
 .tl-phase { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px; font-size: var(--fs-xs); font-weight: var(--fw-bold); color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--line); }
 .tl-phase::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 .tl-row { display: grid; grid-template-columns: 56px 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; min-height: 40px; padding: 6px 14px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
@@ -634,7 +634,11 @@ input[type=range] { accent-color: var(--accent); }
 .tl-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width var(--dur-slow) var(--ease); }
 .tl-count { font: 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
 .tl-dur { font: 12px/1 var(--mono); color: var(--muted); }
-.tech .log { margin-top: 0; }
+.tech .log { margin-top: 0; height: 300px; max-height: none; overscroll-behavior: contain; }
+.tech { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.tech-head { flex-wrap: wrap; }
+.tech-title { font-size: var(--fs-md); margin-right: auto; }
+.progress.done .tech { margin-top: 4px; }
 .progress.done .tech { flex-basis: 100%; }
 @media (max-width: 620px) { .tl-row { grid-template-columns: 22px minmax(0, 1fr); } .tl-time, .tl-side { display: none; } }
 .stage-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }

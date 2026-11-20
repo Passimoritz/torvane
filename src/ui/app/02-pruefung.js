@@ -91,12 +91,15 @@ async function refreshEstimate() {
   $('estSwitch').onclick = () => { state.config.analysisDepth = o.depth; saveCfg(); refreshEstimate(); toast(`${modeName(o.depth)}-Modus aktiv`, 'ok'); };
 }
 
-// Protokoll: folgt nur dann den neuen Zeilen, wenn man unten steht. Wer nach oben scrollt, bleibt dort.
+// Protokoll: neueste Zeile oben. Wer oben steht, sieht sie sofort; wer nach unten gescrollt hat,
+// bleibt an derselben Stelle stehen (die neue Zeile schiebt den Inhalt nicht weg).
 function appendRunLog(line) {
   const log = $('log');
-  const follow = log.scrollHeight - log.scrollTop - log.clientHeight < 24;
-  log.textContent += line;
-  if (follow) log.scrollTop = log.scrollHeight;
+  const atTop = log.scrollTop < 24;
+  const before = log.scrollHeight;
+  const lines = String(line).replace(/\n+$/, '').split('\n').reverse().join('\n');
+  log.textContent = lines + '\n' + log.textContent;
+  if (!atTop) log.scrollTop += log.scrollHeight - before;
 }
 
 async function runAudit(opts = {}) {
@@ -186,7 +189,7 @@ async function runAudit(opts = {}) {
     $('progressPanel').classList.add('failed');
     renderStepper('');
     showTech(true, 'raw');
-    $('log').textContent += '\nFEHLER: ' + res.error + '\n';
+    appendRunLog('FEHLER: ' + res.error + '\n');
     toast('Prüfung fehlgeschlagen: ' + res.error, 'err');
     return;
   }
@@ -315,17 +318,18 @@ function renderTimeline() {
   const tl = state.timeline || [];
   const t0 = state.runStartedAt || (tl[0] && tl[0].start) || Date.now();
   const labelOf = (ph) => (PHASES.find((x) => x.key === ph) || { label: ph }).label;
+  // Neueste oben: Schritte und Zeilen in umgekehrter Reihenfolge
   let html = '', phase = null;
-  for (const e of tl) {
+  for (const e of tl.slice().reverse()) {
     if (e.phase !== phase) { phase = e.phase; html += `<li class="tl-phase">${esc(labelOf(phase))}</li>`; }
     const pct = e.total ? Math.round((e.done / e.total) * 100) : null;
     const side = pct != null ? `<span class="tl-bar"><i style="width:${pct}%"></i></span><span class="tl-count">${e.done}/${e.total}</span>`
       : e.end ? `<span class="tl-dur">${esc(fmtElapsed(e.end - e.start))}</span>` : '';
     html += `<li class="tl-row ${e.end ? 'done' : 'now'}"><span class="tl-time">${fmtClock(e.start - t0)}</span><span class="tl-state" aria-hidden="true">${e.end ? '✓' : ''}</span><span class="tl-main"><span class="tl-label">${esc(e.label)}</span><span class="tl-detail" data-no-i18n title="${esc(e.detail)}">${esc(e.detail)}</span></span><span class="tl-side">${side}</span></li>`;
   }
-  const follow = box.scrollHeight - box.scrollTop - box.clientHeight < 24;
+  const atTop = box.scrollTop < 24, before = box.scrollHeight;
   box.innerHTML = html || '<li class="tl-phase">Noch keine Schritte</li>';
-  if (follow) box.scrollTop = box.scrollHeight;
+  if (!atTop) box.scrollTop += box.scrollHeight - before;
   const steps = tl.filter((e) => e.end).length;
   const msgs = tl.reduce((n, e) => n + e.count, 0);
   $('techStats').innerHTML = `<span><b>${steps}</b> ${steps === 1 ? 'Zwischenschritt' : 'Zwischenschritte'} erledigt</span><span><b>${msgs}</b> Meldungen</span>`;
@@ -338,7 +342,6 @@ function setTechView(v) {
 }
 function showTech(open, view) {
   $('tech').hidden = !open;
-  $('logToggle').setAttribute('aria-expanded', String(open));
   if (view) setTechView(view);
 }
 const fmtElapsed = (ms) => { const s = Math.round(ms / 1000); return s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`; };
@@ -455,7 +458,7 @@ function renderResult(result) {
 
   if (result.errors && result.errors.length) {
     showTech(true, 'raw');
-    $('log').textContent += '\nHinweise:\n' + result.errors.map((e) => '  - ' + e).join('\n') + '\n';
+    appendRunLog('Hinweise:\n' + result.errors.map((e) => '  - ' + e).join('\n') + '\n');
   }
   refreshResultView();
 }
