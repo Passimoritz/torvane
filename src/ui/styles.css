@@ -152,8 +152,8 @@ kbd {
   grid-row: span 2; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
   background: var(--brand-tile); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
 }
-.logo-tile svg { width: 24px; height: 24px; }
-.logo-tile svg path { fill: var(--brand); }
+.logo-tile svg { width: 26px; height: 26px; fill: var(--brand); }
+.ob-logo svg { width: 36px; height: 36px; }
 .brand-name { font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--text-strong); line-height: 1.15; }
 .brand-tag { font-size: var(--fs-xs); color: var(--muted); line-height: 1.25; }
 
@@ -548,7 +548,7 @@ input[type=range] { accent-color: var(--accent); }
 .rs-b { stop-color: var(--accent); stop-opacity: 0; }
 .radar-sweep { transform-origin: 100px 100px; animation: sweep 3.2s linear infinite; }
 @keyframes sweep { to { transform: rotate(360deg); } }
-.radar-shield path { fill: var(--brand); }
+.radar-shield { fill: var(--brand); }
 .radar-shield { transform-origin: 100px 96px; animation: breathe 2.4s ease-in-out infinite; }
 @keyframes breathe { 50% { transform: scale(1.06); } }
 .blip { fill: var(--accent); animation: blipIn 2.8s ease-out forwards; transform-box: fill-box; transform-origin: center; }
