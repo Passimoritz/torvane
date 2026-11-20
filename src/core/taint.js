@@ -22,8 +22,8 @@ const isTest = (u) => /(^|\/)(test|tests|__tests__|spec|e2e|fixtures?|mocks?)(\/
 
 const SINKS = [
   { kind: 'sql', cat: 'Injection', label: 'einen SQL-Befehl', re: (p) => new RegExp(`\\.(query|execute|raw|executemany)\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE)[^"']*["']\\s*[+%]\\s*${p}\\b|f["'][^"']*\\{${p}\\b|${p}\\s*[,)])`, 'i'), guard: /\?\s*[,)]|\$\d|%s['"]\s*,\s*\(|:\w+\b|escape|sanitize|parseInt|Number\(|int\(/ },
-  { kind: 'shell', cat: 'Injection', label: 'einen Systembefehl', re: (p) => new RegExp(`\\b(exec|execSync|spawn|spawnSync|execFile|system|popen|subprocess\\.(?:run|call|Popen|check_output)|os\\.system)\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|["'][^"']*["']\\s*\\+\\s*${p}\\b|f["'][^"']*\\{${p}\\b|${p}\\b)`), guard: /shlex\.quote|escapeShellArg|allowlist|whitelist/ },
-  { kind: 'eval', cat: 'Injection', label: 'ausgeführten Code (eval)', re: (p) => new RegExp(`\\b(eval|new Function|exec)\\s*\\(\\s*${p}\\b`), guard: null },
+  { kind: 'shell', cat: 'Injection', label: 'einen Systembefehl', re: (p) => new RegExp(`(?<!\\/[dgimsuy]*\\.)(?<![A-Za-z_$]*(?:[Rr]e|RE|[Rr]egex|REGEX|[Pp]attern|PATTERN|rx|matcher)\\.)\\b(exec|execSync|spawn|spawnSync|execFile|system|popen|subprocess\\.(?:run|call|Popen|check_output)|os\\.system)\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|["'][^"']*["']\\s*\\+\\s*${p}\\b|f["'][^"']*\\{${p}\\b|${p}\\b)`), guard: /shlex\.quote|escapeShellArg|allowlist|whitelist/ },
+  { kind: 'eval', cat: 'Injection', label: 'ausgeführten Code (eval)', re: (p) => new RegExp(`(?<![.\\w$])(eval|new Function|exec)\\s*\\(\\s*${p}\\b`), guard: null },
   { kind: 'html', cat: 'XSS', label: 'die ausgelieferte Webseite', re: (p) => new RegExp(`(\\.innerHTML\\s*=\\s*${p}\\b|res\\.send\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|${p}\\b)|dangerouslySetInnerHTML=\\{\\{\\s*__html:\\s*${p}\\b|render_template_string\\s*\\(\\s*${p}\\b|Markup\\s*\\(\\s*${p}\\b)`), guard: /escape|sanitize|DOMPurify|encodeURIComponent|textContent/ },
   { kind: 'path', cat: 'PathTraversal', label: 'einen Dateipfad', re: (p) => new RegExp(`\\b(readFile|readFileSync|createReadStream|writeFile|writeFileSync|unlink|sendFile|open)\\s*\\(\\s*(?:path\\.join\\([^)]*\\b${p}\\b|${p}\\b|\`[^\`]*\\$\\{\\s*${p}\\b)`), guard: /path\.basename|startsWith\(|secure_filename|realpath/ },
   { kind: 'ssrf', cat: 'SSRF', label: 'den Abruf einer fremden Adresse (SSRF)', re: (p) => new RegExp(`\\b(fetch|axios(?:\\.get|\\.post)?|got|http\\.get|https\\.get|requests\\.(?:get|post)|urlopen)\\s*\\(\\s*(?:\`[^\`]*\\$\\{\\s*${p}\\b|${p}\\b)`), guard: /allowlist|allowedHosts|whitelist|new URL\([^)]*\)\.host(name)?\s*(===|!==|in)/ },
@@ -61,6 +61,22 @@ function functionsOf(u) {
   return out;
 }
 
+// Darf Datei `caller` eine Funktion aus `def` aufrufen? Gleiche Datei oder ein Import/require, dessen Pfad auf
+// den Dateinamen von `def` endet. Ohne diese Pruefung verbanden gleichnamige Funktionen fremde Module (Web <-> Server).
+const stem = (f) => f.replace(/\.(m?[jt]sx?|cjs|py)$/i, '').split('/');
+function canCall(caller, def) {
+  if (base(caller) === def) return true;
+  const parts = stem(def);
+  const name = parts[parts.length - 1] === 'index' || parts[parts.length - 1] === '__init__' ? parts[parts.length - 2] : parts[parts.length - 1];
+  if (!name) return false;
+  const c = caller.content || '';
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Barrel-Import (import … from './modules') erreicht Dateien darin: Ordnername zaehlt mit
+  const dir = parts.length > 1 ? parts[parts.length - 2].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+  if (dir && new RegExp(`(?:from|require\\(|import\\()\\s*['"][^'"]*\\b${dir}(?:/index(?:\\.[cm]?[jt]sx?)?)?['"]`).test(c)) return true;
+  return new RegExp(`(?:from|import|require\\(|import\\()\\s*['"][^'"]*\\b${esc}(?:\\.[cm]?[jt]sx?|/index(?:\\.[cm]?[jt]sx?)?)?['"]|^\\s*(?:from\\s+[\\w.]*\\b${esc}\\s+import|import\\s+[\\w.]*\\b${esc}\\b)`, 'm').test(c);
+}
+
 function analyzeTaint(units) {
   const fns = [];
   for (const u of units) if ((isJs(u) || isPy(u)) && !isTest(u)) for (const f of functionsOf(u)) fns.push({ ...f, unit: u });
@@ -71,7 +87,7 @@ function analyzeTaint(units) {
     f.params.forEach((p, idx) => {
       for (const sink of SINKS) {
         const m = f.body.match(sink.re(p.replace(/\$/g, '\\$')));
-        if (m && !(sink.guard && sink.guard.test(f.body))) add(f.name, { idx, sink, file: base(f.unit), line: lineOf(f.unit.content, f.unit.content.indexOf(f.body) + f.body.indexOf(m[0])), chain: [`${base(f.unit)}:${f.name}()`] });
+        if (m && !(sink.guard && sink.guard.test(f.body))) add(f.name, { idx, sink, def: base(f.unit), file: base(f.unit), line: lineOf(f.unit.content, f.unit.content.indexOf(f.body) + f.body.indexOf(m[0])), chain: [`${base(f.unit)}:${f.name}()`] });
       }
     });
   }
@@ -86,8 +102,9 @@ function analyzeTaint(units) {
           const args = m[1].split(',').map((a) => a.trim());
           for (const s of sums) {
             const arg = args[s.idx]; if (!arg) continue;
+            if (!canCall(g.unit, s.def)) continue;
             const pi = g.params.indexOf(arg.replace(/^\.\.\./, ''));
-            if (pi >= 0 && add(g.name, { ...s, idx: pi, chain: [`${base(g.unit)}:${g.name}()`, ...s.chain] })) changed = true;
+            if (pi >= 0 && add(g.name, { ...s, idx: pi, def: base(g.unit), chain: [`${base(g.unit)}:${g.name}()`, ...s.chain] })) changed = true;
           }
         }
       }
@@ -107,7 +124,7 @@ function analyzeTaint(units) {
         for (const s of sums) {
           const arg = args[s.idx];
           if (!arg || !SOURCE.test(arg)) continue;
-          if (s.file === base(u)) continue;
+          if (s.file === base(u) || !canCall(u, s.def)) continue;
           const key = `${base(u)}:${callee}:${s.sink.kind}`;
           if (seen.has(key)) continue;
           seen.add(key);

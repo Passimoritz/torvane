@@ -55,6 +55,7 @@ function analyzeBinary(buf, label) {
   if (hits.length >= 2) {
     const many = hits.length >= 4;
     out.push(normalizeFinding({
+      ruleId: 'binary-suspect-apis',
       title: `Binary: ${hits.length} sicherheitsrelevante API-Aufrufe (${type})`,
       severity: many ? 'medium' : 'info', category: 'Other', location: where,
       description: `In der Binaerdatei kommen mehrere sicherheitsrelevante Aufrufe vor: ${hits.slice(0, 12).join(', ')}${hits.length > 12 ? ' …' : ''}.`,
@@ -69,6 +70,7 @@ function analyzeBinary(buf, label) {
   const upx = bufHas(buf, 'UPX!') || bufHas(buf, 'UPX0') || bufHas(buf, 'UPX1');
   if (upx) {
     out.push(normalizeFinding({
+      ruleId: 'binary-upx-packed',
       title: `Binary: mit UPX gepackt (${type})`,
       severity: 'low', category: 'Other', location: where,
       description: 'Die Datei enthaelt UPX-Marker, ist also vermutlich mit UPX gepackt.',
@@ -77,8 +79,10 @@ function analyzeBinary(buf, label) {
       remediation: 'Falls es eigene Software ist: ok. Sonst Herkunft pruefen; ggf. mit „upx -d" entpacken und erneut scannen.',
       confidence: 'medium',
     }, 'binary'));
-  } else if (h >= 7.2) {
+  } else if (h >= 7.2 && /^(PE|ELF|Mach-O)/.test(type)) {
+    // Nur bei Programmen auffaellig: Archive, Medien, Firmware und Datenbloecke sind von Natur aus nahe 8 Bit/Byte
     out.push(normalizeFinding({
+      ruleId: 'binary-high-entropy', // fest statt Messwert im Namen, sonst ist jede Datei eine eigene Regel
       title: `Binary: hohe Entropie (${h.toFixed(2)}/8) - evtl. gepackt/verschluesselt (${type})`,
       severity: 'info', category: 'Other', location: where,
       description: `Die Datei hat eine sehr hohe Entropie (${h.toFixed(2)} Bit/Byte). Das deutet auf Kompression, Packer oder Verschluesselung hin.`,

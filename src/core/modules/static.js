@@ -69,8 +69,9 @@ function supplyChain(units) {
       for (const hook of ['preinstall', 'install', 'postinstall']) {
         if (pj.scripts && pj.scripts[hook]) out.push(mk(M, u, c.indexOf(`"${hook}"`), { ruleId: 'install-script', severity: 'low', category: 'Dependencies', title: `Install-Skript im Projekt: ${hook}`, description: `„${hook}: ${String(pj.scripts[hook]).slice(0, 80)}“ läuft bei jedem npm install automatisch. Bei Abhängigkeiten ist das ein beliebter Weg für Schadcode.`, remediation: 'Nur behalten, wenn nötig; in CI mit --ignore-scripts installieren.', confidence: 'medium' }));
       }
-      if (pj.dependencies && Object.keys(pj.dependencies).length && !['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'npm-shrinkwrap.json', 'bun.lockb', 'bun.lock'].some((l) => names.has(l))) {
-        out.push(mk(M, u, null, { ruleId: 'lockfile-missing', severity: 'medium', category: 'Dependencies', title: 'Kein Lockfile vorhanden', description: 'Ohne Lockfile installiert jeder Build eventuell andere Versionen – ein kompromittiertes Update kommt unbemerkt hinein.', remediation: 'package-lock.json erzeugen und einchecken; in CI npm ci verwenden.', confidence: 'high' }));
+      if (pj.dependencies && Object.keys(pj.dependencies).length && !['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'npm-shrinkwrap.json', 'bun.lockb', 'bun.lock'].some((l) => names.has(l)) && !lockfileOnDisk(u)) {
+        const isLib = !pj.private && (pj.main || pj.exports || pj.module || pj.types || pj.files) && !/(^|\/)(apps?|services?|server|backend|web|frontend)\//.test(base(u));
+        out.push(mk(M, u, null, { ruleId: 'lockfile-missing', severity: isLib ? 'info' : 'medium', category: 'Dependencies', title: 'Kein Lockfile vorhanden', description: 'Ohne Lockfile installiert jeder Build eventuell andere Versionen – ein kompromittiertes Update kommt unbemerkt hinein.', remediation: 'package-lock.json erzeugen und einchecken; in CI npm ci verwenden.', confidence: 'high' }));
       }
     }
     if (n === 'package-lock.json') {
@@ -152,16 +153,73 @@ function containers(units) {
   return out;
 }
 
+// Lockfile liegt oft in der Wurzel eines Monorepos (pnpm/yarn workspaces) und wurde wegen der Dateigrenze evtl. nicht eingelesen
+const LOCKFILES = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'npm-shrinkwrap.json', 'bun.lockb', 'bun.lock'];
+function lockfileOnDisk(u) {
+  if (!u.path || !path.isAbsolute(u.path)) return false;
+  let dir = path.dirname(u.path);
+  for (let i = 0; i < 6; i++) {
+    if (LOCKFILES.some((l) => fs.existsSync(path.join(dir, l)))) return true;
+    if (fs.existsSync(path.join(dir, '.git'))) return false;
+    const up = path.dirname(dir); if (up === dir) return false; dir = up;
+  }
+  return false;
+}
+
+// --- Fehlalarm-Filter der SAST-Regeln (gemessen an echten Projekten) ------
+const lineAround = (c, i) => c.slice(c.lastIndexOf('\n', i - 1) + 1, c.indexOf('\n', i) < 0 ? c.length : c.indexOf('\n', i));
+const isCommentLine = (l) => /^\s*(\/\/|\/?\*|#(?!\{)|--|<!--)/.test(l);
+// === gegen null/undefined/Literale, typeof-Pruefungen, Status-Strings ("valid"), Feld-Existenz: kein Geheimnisvergleich
+function timingCompareReal(m, c) {
+  const l = lineAround(c, m.index);
+  if (isCommentLine(l)) return false;
+  const lhs = m[0].split(/===|!==|==|!=/)[0].trim();
+  const rhs = c.slice(m.index + m[0].length - m[0].split(/===|!==|==|!=/).pop().trim().length).match(/^[\w.[\]'"`$-]+/);
+  const r = rhs ? rhs[0] : '';
+  if (/^(undefined|null|true|false|None|nil|\d+)$/.test(r) || /^['"`]/.test(r)) return false;
+  if (/(^|\.)(has|is|require|need|with|use|show|allow|last|current|prev|old)\w*$|Id$|Name$|Issuer$|Type$|Kind$|Alg\w*$|Algorithm$|Version$|Format$|Length$|Status$|Sealed$|Count$|Url$|Mode$/i.test(lhs)) return false;
+  if (/\btypeof\s*$/.test(c.slice(Math.max(0, m.index - 10), m.index)) || /\.(length|size)\b/.test(lhs + r)) return false;
+  if (/\b(last|prev\w*|previous|current|old|draft|cached|saved|dataset|card|state|stored)\w*\b/i.test(r)) return false;
+  if (/signature|digest/i.test(m[1]) && !/\b(req|request|ctx\.request)\.|headers|\bexpected\b|provided|incoming|received/i.test(m[0]) && !/createHmac|\bhmac\b|HMAC|webhook|x-hub-signature|stripe-signature|verifySignature|crypto\.|hashlib|hmac\.new/i.test(c.slice(Math.max(0, m.index - 600), m.index + 300))) return false;
+  return true;
+}
+// SHA-1/MD5 ohne Sicherheitszweck: WebSocket-Handshake (RFC 6455), TOTP-Standard, Cache-Schluessel, ETag,
+// Pruefsummen von Downloads mit Vorgabe, HIBP-k-Anonymitaet, Git-Objekt-IDs, ausdrueckliche nosec/noqa-Ausnahme
+function weakHashBenign(c, i, u) {
+  if (u && /hibp|pwned|gravatar|cache|thumb|etag|checksum|modpack|modrinth|curseforge/i.test(base(u))) return true;
+  const l = lineAround(c, i);
+  // Ergebnis wird nur als Name/ID/Dateiname benutzt (Cache, Vorschaubild, UUID v3 nach Minecraft-Protokoll)
+  if (/\b(nameOf|idOf|keyOf|cacheKey|fileName|filename|thumb\w*|uuid\w*|serverId|etag|slug)\b|OfflinePlayer:|path\.join\(|\.(jpe?g|png|webp|json|txt)['"`]|\.slice\(0,\s*\d+\)|\[:\d+\]/i.test(l)) return true;
+  const ctx = c.slice(Math.max(0, i - 250), i + 250);
+  return /Sec-WebSocket|258EAFA5-E914-47DA-95CA-C5AB0DC85B11|websocket|totp|hotp|otpauth|etag|cache|checksum|fingerprint|thumbprint|dedup|hibp|pwnedpasswords|range\/|gravatar|git\b|object id|mokutil|noqa|nosec|usedforsecurity\s*=\s*False|NOSONAR|content[-_ ]?hash|file[-_ ]?hash|cachekey|cache_key|sysroot|legacy|compat/i.test(ctx);
+}
+// Nur rekursives Zusammenfuehren (merge/extend/deep oder Rekursion ueber typeof === 'object') ist Prototype Pollution
+function recursiveMerge(m, c) {
+  const ctx = c.slice(Math.max(0, m.index - 300), m.index + 400);
+  return /merge|extend|deep|assign|defaults|mixin|clone/i.test(ctx) && /typeof\s+[\w.[\]]+\s*===?\s*['"]object['"]|\bisObject\(|\bisPlainObject\(|\w+\(\s*\w+\[\s*\w+\s*\]\s*,\s*\w+\[\s*\w+\s*\]/.test(ctx);
+}
+// ReDoS nur, wenn die innere Wiederholung mehrdeutig ist; Gruppen, die mit einem festen Trennzeichen beginnen
+// ((\.[a-z]+)+, (&\w+=\w+)*, (\/[a-z-]+)+), sind linear. Kommentare und Strings in Doku zaehlen nicht.
+function redosReal(m, c) {
+  const l = lineAround(c, m.index);
+  if (isCommentLine(l)) return false;
+  const g = m[0].match(/\((?:\?:)?([^()\n]*[+*])\)[+*]/);
+  if (!g) return true;
+  const inner = g[1];
+  if (/^(\\[.\/|&,;:@#=-]|[&,;:@#=\/|-])/.test(inner) && !/(^|[^\\])\.|\\S|\[\^/.test(inner.slice(2))) return false;
+  return true;
+}
+
 // --- Eigene SAST-Regeln -------------------------------------------------
 const SAST_RULES = [
   { id: 'sast-insecure-random', sev: 'high', cat: 'Crypto', re: /\b(token|secret|otp|password|passwd|nonce|salt|session|apikey|api_key|reset\w*|verification\w*)\w*\s*[:=][^;\n]{0,60}Math\.random\(\)/gi, title: 'Math.random() für Token/Code/Geheimnis', desc: 'Math.random() ist nicht kryptografisch sicher – damit erzeugte Werte sind vorhersagbar.' },
-  { id: 'sast-weak-hash', sev: 'medium', cat: 'Crypto', re: /createHash\(\s*['"](md5|sha1)['"]|hashlib\.(md5|sha1)\(/gi, title: 'Schwacher Hash (MD5/SHA-1)', desc: 'MD5 und SHA-1 sind für Sicherheitszwecke gebrochen.' },
+  { id: 'sast-weak-hash', sev: 'medium', cat: 'Crypto', test: (m, c, u) => !weakHashBenign(c, m.index, u), re: /createHash\(\s*['"](md5|sha1)['"]|hashlib\.(md5|sha1)\(/gi, title: 'Schwacher Hash (MD5/SHA-1)', desc: 'MD5 und SHA-1 sind für Sicherheitszwecke gebrochen.' },
   { id: 'sast-weak-cipher', sev: 'high', cat: 'Crypto', re: /createCipheriv?\(\s*['"](des|des-ede3?|rc4|aes-\d+-ecb|bf)[\w-]*['"]/gi, title: 'Schwache Verschlüsselung (DES/RC4/ECB)', desc: 'Diese Verfahren bzw. der ECB-Modus schützen Daten nicht zuverlässig.' },
-  { id: 'sast-timing-compare', sev: 'medium', cat: 'Crypto', re: /\b\w*(signature|hmac|digest|apiKey|api_key|webhookSecret)\w*\s*(===|!==|==|!=)\s*[\w.[\]'"]+/gi, title: 'Geheimnis mit === verglichen (Timing-Angriff)', desc: 'Ein normaler Vergleich ist nicht zeitkonstant und kann den richtigen Wert über Antwortzeiten verraten.', test: (m, c) => !/timingSafeEqual|compare_digest/.test(c.slice(Math.max(0, m.index - 300), m.index + 300)) },
+  { id: 'sast-timing-compare', sev: 'medium', cat: 'Crypto', re: /\b\w*(signature|hmac|digest|apiKey|api_key|webhookSecret)\w*\s*(===|!==|==|!=)\s*[\w.[\]'"]+/gi, title: 'Geheimnis mit === verglichen (Timing-Angriff)', desc: 'Ein normaler Vergleich ist nicht zeitkonstant und kann den richtigen Wert über Antwortzeiten verraten.', test: (m, c) => !/timingSafeEqual|compare_digest/.test(c.slice(Math.max(0, m.index - 300), m.index + 300)) && timingCompareReal(m, c) },
   { id: 'sast-jwt-decode-no-verify', sev: 'high', cat: 'Auth', re: /jwt\.decode\(/g, title: 'jwt.decode() ohne Signaturprüfung', desc: 'jwt.decode() liest das Token nur – die Signatur wird nicht geprüft.', unless: /jwt\.verify\(/ },
   { id: 'sast-jwt-no-expiry', sev: 'medium', cat: 'Auth', re: /jwt\.sign\([^;]*?\)\s*[;\n]/g, title: 'JWT ohne Ablaufzeit', desc: 'Ohne expiresIn bleibt ein geleaktes Token unbegrenzt gültig.', test: (m) => !/expiresIn|\bexp\s*:/.test(m[0]) },
-  { id: 'sast-prototype-pollution', sev: 'medium', cat: 'Injection', re: /for\s*\(\s*(?:const|let|var)\s+(\w+)\s+in\s+(\w+)\s*\)\s*\{?[^}]{0,120}\[\s*\1\s*\]\s*=/g, title: 'Ungefiltertes Objekt-Merge (Prototype Pollution)', desc: 'Schlüssel wie __proto__ werden nicht ausgefiltert.', test: (m, c) => !/__proto__|hasOwnProperty|hasOwn\(|Object\.create\(null\)/.test(c.slice(Math.max(0, m.index - 200), m.index + 400)) },
-  { id: 'sast-redos', sev: 'medium', cat: 'DoS', re: /\/\^?[^/\n]*\((?:[^()\n]*[+*])\)[+*][^/\n]*\/[gimsuy]*/g, title: 'Regulärer Ausdruck mit verschachtelter Wiederholung (ReDoS)', desc: 'Muster wie (a+)+ können bei böswilliger Eingabe exponentiell lange laufen.' },
+  { id: 'sast-prototype-pollution', sev: 'medium', cat: 'Injection', re: /for\s*\(\s*(?:const|let|var)\s+(\w+)\s+in\s+(\w+)\s*\)\s*\{?[^}]{0,120}\[\s*\1\s*\]\s*=/g, title: 'Ungefiltertes Objekt-Merge (Prototype Pollution)', desc: 'Schlüssel wie __proto__ werden nicht ausgefiltert.', test: (m, c) => recursiveMerge(m, c) && !/__proto__|hasOwnProperty|hasOwn\(|Object\.create\(null\)/.test(c.slice(Math.max(0, m.index - 200), m.index + 400)) },
+  { id: 'sast-redos', sev: 'medium', cat: 'DoS', test: (m, c) => redosReal(m, c), re: /\/\^?[^/\n]*\((?:[^()\n]*[+*])\)[+*][^/\n]*\/[gimsuy]*/g, title: 'Regulärer Ausdruck mit verschachtelter Wiederholung (ReDoS)', desc: 'Muster wie (a+)+ können bei böswilliger Eingabe exponentiell lange laufen.' },
   { id: 'sast-ssrf', sev: 'high', cat: 'SSRF', re: /\b(fetch|axios(?:\.get|\.post)?|got|request|http\.get|https\.get|urlopen|requests\.get)\(\s*(req\.(query|body|params)\.\w+|request\.(args|GET|json)\b|`[^`]*\$\{\s*req\.(query|body|params))/g, title: 'Server ruft vom Nutzer übergebene URL ab (SSRF)', desc: 'Ohne Allowlist erreicht der Angreifer interne Dienste oder Cloud-Metadaten.' },
   { id: 'sast-mass-assignment', sev: 'high', cat: 'AccessControl', re: /\.(create|update|updateMany|upsert|insert|insertOne|findOneAndUpdate|findByIdAndUpdate)\(\s*(\{\s*(where\s*:[^}]*\}\s*,\s*)?data\s*:\s*)?req\.body\s*[,)}]/g, title: 'req.body ungefiltert in die Datenbank (Mass Assignment)', desc: 'Nutzer können zusätzliche Felder wie role oder balance mitschicken.' },
   // Eingabe aus der Anfrage direkt in einer gefaehrlichen Senke (innerhalb einer Zeile)
@@ -266,7 +324,7 @@ function llm(units) {
       const re = /(system\w*|sys(?:Msg|Prompt)?|role\s*:\s*['"]system['"]\s*,\s*content)\s*[:=]\s*`[^`]*\$\{\s*(req\.|request\.|input|userInput|query|message|body|params)/gi; let m;
       while ((m = re.exec(c))) out.push(mk(M, u, m.index, { ruleId: 'llm-prompt-injection-concat', severity: 'high', category: 'Injection', title: 'Nutzereingabe direkt im System-Prompt', description: 'Unvertraute Eingaben werden in den System-Prompt eingesetzt. Damit kann ein Nutzer die Anweisungen der KI überschreiben (Prompt Injection).', remediation: 'Eingabe als eigene user-Nachricht übergeben.', confidence: 'medium' }));
       const sinks = [
-        /(eval|execSync|exec|new Function)\(\s*(completion|response|answer|llmOutput|aiResponse|aiOutput|reply|generated)\w*[.\w[\]]*\)/gi,
+        /(?<!\/[dgimsuy]*\.)(?<![A-Za-z_$]*(?:[Rr]e|RE|[Rr]egex|REGEX|[Pp]attern|PATTERN|rx|Rx|matcher)\.)\b(eval|execSync|exec|new Function)\(\s*(completion|response|answer|llmOutput|aiResponse|aiOutput|reply|generated)\w*[.\w[\]]*\)/gi,
         /\.innerHTML\s*=\s*(completion|response|answer|llmOutput|aiResponse|aiOutput|reply|generated)\w*[.\w[\]]*/gi,
         /dangerouslySetInnerHTML=\{\{\s*__html:\s*(completion|response|answer|llmOutput|aiResponse|reply|generated)/gi,
       ];

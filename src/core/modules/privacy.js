@@ -17,7 +17,7 @@ const SKIP = /(^|\/)(package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml|composer\.
 // --- IBAN ---------------------------------------------------------------
 const IBAN_LEN = { DE: 22, AT: 20, CH: 21, LI: 21, FR: 27, NL: 18, BE: 16, LU: 20, IT: 27, ES: 24, PT: 25, GB: 22, IE: 22, PL: 28, CZ: 24, DK: 18, SE: 24, NO: 15, FI: 18, HU: 28, GR: 27, SK: 24, SI: 19, HR: 21, RO: 24, BG: 22, EE: 20, LV: 21, LT: 20, MT: 31, CY: 28, IS: 26 };
 // Oeffentlich bekannte Beispiel-IBANs aus Dokumentationen (keine echten Konten)
-const EXAMPLE_IBANS = new Set(['DE89370400440532013000', 'DE02120300000000202051', 'DE75512108001245126199', 'GB82WEST12345698765432', 'GB29NWBK60161331926819', 'FR1420041010050500013M02606', 'NL91ABNA0417164300', 'AT611904300234573201', 'CH9300762011623852957', 'BE68539007547034', 'ES9121000418450200051332', 'IT60X0542811101000000123456']);
+const EXAMPLE_IBANS = new Set(['NO9386011117947', 'CY17002001280000001200527600', 'MT84MALT011000012345MTLCAST001S', 'DK5000400440116243', 'FI2112345600000785', 'SE4550000000058398257466', 'PL61109010140000071219812874', 'PT50000201231234567890154', 'IE29AIBK93115212345678', 'LU280019400644750000', 'CZ6508000000192000145399', 'HU42117730161111101800000000', 'GR1601101250000000012300695', 'IS140159260076545510730339', 'LI21088100002324013AA', 'SK3112000000198742637541', 'SI56263300012039086', 'HR1210010051863000160', 'RO49AAAA1B31007593840000', 'BG80BNBG96611020345678', 'EE382200221020145685', 'LV80BANK0000435195001', 'LT121000011101001000', 'MC5811222000010123456789030', 'SM86U0322509800000000270100', 'TR330006100519786457841326', 'IL620108000000099999999', 'SA0380000000608010167519', 'AE070331234567890123456', 'DE89370400440532013000', 'DE02120300000000202051', 'DE75512108001245126199', 'GB82WEST12345698765432', 'GB29NWBK60161331926819', 'FR1420041010050500013M02606', 'NL91ABNA0417164300', 'AT611904300234573201', 'CH9300762011623852957', 'BE68539007547034', 'ES9121000418450200051332', 'IT60X0542811101000000123456']);
 function ibanValid(raw) {
   const s = raw.replace(/\s+/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(s) || IBAN_LEN[s.slice(0, 2)] !== s.length) return false;
@@ -71,7 +71,7 @@ function pii(u, out) {
   // E-Mail-Listen (ab 5 verschiedenen echten Adressen)
   const mails = new Map();
   EMAIL.lastIndex = 0;
-  while ((m = EMAIL.exec(c)) && mails.size < 200) if (!EMAIL_SKIP.test(m[0]) && !mails.has(m[0].toLowerCase())) mails.set(m[0].toLowerCase(), m.index);
+  while ((m = EMAIL.exec(c)) && mails.size < 200) if (!EMAIL_SKIP.test(m[0]) && !/\.(test|example|invalid|localhost|local|internal|lan|corp|home\.arpa)$|@[^.]+\.(example|test)\./i.test(m[0]) && !mails.has(m[0].toLowerCase())) mails.set(m[0].toLowerCase(), m.index);
   if (mails.size >= 5) { const first = [...mails.entries()]; found.push({ id: 'pii-email-list', sev: 'medium', i: first[0][1], n: mails.size, ev: first.slice(0, 3).map(([e]) => redactSecret(e)).join(', '), what: 'E-Mail-Adressen' }); }
   // Telefonnummern (ab 2 verschiedenen)
   const phones = new Map();
@@ -124,12 +124,14 @@ function logSecrets(u, out) {
   while ((m = LOG_CALL.exec(c)) && n < 5) {
     const line = c.slice(m.index + m[0].length, c.indexOf('\n', m.index) < 0 ? c.length : c.indexOf('\n', m.index)).slice(0, 240);
     if (/^\s*$/.test(line)) continue;
+    const pre = c.slice(c.lastIndexOf('\n', m.index - 1) + 1, m.index);
+    if ((pre.match(/(?<!\\)["'`]/g) || []).length % 2 === 1 || /^\s*(\/\/|#|\*)/.test(pre)) continue; // im String / Kommentar
     const code = argCode(line);
     const sens = code.match(SENSITIVE_ID);
     const whole = WHOLE_REQUEST.test(code);
     if (!sens && !whole) continue;
     // "token.length", "password_reset_url" u. ae. sind harmlos
-    if (sens && !whole && /\.(length|size|count)\b|_(url|path|form|field|hint|policy|reset|expires?|type|label|valid)\b|is_?valid|\bhas_?\w+/i.test(code.slice(code.search(SENSITIVE_ID)))) continue;
+    if (sens && !whole && /\.(length|size|count)\b|_(url|path|form|field|hint|policy|reset|expires?|type|label|valid)\b|is_?valid|\bhas_?\w+|^\w+\s*(\?|!==?\s*(null|undefined)|===?\s*(null|undefined))/i.test(code.slice(code.search(SENSITIVE_ID))) || /(!!?|typeof\s+|Boolean\()\s*$/.test(code.slice(0, code.search(SENSITIVE_ID)))) continue;
     n++;
     out.push(mk(M, u, m.index, whole ? {
       ruleId: 'log-full-request', severity: 'medium', category: 'Logging',

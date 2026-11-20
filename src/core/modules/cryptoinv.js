@@ -5,7 +5,18 @@
 //  - ein Hinweis, wenn asymmetrische Verfahren ohne Post-Quanten-Alternative im Einsatz sind
 //  - hoeher eingestuft: veraltete Verfahren und zu kurze Schluessel
 
-const { base, mk, isText, lineOf } = require('./rulekit');
+const { base, mk, isText, lineOf, isTestFile } = require('./rulekit');
+// Erwaehnung statt Nutzung: Kommentar, Doku-Text in JSON/i18n, Build-Flags, Protokoll-Pflicht (WebSocket, TOTP, HIBP)
+function weakMention(c, idx, u) {
+  const ls = c.lastIndexOf('\n', idx - 1) + 1;
+  const le = c.indexOf('\n', idx) < 0 ? c.length : c.indexOf('\n', idx);
+  const line = c.slice(ls, le);
+  if (/^\s*(\/\/|\/?\*|#|--|;|<!--)/.test(line)) return true;
+  if (/\.json$/i.test(base(u)) && /"(description|reason|title|text|label|help|hint|note|message|[\w.-]*\.(foot|text|desc|hint))"\s*:/i.test(line)) return true;
+  if (/(^|\/)(i18n|locales?|lang|translations?)\//i.test(base(u)) || /build-id=sha1|--build-id/.test(line)) return true;
+  if (/type\s+\w+\s*=|\|\s*["']sha1["']\s*\|/.test(line)) return true; // Typ-Union mit Algorithmusnamen
+  return /Sec-WebSocket|websocket|totp|hotp|otpauth|base32|hibp|pwned|k-anonym|etag|cache|checksum|thumb|nameOf|idOf|fileName|\[:\d+\]|\.slice\(0,\s*\d+\)|noqa|nosec|NOSONAR|usedforsecurity/i.test(c.slice(Math.max(0, idx - 300), idx + 300) + ' ' + base(u));
+}
 
 const M = 'crypto-inventory';
 const CODE = /\.(m?[jt]sx?|cjs|py|rb|php|go|java|kt|kts|cs|swift|scala|dart|ex|exs|rs|c|cc|cpp|cxx|h|hpp|m|mm|lua|ps1|sh|tf|ya?ml|conf|properties|toml|json|xml)$/i;
@@ -60,6 +71,7 @@ function runCryptoInventory(units) {
     for (const [name, kind, re] of ALGOS) {
       re.lastIndex = 0; let m, n = 0;
       while ((m = re.exec(c)) && n < 50) {
+        if (kind === 'weak' && (isTestFile(u) || weakMention(c, m.index, u))) continue;
         n++;
         const e = inv.get(name) || { kind, count: 0, files: new Set(), first: null };
         e.count++; e.files.add(base(u)); if (!e.first) e.first = { u, idx: m.index };

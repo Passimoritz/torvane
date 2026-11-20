@@ -111,6 +111,62 @@ const RULE_FILES = require('./rulefiles').loadRuleFiles();
 PATTERN_RULES.push(...RULE_FILES.patterns);
 const FILE_FINDING_RULES = RULE_FILES.findings;
 
+// --- Fehlalarm-Filter fuer Secret-Treffer --------------------------------
+// Gemessen an echten Projekten: die meisten Treffer waren Platzhalter, Beispielwerte aus Doku/Tests,
+// Vorlagen-Variablen (${VAR}), Pruef-Regexe oder Header ohne Schluessel.
+const TEST_OR_DOC = /(^|[\\/])(test|tests|__tests__|spec|specs|e2e|fixtures?|mocks?|examples?|samples?|demo|docs?)([\\/]|$)|\.(test|spec)\.[cm]?[jt]sx?$|_test\.(py|go|rb)$|(^|[\\/])test_[^\\/]+\.py$|\.(md|mdx|rst|adoc|txt)$/i;
+const PLACEHOLDER_VALUE = /^(?:\*+|x+|\.+|…|<[^>]*>|\{\{[^}]*\}\}|\$\{[^}]*\}|\$\w+|%\w*%?|:\w+|null|none|undefined|true|false|password\d*|passwort|pass|pwd|secret|token|changeme|change[_-]?me|your[_-].*|my[_-]?(password|secret|token|key).*|example.*|sample.*|dummy.*|test.*|fake.*|placeholder.*|redacted|todo|tbd|foo|bar|baz|admin|user(name)?|root|guest|demo.*|some.*|insert.*|enter.*|replace.*|aaa+|123+456?7?8?9?0?|1234567890|qwerty|abc123|letmein|hunter2|peanuts|richtig-pferd-batterie)$/i;
+const ENV_REF = /process\.env|os\.environ|getenv|ENV\[|System\.getenv|import\.meta\.env|\$\{\{?\s*(secrets|vars|env)\.|Deno\.env|config\.get|settings\./i;
+const EXAMPLE_HOST = /@(?:[\w-]+\.)*(?:example\.(?:com|org|net)|[\w-]+\.(?:example|test|invalid|localhost)|localhost|127\.0\.0\.1|\[::1\]|host|your[\w-]*)(?:[:/]|$)/i;
+// Bekannte, oeffentliche Beispielwerte aus Doku (AWS, jwt.io, Stripe-Doku)
+const KNOWN_SAMPLES = /AKIAIOSFODNN7EXAMPLE|wJalrXUtnFEMI\/K7MDENG\/bPxRfiCYEXAMPLEKEY|eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ|SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c|sk_live_4eC39[H]qLyjWDarjtT1zdp7dc|EXAMPLE/;
+
+const GENERIC_RULES = new Set(['Generisches Passwort/Secret im Klartext', 'DB Connection String mit Passwort', 'Zugangsdaten in URL', 'JWT', 'Hartkodierter Basic-Auth-Header']);
+
+function lineAt(content, index) {
+  const s = content.lastIndexOf('\n', index - 1) + 1;
+  const e = content.indexOf('\n', index);
+  return content.slice(s, e < 0 ? content.length : e);
+}
+
+// true = Treffer ist mit hoher Wahrscheinlichkeit kein echtes Geheimnis
+function secretNoise(rule, value, content, index) {
+  const line = lineAt(content, index);
+  if (KNOWN_SAMPLES.test(value)) return true;
+  // Pruef-Code: der Wert steht in einem regulaeren Ausdruck oder einem Vergleich, nicht als Zuweisung
+  if (/\bassert\.?(match|throws|equal)|\.test\(|\.match\(|new RegExp|re\.(search|match|compile)|expect\(|toMatch|toContain|includes\(/.test(line) && !/[:=]\s*["'`]/.test(line.replace(/expect\([^)]*\)/, ''))) return true;
+  switch (rule.name) {
+    case 'Private Key Block': {
+      // echter Schluessel: nach der Kopfzeile folgt Base64-Inhalt (auch mit \n im String)
+      const after = content.slice(index + value.length, index + value.length + 200).replace(/\\n|\\r|\r|\n|["'+\s,]/g, '');
+      return !/^[A-Za-z0-9+/=]{40,}/.test(after);
+    }
+    case 'Generisches Passwort/Secret im Klartext': {
+      const v = (value.match(/[=:]\s*['"]([^'"\n]*)['"]/) || [])[1] || '';
+      if (PLACEHOLDER_VALUE.test(v.trim()) || ENV_REF.test(line) || /^\s*(\/\/|#|\*|--|<!--)/.test(line)) return true;
+      if (/^[A-Z][A-Z0-9_]{3,}$/.test(v) || (/^[a-z]+(?:[_-][a-z]+)*$/.test(v) && v.length < 12)) return true; // Name einer Variable / Feld
+      if (/\s/.test(v) && /^[\p{L} ,.'!?-]+$/u.test(v)) return true; // Satz (Label, Fehlermeldung)
+      if (/^(?:https?:)?\/\/|^\/|\.\w{2,4}$|^[\w-]+\/[\w-]/.test(v)) return true;                             // Pfad, Adresse, Dateiname
+      return false;
+    }
+    case 'DB Connection String mit Passwort':
+    case 'Zugangsdaten in URL': {
+      const cred = (value.match(/:\/\/([^:@/\s]+):([^@\s]*)@/) || []);
+      const user = cred[1] || '', pw = cred[2] || '';
+      if (/\$\{|\{\{|%\(|<|…|\*{2,}|^\$/.test(pw) || PLACEHOLDER_VALUE.test(pw) || pw === user) return true;
+      if (/^(user(name)?|u|a|x|nobody|anonymous)$/i.test(user) && pw.length <= 8) return true;
+      if (EXAMPLE_HOST.test(content.slice(index, index + value.length + 60))) return true;
+      return false;
+    }
+    case 'JWT':
+      return /^eyJhbGciOiJub25lIi/.test(value); // alg "none": Testmaterial, kein Zugang
+    case 'Hartkodierter Basic-Auth-Header':
+      return /Basic\s+(?:dXNlcjpwYXNz|dXNlcm5hbWU6cGFzc3dvcmQ|YWRtaW46YWRtaW4|Og==)/.test(value) || ENV_REF.test(line);
+    default:
+      return false;
+  }
+}
+
 function lineOf(content, index) {
   let line = 1;
   for (let i = 0; i < index && i < content.length; i++) if (content[i] === '\n') line++;
@@ -220,18 +276,24 @@ function prescan(units, opts = {}) {
 
   for (const u of units) {
     const content = u.content || '';
+    const devFile = TEST_OR_DOC.test(String(u.label || ''));
     // Secrets -> direkte Befunde
     for (const rule of secretRules) {
       rule.re.lastIndex = 0;
       let m;
       let hits = 0;
       while ((m = rule.re.exec(content)) && hits < 20) {
+        if (!rule.custom && secretNoise(rule, m[0], content, m.index)) continue;
+        // Tests/Doku: bekannte Formate (AWS, GitHub …) bleiben, generische Muster sind dort fast immer Testwerte
+        if (devFile && !rule.custom && GENERIC_RULES.has(rule.name)) continue;
         hits++;
         findings.push(normalizeFinding({
           ruleId: (rule.custom ? 'custom-' : 'secret-') + rule.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
           evidence: redactSecret(m[0]),
           title: rule.custom ? `Eigene Regel: ${rule.name}` : `Zugangsdaten im Klartext: ${rule.name}`,
-          severity: rule.sev,
+          // In Tests, Beispielen und Doku sind es fast immer Testwerte: sichtbar lassen, aber nicht hoch einstufen
+          ...(devFile && !rule.custom ? { devOnly: true } : {}),
+          severity: devFile && !rule.custom && rule.sev !== 'info' ? 'low' : rule.sev,
           category: 'Secrets',
           location: `${u.label}:${lineOf(content, m.index)}`,
           description: `Im Code steht ein Wert im Format „${rule.name}“: \`${redact(m[0])}\`. Fest eingetragene Zugangsdaten kann jeder lesen, der den Code, das Programm oder ein Archiv davon bekommt.`,
@@ -278,11 +340,12 @@ function prescan(units, opts = {}) {
       }
     }
     // Methode: hohe Entropie -> moegliches Secret ohne bekanntes Muster
-    for (const h of findHighEntropy(content)) {
+    for (const h of devFile ? [] : findHighEntropy(content, { label: u.label, kind: u.kind })) {
       findings.push(normalizeFinding({
         ruleId: 'moeglicher-geheimer-schluessel-hohe-entropie', // fester Schluessel, damit der Verlauf erhalten bleibt
         title: 'Möglicher geheimer Schlüssel (hohe Entropie)',
-        severity: h.context ? 'medium' : 'low',
+        ...(devFile ? { devOnly: true } : {}),
+        severity: h.context && !devFile ? 'medium' : 'low',
         category: 'Secrets',
         location: `${u.label}:${h.line}`,
         description: `Eine sehr zufällig wirkende Zeichenkette (Entropie ${h.entropy}): \`${redact(h.value)}\`. So sehen Schlüssel und Tokens aus.`,

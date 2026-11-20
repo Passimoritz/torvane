@@ -22,10 +22,10 @@ function check(name, cond, info) {
 const units = [
   {
     label: 'app.js', content: `
-      const key = "AKIAIOSFODNN7EXAMPLE";
+      const key = "AKIAQ3EGRV7YXMBN4P2K";
       const stripe = "sk_live_abcd1234567890WXYZ";
       const gh = "github_pat_11ABCDEFG012345678_abcdefghijklmnopqrstuvwxyz";
-      const conn = "https://admin:pa55word@db.example.com/x";
+      const conn = "https://admin:pa55word@db.acme-intern.de/x";
       const { exec } = require('child_process'); exec("ls " + userInput);
       el.innerHTML = data;
       const q = "SELECT * FROM u WHERE id=" + id;
@@ -93,7 +93,7 @@ permissions: write-all
   { label: 'secrets.conf', content: 'apiSecret = "aZ3kP9qXr7vB2mL5nW8cE1tY6uI0oD4sFhG7jK2pQ"' },
   { label: 'config/id_rsa', content: 'placeholder' },
   { label: 'app/.env', content: 'FOO=1' },
-  { label: 'db/backup.sql', content: 'select 1' },
+  { label: 'db/backup.sql', content: '-- MySQL dump 10.13\nINSERT INTO users VALUES (1);' },
 ];
 
 const pre = prescan(units);
@@ -331,7 +331,7 @@ check('binary: Quelle = binary', bf[0] && bf[0].source === 'binary');
 check('binary: harmlos -> kein Befund', analyzeBinary(Buffer.from('AAAAAAAAAAAAAAAAAAAA', 'ascii'), 'plain.bin').length === 0);
 
 console.log('Eigene Regeln / Regeln deaktivieren:');
-const preC = prescan([{ label: 'x', content: 'tok ACME-123456 und AKIAIOSFODNN7EXAMPLE' }], {
+const preC = prescan([{ label: 'x', content: 'tok ACME-123456 und AKIAQ3EGRV7YXMBN4P2K' }], {
   customSecrets: [{ name: 'Acme', regex: 'ACME-[0-9]{6}', severity: 'high' }],
   disabledRules: ['AWS Access Key ID'],
 });
@@ -351,7 +351,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
   const providers = require('../src/core/providers');
   const { redactSecrets, shouldRedact, extractSlice, validateFindings, enrich } = require('../src/core/harness');
 
-  const red = redactSecrets('const k = "AKIAIOSFODNN7EXAMPLE"; const ok = 1;');
+  const red = redactSecrets('const k = "AKIAQ3EGRV7YXMBN4P2K"; const ok = 1;');
   check('redact: AWS-Key geschwaerzt', red.count === 1 && !red.text.includes('IOSFODNN7EXAMPLE') && red.text.includes('const ok = 1'));
   check('redact: nur bei externem Anbieter', shouldRedact({ provider: 'anthropic' }) && !shouldRedact({ provider: 'ollama' }));
   check('redact: abschaltbar', !shouldRedact({ provider: 'openai', redactSecrets: false }));
@@ -424,16 +424,16 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     check('redact: kurz -> komplett', redactSecret('abc123') === '****REDACTED****');
     const nf = normalizeFinding({ title: 'trivy: x (CVE-2024-1234)', severity: 'high', category: 'Dependencies' }, 'trivy');
     check('ruleId: CVE aus Titel', nf.ruleId === 'CVE-2024-1234');
-    const gl = parseGitleaks(JSON.stringify([{ RuleID: 'aws-access-token', File: 'a.js', StartLine: 3, Secret: 'AKIAIOSFODNN7EXAMPLE' }]));
+    const gl = parseGitleaks(JSON.stringify([{ RuleID: 'aws-access-token', File: 'a.js', StartLine: 3, Secret: 'AKIAQ3EGRV7YXMBN4P2K' }]));
     check('gitleaks: geparst + Regel-ID', gl.length === 1 && gl[0].ruleId === 'aws-access-token');
-    check('gitleaks: Klartext-Secret nie gespeichert', !JSON.stringify(gl).includes('IOSFODNN7EXAMP') && gl[0].evidence === 'AKI****REDACTED****PLE');
+    check('gitleaks: Klartext-Secret nie gespeichert', !JSON.stringify(gl).includes('Q3EGRV7YXMBN4') && gl[0].evidence === 'AKI****REDACTED****P2K');
     check('gitleaks: kaputte Ausgabe -> null', parseGitleaks('{"oops":1}') === null);
     const tv = parseTrivy(JSON.stringify({ Results: [{ Target: 'nginx:1.25 (debian 12)', Vulnerabilities: [{ VulnerabilityID: 'CVE-2023-44487', PkgName: 'libnghttp2', InstalledVersion: '1.52', Severity: 'HIGH' }], Misconfigurations: [{ ID: 'DS002', Title: 'Image user should not be root', Severity: 'HIGH' }] }] }), 'nginx:1.25');
     check('trivy: Vuln + Misconfig', tv.length === 2 && tv[0].ruleId === 'CVE-2023-44487' && tv[1].ruleId === 'DS002');
     const { enrich: enrich2 } = require('../src/core/harness');
     const { dedupeFindings: dd } = require('../src/core/schema');
     const kept = enrich2(dd([{ ...gl[0], location: 'a.js:3' }, normalizeFinding({ title: 'Secret im Code', severity: 'critical', category: 'Secrets', location: 'a.js:3' }, 'ai')]));
-    check('evidence: Fundstelle bleibt nach Merge + Anreicherung erhalten', kept.length === 1 && kept[0].evidence === 'AKI****REDACTED****PLE' && kept[0].assurance === 'confirmed-multi');
+    check('evidence: Fundstelle bleibt nach Merge + Anreicherung erhalten', kept.length === 1 && kept[0].evidence === 'AKI****REDACTED****P2K' && kept[0].assurance === 'confirmed-multi');
   }
 
   console.log('Scope-Durchsetzung:');
@@ -757,7 +757,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     {
       const { runPrescan } = require('../src/core/prescan-worker');
       const { prescan } = require('../src/core/prescan');
-      const units = [{ label: 'p/a.js', kind: 'file', language: 'javascript', content: 'const k = "AKIAIOSFODNN7EXAMPLE";\nrequire("child_process").exec(x);' }, { label: 'p/package.json', kind: 'file', language: 'json', content: '{"dependencies":{"lodash":"4.17.0"}}' }];
+      const units = [{ label: 'p/a.js', kind: 'file', language: 'javascript', content: 'const k = "AKIAQ3EGRV7YXMBN4P2K";\nrequire("child_process").exec(x);' }, { label: 'p/package.json', kind: 'file', language: 'json', content: '{"dependencies":{"lodash":"4.17.0"}}' }];
       const seen = [];
       const w = await runPrescan(units, {}, (p) => seen.push(p));
       const direct = prescan(units, {});
@@ -1076,7 +1076,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     await runAudit([webT, { type: 'path', value: dir }], quiet, () => {});
     check('ki für Webadressen aus: gemischte Prüfung schickt nur den Code', aiHits > 0 && !aiBodies.includes('WEBMARKE123') && aiBodies.includes('const x'));
     // Auch der KI-Gegencheck der Regel-Befunde sieht nichts von der Webadresse
-    fs.writeFileSync(path.join(dir, 'b.js'), 'const k = "AKIAIOSFODNN7EXAMPLE";\nrequire("child_process").exec(x);\n');
+    fs.writeFileSync(path.join(dir, 'b.js'), 'const k = "AKIAQ3EGRV7YXMBN4P2K";\nrequire("child_process").exec(x);\n');
     aiBodies = ''; aiHits = 0;
     const webPort = `:${web.address().port}`;
     const reviewed = await runAudit([webT, { type: 'path', value: dir }], { ...cfg, aiRunSummary: false }, () => {});
@@ -1287,8 +1287,8 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     check('erreichbar: aktiv ausgenutzte Lücke wird nie abgewertet', applyReachability([dep('minimist', { inCisaKev: true })], units)[0].severity === 'high');
     const flow = analyzeTaint([
       U('srv/db.js', 'function findUser(id) {\n  return db.query("SELECT * FROM users WHERE id = " + id);\n}\nmodule.exports = { findUser };'),
-      U('srv/service.js', 'function loadProfile(userId) {\n  return findUser(userId);\n}'),
-      U('srv/routes.js', "app.get('/u', (req, res) => {\n  loadProfile(req.query.id);\n});"),
+      U('srv/service.js', 'const { findUser } = require("./db");\nfunction loadProfile(userId) {\n  return findUser(userId);\n}'),
+      U('srv/routes.js', "const { loadProfile } = require('./service');\napp.get('/u', (req, res) => {\n  loadProfile(req.query.id);\n});"),
     ]);
     check('datenfluss: Eingabe über drei Dateien bis in den SQL-Befehl', flow.length === 1 && flow[0].ruleId === 'taint-sql' && /routes\.js/.test(flow[0].description) && /service\.js:loadProfile/.test(flow[0].description) && flow[0].location === 'srv/db.js:2');
     const safe = analyzeTaint([
@@ -2261,7 +2261,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     check('nachschlagen: Anbieter ohne Werkzeuge meldet NO_TOOLS', noTools === 'NO_TOOLS' && !providers.supportsTools('bedrock') && providers.supportsTools('ollama'));
 
     // Nachschlagen in analyze(): Werkzeug-Ausgabe wird fuer die Cloud geschwaerzt; Fallback ohne Werkzeuge
-    const aUnits = [{ label: 'proj/routes/user.js', kind: 'file', language: 'javascript', content: 'const { getUser } = require("../lib/db");\napp.get("/u/:id", (req, res) => getUser(req.params.id));' }, { label: 'proj/lib/db.js', kind: 'file', language: 'javascript', content: 'const key = "AKIAIOSFODNN7EXAMPLE";\nfunction getUser(id) { return db.query("SELECT * FROM u WHERE id=" + id); }' }];
+    const aUnits = [{ label: 'proj/routes/user.js', kind: 'file', language: 'javascript', content: 'const { getUser } = require("../lib/db");\napp.get("/u/:id", (req, res) => getUser(req.params.id));' }, { label: 'proj/lib/db.js', kind: 'file', language: 'javascript', content: 'const key = "AKIAQ3EGRV7YXMBN4P2K";\nfunction getUser(id) { return db.query("SELECT * FROM u WHERE id=" + id); }' }];
     let toolText = '';
     providers.callProviderTools = async (cfg, m) => { toolText = await m.runTool('read_file', { path: 'lib/db.js' }); return { text: JSON.stringify({ findings: [] }), usage: { inputTokens: 1, outputTokens: 1 }, lookups: 1 }; };
     providers.callProvider = async () => ({ text: '{"findings":[]}', usage: {} });
@@ -2297,7 +2297,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     // Strenger Datenschutz (privmode)
     const priv = harness.redactPrivate('// @author Max Mustermann <max@acme-corp.com>\nconst h = "db01.prod.internal"; ip = "10.1.2.3"; // Acme Corp intern, api.acme.io', { terms: ['Acme Corp'], hosts: ['acme.io'] });
     check('datenschutz: Person, E-Mail, interner Host, IP, Firma, eigene Domain geschwärzt', !/Mustermann|max@|db01\.prod|10\.1\.2\.3|Acme Corp|api\.acme\.io/.test(priv.text) && /«person-1»/.test(priv.text) && /«firma-1»/.test(priv.text) && priv.count === 6);
-    const both = harness.redactForCloud('k="AKIAIOSFODNN7EXAMPLE"; mail="a.b@firma.de"', { privacyMode: true });
+    const both = harness.redactForCloud('k="AKIAQ3EGRV7YXMBN4P2K"; mail="a.b@firma.de"', { privacyMode: true });
     check('datenschutz: zusammen mit Secrets in einem Schritt', !/IOSFODNN7EXAMPLE|a\.b@firma/.test(both.text) && both.count === 2);
     check('datenschutz: ohne privmode bleiben E-Mails stehen', /a\.b@firma\.de/.test(harness.redactForCloud('mail="a.b@firma.de"', {}).text));
     check('datenschutz: lokal wird nie geschwärzt, privmode schaltet für Cloud ein', !harness.shouldRedact({ provider: 'ollama', privacyMode: true }) && harness.shouldRedact({ provider: 'openai', redactSecrets: false, privacyMode: true }));
@@ -2327,7 +2327,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     let patchUser = '';
     providers.callProvider = async (_c, m) => { patchUser = m.user; return { text: JSON.stringify({ summary: 'Parametrisierte Abfrage', diff: '--- a/proj/lib/db.js\n+++ b/proj/lib/db.js\n@@ -2,1 +2,1 @@\n-function getUser(id) { return db.query("SELECT * FROM u WHERE id=" + id); }\n+function getUser(id) { return db.query("SELECT * FROM u WHERE id=?", [id]); }\n', notes: '', confidence: 'high' }), usage: { inputTokens: 100, outputTokens: 50 } }; };
     const fx = { title: 'SQL-Injection', severity: 'high', location: 'proj/lib/db.js:2', category: 'Injection', description: 'Konkatenation' };
-    const p1 = await aifix.generatePatch({ finding: fx, code: { ...code, lines: ['const key = "AKIAIOSFODNN7EXAMPLE";', ...code.lines.slice(1)] }, config: { provider: 'anthropic', model: 'claude-x', lang: 'en' } });
+    const p1 = await aifix.generatePatch({ finding: fx, code: { ...code, lines: ['const key = "AKIAQ3EGRV7YXMBN4P2K";', ...code.lines.slice(1)] }, config: { provider: 'anthropic', model: 'claude-x', lang: 'en' } });
     check('patch: Diff geliefert, Statistik und Prüfung gegen den Code', p1.ok && /^--- a\/proj\/lib\/db\.js/m.test(p1.diff) && p1.stats.added === 1 && p1.stats.removed === 1 && p1.check.applies === true);
     check('patch: Code geht geschwärzt an die Cloud-KI, englische Anweisung', !/IOSFODNN7EXAMPLE/.test(patchUser) && /Answer in English/.test(patchUser));
     const p2 = aifix.checkDiff('@@ -1,1 +1,1 @@\n-gibt es nicht\n+neu\n', code);

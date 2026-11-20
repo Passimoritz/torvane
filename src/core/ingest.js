@@ -32,7 +32,13 @@ const TEXT_EXT = new Set([
   '.xml', '.gradle', '.tf', '.dockerfile', '.md', '.txt', '.lock',
 ]);
 
-const SKIP_DIR = new Set(['node_modules', '.git', '.svn', '.hg', 'dist', 'build', 'out', 'target', '.next', '.cache', 'vendor', '__pycache__', '.venv', 'venv']);
+const SKIP_DIR = new Set(['node_modules', '.git', '.svn', '.hg', 'dist', 'build', 'out', 'target', '.next', '.cache', 'vendor', '__pycache__', '.venv', 'venv',
+  // Erzeugtes und Caches: kein eigener Code, nur Fehlalarme und doppelte Treffer
+  'bower_components', 'jspm_packages', '.pnpm-store', '.yarn', '.turbo', '.nuxt', '.svelte-kit', '.parcel-cache', '.angular', '.gradle',
+  '.tox', '.nox', '.mypy_cache', '.pytest_cache', '.ruff_cache', '.terraform', 'coverage', '.nyc_output', 'Pods', 'DerivedData']);
+function isDbDataDir(dir) {
+  try { return fs.existsSync(path.join(dir, 'PG_VERSION')) || fs.existsSync(path.join(dir, 'ibdata1')); } catch { return false; }
+}
 
 const BINARY_EXE_EXT = new Set(['.exe', '.dll', '.so', '.dylib', '.bin', '.msi', '.app']);
 const ARCHIVE_EXT = new Set(['.zip', '.jar', '.war', '.ear', '.apk', '.aar', '.nupkg', '.ipa', '.xapk']);
@@ -179,8 +185,14 @@ function walkDir(col, dir, root, matcher) {
     if (matcher && matcher(rel, ent.name)) continue;           // per .vigilignore ausgeschlossen
     if (ent.isDirectory()) {
       if (SKIP_DIR.has(ent.name)) continue;
+      // Kopien des eigenen Codes (Git-Worktrees von Agenten/IDEs) wuerden jeden Befund vervielfachen
+      if (ent.name === 'worktrees' && /(^|[\\/])\.(claude|cursor|git)$/.test(dir)) continue;
+      // Datenverzeichnisse von Datenbanken sind Binaerdaten, kein Code (PostgreSQL: PG_VERSION, MySQL/MariaDB: ibdata1)
+      if (isDbDataDir(full)) { col.notes.push(`Datenbank-Datenverzeichnis übersprungen: ${rel}`); continue; }
       walkDir(col, full, root, matcher);
     } else if (ent.isFile()) {
+      // Worktree-Zeiger (.git als Datei) ist kein mitgeliefertes Repository
+      if (ent.name === '.git') continue;
       ingestFile(col, full, root);
     }
   }
