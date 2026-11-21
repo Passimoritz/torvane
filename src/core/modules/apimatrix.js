@@ -17,7 +17,7 @@ async function get(guard, url, headers, signal) {
   const host = new URL(url).host;
   await guard.before(host);
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Vigil-Audit/0.2', ...headers }, redirect: 'manual', signal: signal ? AbortSignal.any([AbortSignal.timeout(TIMEOUT), signal]) : AbortSignal.timeout(TIMEOUT) });
+    const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'Torvane-Audit/0.2', ...headers }, redirect: 'manual', signal: signal ? AbortSignal.any([AbortSignal.timeout(TIMEOUT), signal]) : AbortSignal.timeout(TIMEOUT) });
     guard.after(host, res.status);
     const text = (await res.text()).slice(0, 200000);
     let json = null; try { json = JSON.parse(text); } catch { /* kein JSON */ }

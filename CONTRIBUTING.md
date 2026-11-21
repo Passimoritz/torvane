@@ -1,14 +1,14 @@
-# Contributing to Vigil
+# Contributing to Torvane
 
-Thanks for helping! Vigil is a **defensive** tool: it only checks what the user owns, and it
+Thanks for helping! Torvane is a **defensive** tool: it only checks what the user owns, and it
 never ships exploit payloads, DoS, brute force or anything that weakens system security
 (e.g. Smart App Control). Contributions that change this will not be merged.
 
 ## Setup
 
 ```bash
-git clone https://github.com/Passimoritz/vigil.git
-cd vigil
+git clone https://github.com/Passimoritz/torvane.git
+cd torvane
 npm ci
 npm start          # run the app
 npm test           # must pass
@@ -34,7 +34,7 @@ optional; tests do not need them.
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) – it explains the modules, the data flow and
 step by step how to add a check, an external tool, an AI provider or a feed.
 
-## Security rules for code in Vigil
+## Security rules for code in Torvane
 
 * Renderer never gets Node: add new capabilities as a named function in `electron/preload.js` and
   a validated `ipcMain.handle` in `electron/main.js`.

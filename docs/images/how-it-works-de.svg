@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 290" width="1200" height="290" role="img" aria-label="So arbeitet Vigil: sammeln, Regeln und Datenbanken, KI-Analyse, Gegenprüfung, zusammenführen und berichten">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 290" width="1200" height="290" role="img" aria-label="So arbeitet Torvane: sammeln, Regeln und Datenbanken, KI-Analyse, Gegenprüfung, zusammenführen und berichten">
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#f2b23a"/></marker>
   </defs>
   <rect width="1200" height="290" rx="20" fill="#0d1626"/>
   <g font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
-    <text x="40" y="48" font-size="22" font-weight="700" fill="#ffffff">So arbeitet Vigil</text>
+    <text x="40" y="48" font-size="22" font-weight="700" fill="#ffffff">So arbeitet Torvane</text>
     <text x="40" y="74" font-size="15" fill="#93a4bd">Feste Regeln finden Bekanntes zuverlässig – die KI ergänzt Logikfehler und muss sie belegen.</text>
 
     <g transform="translate(40 100)">

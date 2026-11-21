@@ -43,7 +43,7 @@ const ENV = { anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', gemini: 
   process.stderr.write('\n');
   const s = scoreBench(result.findings, expected);
   const pct = (x) => `${Math.round(x * 100)} %`;
-  console.log(`\nVigil-Trefferquote · ${provider ? `${provider} / ${config.model}` : 'nur Regeln (ohne KI)'} · ${Math.round((Date.now() - t0) / 1000)} s\n`);
+  console.log(`\nTorvane-Trefferquote · ${provider ? `${provider} / ${config.model}` : 'nur Regeln (ohne KI)'} · ${Math.round((Date.now() - t0) / 1000)} s\n`);
   for (const h of s.hits) console.log(`  ${h.found ? '✔' : '✘'}  ${h.label}${h.found ? `  (${h.by.join(', ')})` : ''}`);
   console.log(`\n  Gefunden:     ${s.found} von ${s.total} (${pct(s.recall)})`);
   console.log(`  Genauigkeit:  ${pct(s.precision)} – ${s.extra.length} Befund(e) ohne erwartete Lücke`);

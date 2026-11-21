@@ -142,8 +142,8 @@ function analyzeModelFile(buf, label) {
       ruleId: 'model-pickle-dangerous-global', severity: sev, category: 'Deserialization', confidence: 'high',
       title: `Modelldatei enthält gefährliche Pickle-Importe: ${list.join(', ')}`,
       description: r.calls
-        ? `Die Pickle-Daten importieren ${list.join(', ')} und rufen Funktionen auf (REDUCE/INST/OBJ). Beim Laden mit torch.load, pickle.load oder joblib.load wird dieser Code sofort ausgeführt – die Datei ist damit ein ausführbares Programm. Vigil hat die Datei nur gelesen, nicht geladen.`
-        : `Die Pickle-Daten importieren ${list.join(', ')}. Beim Laden mit torch.load, pickle.load oder joblib.load wird dieser Code sofort ausgeführt – die Datei ist damit ein ausführbares Programm. Vigil hat die Datei nur gelesen, nicht geladen.`,
+        ? `Die Pickle-Daten importieren ${list.join(', ')} und rufen Funktionen auf (REDUCE/INST/OBJ). Beim Laden mit torch.load, pickle.load oder joblib.load wird dieser Code sofort ausgeführt – die Datei ist damit ein ausführbares Programm. Torvane hat die Datei nur gelesen, nicht geladen.`
+        : `Die Pickle-Daten importieren ${list.join(', ')}. Beim Laden mit torch.load, pickle.load oder joblib.load wird dieser Code sofort ausgeführt – die Datei ist damit ein ausführbares Programm. Torvane hat die Datei nur gelesen, nicht geladen.`,
       impact: 'Wer die Datei lädt (Entwickler, Trainings- oder Inferenz-Server), führt den eingebauten Befehl mit seinen Rechten aus: Zugangsdaten abgreifen, Hintertür installieren, Daten verschlüsseln.',
       remediation: 'Die Datei nicht laden und die Herkunft prüfen. Modelle im safetensors-Format beziehen bzw. umwandeln, torch.load(..., weights_only=True) verwenden und Downloads nur aus vertrauenswürdigen Quellen mit Prüfsumme zulassen.',
       location: r.entry,

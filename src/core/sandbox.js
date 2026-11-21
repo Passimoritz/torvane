@@ -58,7 +58,7 @@ function minimalEnv(src = process.env, extra = {}) {
 }
 
 // Working directory: the scan target itself (directory, or the folder of a file). Network targets
-// and images get the OS temp dir – never Vigil's own folder or the user's profile.
+// and images get the OS temp dir – never Torvane's own folder or the user's profile.
 function targetCwd(args) {
   for (const a of args || []) {
     if (typeof a !== 'string' || !path.isAbsolute(a)) continue;

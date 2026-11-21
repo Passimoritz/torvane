@@ -70,7 +70,7 @@ function toCycloneDx(result, opts = {}) {
     version: 1,
     metadata: {
       timestamp: now.toISOString(),
-      tools: { components: [{ type: 'application', name: 'Vigil', version: VIGIL_VERSION }] },
+      tools: { components: [{ type: 'application', name: 'Torvane', version: VIGIL_VERSION }] },
       component: { type: 'application', 'bom-ref': 'vigil-root', name: projectName(opts) },
     },
     components: comps,
@@ -97,7 +97,7 @@ function toSpdx(result, opts = {}) {
     SPDXID: 'SPDXRef-DOCUMENT',
     name: `${name}-sbom`,
     documentNamespace: `https://spdx.org/spdxdocs/vigil-${encodeURIComponent(name)}-${uuid()}`,
-    creationInfo: { created: now.toISOString().replace(/\.\d{3}Z$/, 'Z'), creators: [`Tool: Vigil-${VIGIL_VERSION}`] },
+    creationInfo: { created: now.toISOString().replace(/\.\d{3}Z$/, 'Z'), creators: [`Tool: Torvane-${VIGIL_VERSION}`] },
     packages: [root, ...packages],
     relationships: [
       { spdxElementId: 'SPDXRef-DOCUMENT', relationshipType: 'DESCRIBES', relatedSpdxElement: 'SPDXRef-Package-root' },

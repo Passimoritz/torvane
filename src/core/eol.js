@@ -4,7 +4,7 @@
 // Der Feed wird wie die anderen taeglich geladen (feeds.js). Fehlt er, greifen die Pruefungen auf ihre
 // eingebauten Fallback-Werte zurueck – status() liefert dann null.
 
-// Nur was Vigil wirklich vergleicht; der Rest der Quelle (rund 3 MB) wird nicht gespeichert.
+// Nur was Torvane wirklich vergleicht; der Rest der Quelle (rund 3 MB) wird nicht gespeichert.
 const PRODUCTS = ['postgresql', 'mysql', 'mariadb', 'mongodb', 'redis', 'openssl', 'debian', 'ubuntu', 'rocky-linux', 'almalinux', 'nginx', 'apache-http-server', 'php', 'nodejs', 'python', 'tomcat', 'kubernetes'];
 const FEED_URL = 'https://endoflife.date/api/v1/products/full';
 

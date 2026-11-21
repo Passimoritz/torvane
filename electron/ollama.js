@@ -66,7 +66,7 @@ async function status(base) {
 
 // Nur den unsichtbaren Hintergrunddienst "ollama serve" starten – nie die Desktop-App, und
 // hoechstens einen Prozess. Kein "detached": unter Windows oeffnet das trotz windowsHide
-// fuer jeden Start ein eigenes Konsolenfenster. Der Dienst endet mit Vigil.
+// fuer jeden Start ein eigenes Konsolenfenster. Der Dienst endet mit Torvane.
 let serveChild = null;
 let starting = null;
 async function waitRunning(base) {
@@ -124,7 +124,7 @@ async function install(onLine = () => {}) {
     child.on('close', (code) => {
       // Ollama liegt danach unter %LOCALAPPDATA%; der PATH dieses Prozesses kennt es evtl. noch nicht.
       if (code === 0 || findBinary()) {
-        // Vom Installer gestartete Desktop-App wieder schliessen – Vigil nutzt nur den Hintergrunddienst.
+        // Vom Installer gestartete Desktop-App wieder schliessen – Torvane nutzt nur den Hintergrunddienst.
         if (!appWasRunning && process.platform === 'win32') execFile('taskkill', ['/IM', 'ollama app.exe', '/F'], { windowsHide: true }, () => resolve({ ok: true }));
         else resolve({ ok: true });
       }

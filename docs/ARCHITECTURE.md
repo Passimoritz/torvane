@@ -1,6 +1,6 @@
-# Vigil architecture
+# Torvane architecture
 
-Vigil is an Electron app in plain CommonJS (no bundler, no TypeScript). Everything that does
+Torvane is an Electron app in plain CommonJS (no bundler, no TypeScript). Everything that does
 security work lives in `src/core` and runs in plain Node – the same code powers the desktop app,
 the CLI (`src/cli.js`), the benchmark (`tools/bench.js`) and the tests (`test/run.js`).
 
@@ -32,7 +32,7 @@ src/core/                 security engine (no Electron)
   greenbone-setup.js      automatic Greenbone setup: own WSL distro with Docker Engine, official compose.yaml, random password; runs only during scans
   prescan-worker.js       static pre-scan in a worker thread, so large projects do not freeze the window
   runstate.js             saved progress of a check: finished steps and AI blocks, encrypted like the history; paused or interrupted checks continue from it
-  toolupdate.js           daily updates of installed tools (checksum, rollback), nmap via signed installer, Vigil via git fast-forward
+  toolupdate.js           daily updates of installed tools (checksum, rollback), nmap via signed installer, Torvane via git fast-forward
   schedule.js             scheduled checks: due logic, what to report, webhook payloads (runner lives in electron/main.js)
   intel.js                CISA KEV / EPSS, contextual risk, attack paths
   verify.js               SHA-256 pinning and minisign verification of downloads

@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 6/9: Übersicht über alle Läufe.
+// Torvane-Oberfläche, Teil 6/9: Übersicht über alle Läufe.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Uebersicht (Dashboard über alle Läufe) ------------------------------
@@ -85,7 +85,7 @@ function bindDashExport() {
 async function loadDashboard() {
   const res = await window.vigil.dashboard({ ...dash, limit: 5000 });
   const stats = res.stats;
-  const findings = wantEnglish() ? res.findings.map(window.VigilFindingsI18n.localizeFinding) : res.findings;
+  const findings = wantEnglish() ? res.findings.map(window.TorvaneFindingsI18n.localizeFinding) : res.findings;
   state.dashStats = stats;
   const open = stats.open || {};
   const total = stats.openTotal || 0;
@@ -328,7 +328,7 @@ function updateBulk() {
 // Detail-Ansicht fuer einen gespeicherten Befund der Uebersicht (seitliches Fenster).
 function dashFindingFull(rec) {
   const full = dashFindingMerge(rec);
-  return wantEnglish() ? window.VigilFindingsI18n.localizeFinding(full) : full;
+  return wantEnglish() ? window.TorvaneFindingsI18n.localizeFinding(full) : full;
 }
 function dashFindingMerge(rec) {
   return { ...rec, ...(rec.finding || {}), id: rec.id, status: rec.status, severity: rec.severity, title: rec.title, location: rec.location, statusNote: rec.statusNote, firstSeenAt: rec.firstSeenAt, lastSeenAt: rec.lastSeenAt, contextualRiskScore: rec.contextualRiskScore ?? (rec.finding && rec.finding.contextualRiskScore), linkedKeys: [] };

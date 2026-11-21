@@ -1,6 +1,6 @@
 'use strict';
 
-// Einstellungen der Erweiterung: Port und API-Token der lokalen Vigil-REST-API (nur lokal gespeichert)
+// Einstellungen der Erweiterung: Port und API-Token der lokalen Torvane-REST-API (nur lokal gespeichert)
 const $ = (id) => document.getElementById(id);
 (async () => {
   const s = await chrome.storage.local.get({ port: 7811, token: '' });

@@ -1,13 +1,13 @@
 'use strict';
 
-// Haelt die Werkzeuge von Vigil aktuell, hoechstens einmal am Tag. Aktualisiert wird nur, was schon da ist;
+// Haelt die Werkzeuge von Torvane aktuell, hoechstens einmal am Tag. Aktualisiert wird nur, was schon da ist;
 // nichts wird neu installiert.
 //
 // Sicherheit beim Tausch:
 //  - Quellen sind fest: GitHub-Releases der jeweiligen Projekte bzw. nmap.org. Geprueft wird die SHA-256-Summe
 //    des Herausgebers, bei nmap zusaetzlich die digitale Signatur.
 //  - Die alte Datei bleibt liegen, bis die neue nachweislich laeuft. Blockiert Windows die neue Datei
-//    (Smart App Control), kommt automatisch die alte zurueck. Vigil umgeht die Sperre nicht.
+//    (Smart App Control), kommt automatisch die alte zurueck. Torvane umgeht die Sperre nicht.
 
 const crypto = require('crypto');
 const fs = require('fs');
@@ -39,7 +39,7 @@ function isNewer(latest, current) {
 }
 const versionIn = (text) => (String(text || '').replace(/\x1b\[[0-9;]*m/g, '').match(/\bv?(\d+\.\d+(?:\.\d+)*)\b/) || [])[1] || null;
 const timeout = (ms, signal) => (signal ? AbortSignal.any([AbortSignal.timeout(ms), signal]) : AbortSignal.timeout(ms));
-const HEAD = { 'User-Agent': 'Vigil-Audit' };
+const HEAD = { 'User-Agent': 'Torvane-Audit' };
 
 // "<sha256>  <name>" oder "<name> <sha256>"; Pfadteile vor dem Namen zaehlen nicht
 function checksumFor(text, name) {
@@ -144,7 +144,7 @@ async function updateGithubTool(tool, exePath, { run, fetchImpl = fetch, signal 
 }
 
 // nmap: Nur der Installer ist aktuell; er ist signiert und laeuft still durch, Windows fragt einmal nach
-// Administratorrechten. Lehnt der Nutzer ab, fragt Vigil eine Woche lang nicht erneut.
+// Administratorrechten. Lehnt der Nutzer ab, fragt Torvane eine Woche lang nicht erneut.
 async function updateNmap(exePath, { run, fetchImpl = fetch, signal, lastAttempt = 0, now = Date.now(), onPrompt = () => {} } = {}) {
   const res = (status, extra = {}) => ({ id: 'nmap', status, ...extra });
   const verOf = (r) => (String(r.stdout || '').match(/Nmap version (\d+(?:\.\d+)+)/i) || [])[1] || null;
@@ -209,7 +209,7 @@ async function updatePackaged({ run, signal, retirePkg } = {}) {
   return out;
 }
 
-// Vigil selbst, wenn es aus einer Git-Kopie laeuft: nur vorspulen, nur auf main und nur ohne eigene
+// Torvane selbst, wenn es aus einer Git-Kopie laeuft: nur vorspulen, nur auf main und nur ohne eigene
 // Aenderungen. Wirksam beim naechsten Start.
 async function updateSelf(dir, { run, signal } = {}) {
   const git = (args, t = 60000) => run('git', ['-C', dir, ...args], { timeoutMs: t, signal });

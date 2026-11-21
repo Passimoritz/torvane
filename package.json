@@ -1,8 +1,8 @@
 {
-  "name": "vigil",
-  "version": "0.2.0",
+  "name": "torvane",
+  "version": "0.3.0",
   "private": true,
-  "description": "Vigil – defensives Sicherheits-Audit für eigene Projekte, Webseiten, Server und Container.",
+  "description": "Torvane – defensives Sicherheits-Audit für eigene Projekte, Webseiten, Server und Container.",
   "main": "electron/main.js",
   "bin": { "torvane": "src/cli.js" },
   "scripts": {
@@ -35,7 +35,7 @@
   },
   "build": {
     "appId": "com.passimoritz.vigil",
-    "productName": "Vigil",
+    "productName": "Torvane",
     "directories": {
       "output": "dist"
     },
@@ -67,7 +67,7 @@
         }
       ],
       "icon": "assets/icon.ico",
-      "legalTrademarks": "Vigil",
+      "legalTrademarks": "Torvane",
       "signtoolOptions": {
         "publisherName": "Passimoritz"
       }
@@ -79,8 +79,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Vigil",
-      "uninstallDisplayName": "Vigil ${version}",
+      "shortcutName": "Torvane",
+      "uninstallDisplayName": "Torvane ${version}",
       "runAfterFinish": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
@@ -93,12 +93,12 @@
       ],
       "displayLanguageSelector": false,
       "deleteAppDataOnUninstall": false,
-      "artifactName": "Vigil-Setup-${version}.${ext}",
+      "artifactName": "Torvane-Setup-${version}.${ext}",
       "menuCategory": false
     },
     "copyright": "Copyright © 2026 Passimoritz",
     "portable": {
-      "artifactName": "Vigil-Portable-${version}.${ext}",
+      "artifactName": "Torvane-Portable-${version}.${ext}",
       "unicode": true
     }
   },
@@ -108,7 +108,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Passimoritz/vigil.git"
+    "url": "https://github.com/Passimoritz/torvane.git"
   },
-  "homepage": "https://github.com/Passimoritz/vigil"
+  "homepage": "https://github.com/Passimoritz/torvane"
 }

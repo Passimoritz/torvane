@@ -880,12 +880,12 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
       check('updates: abgelehnte Windows-Abfrage wird gemerkt', nRefused.status === 'failed' && nRefused.attempted === true && ncalls.some((c) => /RunAs/.test(c)));
       const nWait = await up.updateNmap('nmap', { run: nrun(true, true), fetchImpl: nf, lastAttempt: Date.now() - 1000 });
       check('updates: danach eine Woche keine neue Abfrage', nWait.status === 'waiting');
-      // Vigil selbst: nur vorspulen, nie ueber eigene Aenderungen
+      // Torvane selbst: nur vorspulen, nie ueber eigene Aenderungen
       const gitRun = (o) => async (cmd, args) => { const a = args.slice(2).join(' '); if (/rev-parse --abbrev/.test(a)) return { ok: true, stdout: o.branch || 'main' }; if (/status/.test(a)) return { ok: true, stdout: o.dirty ? ' M x' : '' }; if (/rev-parse HEAD/.test(a)) { o.n = (o.n || 0) + 1; return { ok: true, stdout: o.n > 1 && o.moved ? 'bbbbbbbbb' : 'aaaaaaaaa' }; } if (/merge/.test(a)) return { ok: !o.ahead, stdout: '' }; return { ok: true, stdout: '' }; };
       nfs.mkdirSync(npath.join(dir, '.git'));
-      check('updates: Vigil nur ohne eigene Änderungen und nur auf main', (await up.updateSelf(dir, { run: gitRun({ dirty: true }) })).status === 'skipped' && (await up.updateSelf(dir, { run: gitRun({ branch: 'dev' }) })).status === 'skipped' && (await up.updateSelf(dir, { run: gitRun({ ahead: true }) })).status === 'skipped');
+      check('updates: Torvane nur ohne eigene Änderungen und nur auf main', (await up.updateSelf(dir, { run: gitRun({ dirty: true }) })).status === 'skipped' && (await up.updateSelf(dir, { run: gitRun({ branch: 'dev' }) })).status === 'skipped' && (await up.updateSelf(dir, { run: gitRun({ ahead: true }) })).status === 'skipped');
       const selfUp = await up.updateSelf(dir, { run: gitRun({ moved: true }) });
-      check('updates: neue Vigil-Version wird beim nächsten Start aktiv', selfUp.status === 'updated' && selfUp.restart === true);
+      check('updates: neue Torvane-Version wird beim nächsten Start aktiv', selfUp.status === 'updated' && selfUp.restart === true);
       check('updates: installierte Fassung ohne Git bleibt unberührt', (await up.updateSelf(npath.join(dir, 'tool.exe.x'), { run: gitRun({}) })).status === 'skipped');
       let locked = 0;
       const lockErr = () => Object.assign(new Error('gesperrt'), { code: 'EBUSY' });
@@ -1106,7 +1106,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     const m = clk.finish();
     check('timing: Phasen gemessen', Math.round(m.total) === 350 && m.aiCalls === 2 && m.validateCalls === 1);
     const after = t.estimate(inp, t.learn({}, m, { ...inp }));
-    check('timing: nach einem 6-Min-Lauf schaetzt Vigil ~6 Min.', after.measured && Math.abs(after.seconds - 350) < 40);
+    check('timing: nach einem 6-Min-Lauf schaetzt Torvane ~6 Min.', after.measured && Math.abs(after.seconds - 350) < 40);
     const web = t.estimate({ targets: [{ type: 'url' }], config: {} }, {});
     check('timing: Webadresse ohne KI nicht unter einer Minute', web.seconds >= 60);
     // Greenbone zaehlt nur mit, wenn es laeuft und ein Web-Ziel da ist
@@ -1615,7 +1615,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     const img2 = { width: 4, height: 3, data: Buffer.from(img.data) }; img2.data[0] = 250;
     check('visuell: PNG hin und zurück, Pixel-Unterschied mit Toleranz', back.width === 4 && back.data.equals(img.data) && png.compare(img, img2).diffPixels === 1 && png.compare(img, back).diffPixels === 0);
 
-    // Selbst-Scan: Vigils eigene Pruefungen auf Vigils eigenen Code
+    // Selbst-Scan: Torvanes eigene Pruefungen auf Torvanes eigenen Code
     const { ingestTargets } = require('../src/core/ingest');
     const { prescan } = require('../src/core/prescan');
     const { runStaticModules } = require('../src/core/modules/static');
@@ -1626,7 +1626,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     // Regel-Definitionen enthalten die gesuchten Muster selbst (z. B. "jwt.decode(") – das sind keine Luecken
     const RULE_FILES = /modules[\\/](static|langs|iac|mobile|webdeep|cryptoinv)\.js|prescan\.js|findings-en\.js|remedies\.js/;
     const high = selfF.filter((f) => f.severity === 'high' && !RULE_FILES.test(f.location));
-    check(`selbst-scan: keine kritischen Befunde in Vigils eigenem Code (${self.units.length} Dateien)`, self.units.length > 40 && crit.length === 0);
+    check(`selbst-scan: keine kritischen Befunde in Torvanes eigenem Code (${self.units.length} Dateien)`, self.units.length > 40 && crit.length === 0);
     check('selbst-scan: keine hohen Befunde außerhalb der Regel-Dateien', high.length === 0);
     // Electron-Grundhaertung im Hauptfenster
     const mainSrc = fs.readFileSync(path.join(__dirname, '..', 'electron', 'main.js'), 'utf8');
@@ -2511,7 +2511,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     // Abzeichen
     const svg = X.badgeSvg({ grade: 'B', date: '2026-11-05' });
     check('abzeichen: SVG mit Note, Datum und Farbe', /^<svg[^>]+width="\d+" height="20"/.test(svg) && svg.includes('B · 2026-11-05') && svg.includes('#4c9a2a') && svg.includes('role="img"'));
-    check('abzeichen: Markdown-Schnipsel', X.badgeMarkdown('my badge.svg', { grade: 'B', date: '2026-11-05' }) === '![Vigil security: B (2026-11-05)](my%20badge.svg)');
+    check('abzeichen: Markdown-Schnipsel', X.badgeMarkdown('my badge.svg', { grade: 'B', date: '2026-11-05' }) === '![Torvane security: B (2026-11-05)](my%20badge.svg)');
 
     // CI-Formate
     const gl = JSON.parse(X.toGitlabSast(res, '1.2.3'));
@@ -2519,7 +2519,7 @@ console.log('Harness (Schwaerzen, Slices, Gegenpruefung, Belege):');
     check('gitlab sast: Schema-Felder, nur offene Befunde', gl.scan.type === 'sast' && gl.scan.analyzer.version === '1.2.3' && gl.vulnerabilities.length === 2 && v0.severity === 'Critical' && v0.location.file === 'src/db.js' && v0.location.start_line === 12);
     check('gitlab sast: UUID und Kennungen (CWE)', /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-a[0-9a-f]{3}-[0-9a-f]{12}$/.test(v0.id) && v0.identifiers.some((i) => i.type === 'cwe' && i.value === '89'));
     const ju = X.toJunit(res);
-    check('junit: testsuite mit error/failure je Schwere', /<testsuites name="Vigil" tests="2" failures="1" errors="1">/.test(ju) && ju.includes('<error type="critical"') && ju.includes('<failure type="medium"'));
+    check('junit: testsuite mit error/failure je Schwere', /<testsuites name="Torvane" tests="2" failures="1" errors="1">/.test(ju) && ju.includes('<error type="critical"') && ju.includes('<failure type="medium"'));
     check('junit: ohne Befunde ein bestandener Test', /tests="1" failures="0" errors="0"/.test(X.toJunit({ findings: [] })));
     const cs = X.toCheckstyle({ findings: [{ title: 'A <b> & "c"', severity: 'high', location: 'x.js:4', ruleId: 'r1' }, { title: 'B', severity: 'low', location: 'x.js:9' }] });
     check('checkstyle: Datei-Gruppen, Zeilen, Schwere, maskiert', (cs.match(/<file /g) || []).length === 1 && cs.includes('line="4" severity="error" message="A &lt;b&gt; &amp; &quot;c&quot;"') && cs.includes('severity="info"'));

@@ -1,6 +1,6 @@
 'use strict';
 
-// Encryption at rest for Vigil's own data (findings store, scan history).
+// Encryption at rest for Torvane's own data (findings store, scan history).
 //
 //  Format   "VGLE1" | iv (12 bytes) | GCM tag (16 bytes) | AES-256-GCM ciphertext of the JSON text
 //  Key      32 random bytes, stored only wrapped by the OS (Electron safeStorage = Windows DPAPI,
@@ -29,7 +29,7 @@ function createCipher(key) {
       return Buffer.concat([MAGIC, iv, c.getAuthTag(), ct]);
     },
     decrypt(buf) {
-      if (!isEncrypted(buf)) throw new Error('not an encrypted Vigil file');
+      if (!isEncrypted(buf)) throw new Error('not an encrypted Torvane file');
       const iv = buf.subarray(MAGIC.length, MAGIC.length + IV_LEN);
       const tag = buf.subarray(MAGIC.length + IV_LEN, MAGIC.length + IV_LEN + TAG_LEN);
       const d = crypto.createDecipheriv('aes-256-gcm', key, iv);

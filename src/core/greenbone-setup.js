@@ -136,7 +136,7 @@ async function runSetup({ password = '', auto = false, force = false, signal, on
 
   // 1. WSL und eigene Umgebung
   const st = await run('wsl', ['--status'], { timeoutMs: 30000 });
-  if (!st.ok) return { ok: false, state: 'needs_wsl', error: 'WSL fehlt. Einmal „wsl --install“ als Administrator ausführen und neu starten, dann setzt Vigil die Einrichtung fort.' };
+  if (!st.ok) return { ok: false, state: 'needs_wsl', error: 'WSL fehlt. Einmal „wsl --install“ als Administrator ausführen und neu starten, dann setzt Torvane die Einrichtung fort.' };
   if (!(await distroExists(run))) {
     onStep({ step: 'distro', message: 'Lege die eigene WSL-Umgebung an …' });
     const made = await run('wsl', ['--install', IMAGE, '--name', DISTRO, '--no-launch'], { timeoutMs: 30 * 60 * 1000, signal });
@@ -205,12 +205,12 @@ async function runSetup({ password = '', auto = false, force = false, signal, on
 
     // 6. Erst fertig, wenn die Tests geladen sind (beim ersten Mal kann das Stunden dauern)
     if (checkReady) {
-      onStep({ step: 'sync', message: 'Beim ersten Mal kann das Stunden dauern. Du kannst Vigil normal weiter benutzen.' });
+      onStep({ step: 'sync', message: 'Beim ersten Mal kann das Stunden dauern. Du kannst Torvane normal weiter benutzen.' });
       let info = null;
       for (const t0 = Date.now(); Date.now() - t0 < syncWaitMs && !stopped();) {
         try { info = await checkReady(pw); } catch { info = null; }
         if (info && !info.syncing && info.nvts) break;
-        if (info && info.nvts) onStep({ step: 'sync', message: 'Beim ersten Mal kann das Stunden dauern. Du kannst Vigil normal weiter benutzen.', count: info.nvts });
+        if (info && info.nvts) onStep({ step: 'sync', message: 'Beim ersten Mal kann das Stunden dauern. Du kannst Torvane normal weiter benutzen.', count: info.nvts });
         info = null;
         await sleep(pollMs * 4);
       }

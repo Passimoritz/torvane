@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 9/9: Glossar, Notizen, Rückgängig, Pause, Gruppierung, Befehlspalette, Layout, Vergleich, Branding, Einrichtung.
+// Torvane-Oberfläche, Teil 9/9: Glossar, Notizen, Rückgängig, Pause, Gruppierung, Befehlspalette, Layout, Vergleich, Branding, Einrichtung.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // ==========================================================================================
@@ -102,7 +102,7 @@ async function togglePause() {
   $('pauseBtn').disabled = false;
   if (!r || !r.ok) return;
   setPaused(r.paused);
-  $('progressTitle').textContent = r.paused ? 'Pausiert – Stand gespeichert, Vigil darf geschlossen werden' : 'Prüfung läuft …';
+  $('progressTitle').textContent = r.paused ? 'Pausiert – Stand gespeichert, Torvane darf geschlossen werden' : 'Prüfung läuft …';
   toast(r.paused ? 'Prüfung pausiert' : 'Prüfung fortgesetzt', 'ok');
 }
 

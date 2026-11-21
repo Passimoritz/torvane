@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 7/9: Einstellungen und Darstellung.
+// Torvane-Oberfläche, Teil 7/9: Einstellungen und Darstellung.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Einstellungen ------------------------------------------------------
@@ -74,7 +74,7 @@ function renderWatch() {
   window.vigil.watchAlerts().then((list) => {
     const box = $('dashWatch');
     if (!list.length) { box.innerHTML = ''; return; }
-    const tr = (s) => (wantEnglish() && window.VigilFindingsI18n ? window.VigilFindingsI18n.translate(s) : s);
+    const tr = (s) => (wantEnglish() && window.TorvaneFindingsI18n ? window.TorvaneFindingsI18n.translate(s) : s);
     const kind = { newcve: 'Neue Lücke', advisory: 'BSI-Hinweis', ct: 'Zertifikat' };
     box.innerHTML = `<section class="watch-box" aria-label="Hinweise aus der Überwachung"><h3>Neu seit der letzten Prüfung (${list.length})</h3><p class="hint small">Ohne neuen Scan erkannt: neue Schwachstellen in Paketen aus gespeicherten Prüfungen, passende BSI-Sicherheitshinweise und neue Zertifikate für deine Domains.</p><ul class="watch-list">${list.slice(0, 20).map((a, i) => `<li class="watch-item"><span class="feed-dot ${esc(a.severity || '')}" aria-hidden="true"></span><div><b>${esc(tr(a.title))}</b><span class="muted small">${esc(kind[a.type] || '')} · ${esc(fmtDate(a.at))}</span><span class="small">${esc(tr(a.detail || ''))}</span></div><span class="acts">${a.link ? `<button type="button" class="btn ghost tiny" data-watch-link="${i}">Details</button>` : ''}<button type="button" class="btn ghost tiny" data-watch-dismiss="${i}">Ausblenden</button></span></li>`).join('')}</ul>${list.length > 1 ? '<button type="button" class="btn ghost tiny" data-watch-dismiss="*">Alle ausblenden</button>' : ''}</section>`;
     box.querySelectorAll('[data-watch-link]').forEach((b) => { b.onclick = () => window.vigil.openLink(list[Number(b.dataset.watchLink)].link); });

@@ -1,7 +1,7 @@
 'use strict';
 
-// Popup: aktuelle Adresse an die lokale Vigil-REST-API schicken (POST /api/inbox).
-// Vigil fragt im Fenster nach, bevor das Ziel in die Pruefliste kommt – hier wird nichts geprueft.
+// Popup: aktuelle Adresse an die lokale Torvane-REST-API schicken (POST /api/inbox).
+// Torvane fragt im Fenster nach, bevor das Ziel in die Pruefliste kommt – hier wird nichts geprueft.
 const $ = (id) => document.getElementById(id);
 const say = (t, kind) => { $('status').textContent = t; $('status').className = kind || ''; };
 
@@ -23,16 +23,16 @@ async function settings() {
   $('opts').onclick = (e) => { e.preventDefault(); chrome.runtime.openOptionsPage(); };
   $('send').onclick = async () => {
     const { port, token } = await settings();
-    if (!token) { say('Enter the API token from Vigil (Settings → Advanced → Local REST API) first.', 'err'); return; }
+    if (!token) { say('Enter the API token from Torvane (Settings → Advanced → Local REST API) first.', 'err'); return; }
     $('send').disabled = true; say('Sending …');
     try {
       const r = await fetch(`http://127.0.0.1:${port}/api/inbox`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ url }) });
       const j = await r.json().catch(() => ({}));
-      if (r.status === 202) say(`Sent to Vigil: ${j.target || url}. Please confirm it in the app.`, 'ok');
-      else if (r.status === 401) say('Token rejected – copy it again from Vigil.', 'err');
-      else say(`Vigil answered ${r.status}: ${j.error || 'error'}`, 'err');
+      if (r.status === 202) say(`Sent to Torvane: ${j.target || url}. Please confirm it in the app.`, 'ok');
+      else if (r.status === 401) say('Token rejected – copy it again from Torvane.', 'err');
+      else say(`Torvane answered ${r.status}: ${j.error || 'error'}`, 'err');
     } catch {
-      say('Vigil is not reachable. Is the app running and the local REST API enabled?', 'err');
+      say('Torvane is not reachable. Is the app running and the local REST API enabled?', 'err');
     } finally { $('send').disabled = false; }
   };
 })();

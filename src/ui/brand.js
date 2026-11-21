@@ -2,13 +2,13 @@
 
 // Anzeigename der App an EINER Stelle. Fuer eine Umbenennung nur NAME aendern:
 // - Elemente mit data-brand="name" / data-brand="tagline" bekommen den Text,
-// - Seitentitel und alle sichtbaren Texte, in denen "Vigil" steht, werden ersetzt,
-// - die englische Uebersetzung (i18n.js) schlaegt weiter mit "Vigil" nach und setzt danach den neuen Namen ein.
+// - Seitentitel und alle sichtbaren Texte, in denen "Torvane" steht, werden ersetzt,
+// - die englische Uebersetzung (i18n.js) schlaegt weiter mit "Torvane" nach und setzt danach den neuen Namen ein.
 // Interne Kennungen (window.vigil, Dateinamen, IPC) bleiben bewusst unveraendert.
 (() => {
   const NAME = 'Torvane';
   const TAGLINE = 'Sicherheitsprüfung';
-  const ORIGINAL = 'Vigil';
+  const ORIGINAL = 'Torvane';
   const brand = Object.freeze({ name: NAME, tagline: TAGLINE, original: ORIGINAL });
   window.APP_BRAND = brand;
 

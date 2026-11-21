@@ -197,7 +197,7 @@ function parseBackup(d) {
     if (!isTarget && dr.type !== 2) continue;
     add({ ruleId: 'backup-drive-unencrypted', severity: 'low', category: 'Crypto', location: `Laufwerk ${dr.id}`, title: isTarget ? `Sicherungslaufwerk ${dr.id} ist nicht verschlüsselt` : `Wechsellaufwerk ${dr.id} ist nicht verschlüsselt`, description: 'Wer das Laufwerk mitnimmt, kann alle darauf gesicherten Dateien lesen.', remediation: 'Im Explorer Rechtsklick auf das Laufwerk → „BitLocker aktivieren“ (BitLocker To Go).' });
   }
-  add({ ruleId: 'backup-restore-test', severity: 'info', title: 'Wiederherstellung regelmäßig testen', description: 'Vigil sieht nur, ob gesichert wird – nicht, ob sich die Daten auch zurückholen lassen.', remediation: RESTORE_HINT });
+  add({ ruleId: 'backup-restore-test', severity: 'info', title: 'Wiederherstellung regelmäßig testen', description: 'Torvane sieht nur, ob gesichert wird – nicht, ob sich die Daten auch zurückholen lassen.', remediation: RESTORE_HINT });
   return out;
 }
 

@@ -1,14 +1,14 @@
-# Vigil threat model
+# Torvane threat model
 
-Vigil is a defensive security-audit desktop app. It reads source code, talks to websites and
+Torvane is a defensive security-audit desktop app. It reads source code, talks to websites and
 servers the user owns, runs third-party scanners and optionally sends code to an AI provider.
-That makes Vigil itself an attractive target: it holds findings (a map of the user's weak spots),
+That makes Torvane itself an attractive target: it holds findings (a map of the user's weak spots),
 API keys, test-account passwords and an always-on local API. This document lists what we protect,
 the trust boundaries, the threats per boundary (STRIDE) and the controls that exist today.
 
 Scope: the Windows desktop build (Electron 45, plain CommonJS). Out of scope: a fully compromised
 Windows account (malware running as the same user can read process memory and use DPAPI exactly
-like Vigil can) and physical attacks on an unlocked, logged-in machine beyond the app lock.
+like Torvane can) and physical attacks on an unlocked, logged-in machine beyond the app lock.
 
 ## Assets
 
@@ -25,7 +25,7 @@ like Vigil can) and physical attacks on an unlocked, logged-in machine beyond th
 ## Trust boundaries
 
 ```
- user's files ──read──▶ ┌──────────────────────────── Vigil (main process, Node) ───────────────────────────┐
+ user's files ──read──▶ ┌──────────────────────────── Torvane (main process, Node) ───────────────────────────┐
                         │ core pipeline (src/core) · store · feeds · orchestrator · REST API (127.0.0.1)    │
  renderer (sandboxed) ◀─┤ IPC (preload, contextBridge)                                                      │
                         │ child processes: trivy, semgrep, gitleaks, nmap, nuclei … (sandbox.js)            │
@@ -68,8 +68,8 @@ like Vigil can) and physical attacks on an unlocked, logged-in machine beyond th
 | Threat | Risk | Mitigation |
 | --- | --- | --- |
 | T | A manipulated release is installed | Fixed sources, publisher SHA-256 checked before anything is replaced; nmap also needs a valid signature. Checksums come from the same release, so a fully compromised project account is not detected |
-| D | A new file does not run or is blocked by Smart App Control | The old file is kept until the new one runs, and is restored otherwise; Vigil never bypasses the block |
-| E | Unattended code from GitHub runs as the user | Vigil only fast-forwards `main` on an unmodified copy, and only at the next start; can be switched off |
+| D | A new file does not run or is blocked by Smart App Control | The old file is kept until the new one runs, and is restored otherwise; Torvane never bypasses the block |
+| E | Unattended code from GitHub runs as the user | Torvane only fast-forwards `main` on an unmodified copy, and only at the next start; can be switched off |
 
 ### Scheduled checks and Greenbone
 
@@ -90,7 +90,7 @@ like Vigil can) and physical attacks on an unlocked, logged-in machine beyond th
 | --- | --- | --- |
 | S | Attacker serves a fake feed (DNS, proxy) | HTTPS only, host allowlist (`raw.githubusercontent.com`, `cisa.gov`, `epss.cyentia.com`), redirects rejected |
 | T | Feed content manipulated in transit or upstream | Shape and minimum-size checks; optional SHA-256 pins and minisign signatures per feed (`feeds/pins.json`, `src/core/verify.js`); mismatches are rejected and the last good copy stays active |
-| T | Cached feed edited on disk to hide findings | Each cached feed stores a hash of its data; a mismatch makes Vigil ignore it and re-download |
+| T | Cached feed edited on disk to hide findings | Each cached feed stores a hash of its data; a mismatch makes Torvane ignore it and re-download |
 | D | Huge feed or catastrophic regex (ReDoS) | Size caps (3–8 MB), regexes compiled individually, length-limited, applied per line ≤ 2000 chars |
 | E | Code execution from feeds | Feeds are data only – nothing is evaluated |
 
@@ -125,7 +125,7 @@ The app lock does not cover the REST API (it is meant for unattended scripts); d
 | --- | --- | --- |
 | I | Laptop theft, backup copies, other users reading the profile | Findings store and history encrypted with AES-256-GCM (`src/core/securefile.js`); the 256-bit data key is wrapped by Electron safeStorage (Windows DPAPI, bound to the user account); plaintext files are migrated on first start |
 | T | Files edited to hide findings | GCM authentication tag: tampered files fail to decrypt and are moved aside (`*.unreadable-<time>`) instead of being silently replaced |
-| I | Someone at an unlocked PC opens Vigil | Optional app lock: scrypt-hashed password (N=2¹⁵, r=8), on start and after configurable system idle time or when Windows locks; while locked the main process refuses all data IPC; exponential back-off after 5 wrong attempts |
+| I | Someone at an unlocked PC opens Torvane | Optional app lock: scrypt-hashed password (N=2¹⁵, r=8), on start and after configurable system idle time or when Windows locks; while locked the main process refuses all data IPC; exponential back-off after 5 wrong attempts |
 | I | Crash reports leak paths/user names | Crash reports stay local; the home directory is replaced by `~` |
 
 Limits: DPAPI protects against other accounts and offline disk access, not against malware
@@ -139,13 +139,13 @@ the password only.
 | | Threat | Controls |
 | --- | --- | --- |
 | E | Command injection through target paths/URLs | `shell: false`, arguments as arrays, NUL bytes rejected; targets validated (Zod, scope) before |
-| I | A compromised or malicious scanner exfiltrates Vigil's secrets | Minimal environment: only OS basics, proxy (credentials stripped) and tool-specific `TRIVY_*`-style variables; anything named like a token/key/secret/password is removed – API keys from `.env` never reach a child process |
+| I | A compromised or malicious scanner exfiltrates Torvane's secrets | Minimal environment: only OS basics, proxy (credentials stripped) and tool-specific `TRIVY_*`-style variables; anything named like a token/key/secret/password is removed – API keys from `.env` never reach a child process |
 | T | Tool writes outside the target | Working directory = scan target (or the temp dir for network targets) |
 | D | Hanging tool, gigabytes of output | Hard timeouts per tool, 64 MB output cap per stream (process killed), below-normal priority; incomplete runs never auto-resolve findings |
 
 Not done: Windows job objects / restricted tokens / AppContainer. Node has no API for them and
 creating them from PowerShell requires `Add-Type` (runtime C# compilation), which Smart App
-Control and AppLocker rightly block. Vigil never modifies or bypasses Smart App Control or other
+Control and AppLocker rightly block. Torvane never modifies or bypasses Smart App Control or other
 system security settings. A future option is a small signed native helper.
 
 ### 8. Active web checks (domaudit, webscan, nuclei)
@@ -160,13 +160,13 @@ no brute force; per-target rate limits.
 * Electron fuses set at build time (`electron-builder.config.js` → `electronFuses`):
   `RunAsNode` off, `EnableNodeOptionsEnvironmentVariable` off, `EnableNodeCliInspectArguments` off,
   `EnableEmbeddedAsarIntegrityValidation` on, `OnlyLoadAppFromAsar` on, `EnableCookieEncryption` on.
-  Verify a build with `npx @electron/fuses read --app dist/win-unpacked/Vigil.exe`.
+  Verify a build with `npx @electron/fuses read --app dist/win-unpacked/Torvane.exe`.
 * Code signing via SignPath / Azure Trusted Signing (see `SIGNING.md`, `CODE_SIGNING.md`).
 * Dependabot for npm and GitHub Actions; CI runs `npm test` and `npm audit --omit=dev`.
 
 ## Self-check
 
-`npm test` runs Vigil's own static checks against `src/` and `electron/` and fails on any
+`npm test` runs Torvane's own static checks against `src/` and `electron/` and fails on any
 critical finding or any high finding outside the rule-definition files. It also asserts the window
 hardening flags, the CSP, the fuses and that `src/core/tools.js` spawns nothing outside the sandbox.
 

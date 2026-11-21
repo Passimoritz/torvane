@@ -172,7 +172,7 @@ function addTextBuffer(col, label, kind, buf, srcPath) {
     for (const f of analyzeScript(scriptText, label, ext)) col.findings.push(f);
   }
   if (Buffer.byteLength(text, 'utf8') > MAX_TEXT_BYTES) {
-    text = text.slice(0, MAX_TEXT_BYTES) + '\n\n/* ... [von Vigil gekuerzt] ... */';
+    text = text.slice(0, MAX_TEXT_BYTES) + '\n\n/* ... [von Torvane gekuerzt] ... */';
   }
   col.add({ label, kind, language: langFor(ext), path: srcPath || label, content: text });
 }
@@ -463,7 +463,7 @@ function fetchUrl(url) {
     let mod, target;
     try { target = new URL(url); } catch { return resolve({ error: 'Ungueltige URL' }); }
     mod = target.protocol === 'http:' ? http : https;
-    const req = mod.request(url, { method: 'GET', timeout: 12000, headers: { 'User-Agent': 'Vigil-Audit/0.1 (+passive)' } }, (res) => {
+    const req = mod.request(url, { method: 'GET', timeout: 12000, headers: { 'User-Agent': 'Torvane-Audit/0.1 (+passive)' } }, (res) => {
       const chunks = [];
       let size = 0;
       res.on('data', (c) => {

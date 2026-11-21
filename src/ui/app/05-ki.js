@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 5/9: KI-Auswahl: lokal (Ollama/kompatibel) und Cloud.
+// Torvane-Oberfläche, Teil 5/9: KI-Auswahl: lokal (Ollama/kompatibel) und Cloud.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- KI-Auswahl: Lokal (Ollama) oder Cloud ------------------------------
@@ -124,7 +124,7 @@ function setOllamaCard(kind, title, sub, action) {
 function renderOllama() {
   const s = ai.ollama || {};
   if (!s.installed) setOllamaCard('err', 'Ollama ist noch nicht installiert', 'Ollama führt KI-Modelle direkt auf deinem Rechner aus. Die Installation dauert ein, zwei Minuten.', { label: 'Ollama installieren', run: installOllama });
-  else if (!s.running) setOllamaCard('wait', 'Ollama ist installiert, läuft aber nicht', 'Vigil kann den Dienst für dich starten.', { label: 'Ollama starten', run: startOllama });
+  else if (!s.running) setOllamaCard('wait', 'Ollama ist installiert, läuft aber nicht', 'Torvane kann den Dienst für dich starten.', { label: 'Ollama starten', run: startOllama });
   else setOllamaCard('ok', `Ollama läuft${s.version ? ' · Version ' + s.version : ''}`, s.models.length ? `${s.models.length} ${s.models.length === 1 ? 'Modell' : 'Modelle'} installiert` : 'Noch kein Modell installiert – lade unten eins herunter.', null);
   $('localModelRow').hidden = !(s.running && s.models.length);
   $('modelShop').hidden = !s.running;
@@ -191,7 +191,7 @@ async function installOllama() {
     return;
   }
   setOllamaCard('err', 'Installation hat nicht geklappt', r.error, r.fallback
-    ? { label: 'Download-Seite öffnen', run: () => { window.vigil.ollama.openDownload(); $('ollamaSub').textContent = 'Nach der Installation hier einfach weitermachen – Vigil erkennt Ollama automatisch.'; } }
+    ? { label: 'Download-Seite öffnen', run: () => { window.vigil.ollama.openDownload(); $('ollamaSub').textContent = 'Nach der Installation hier einfach weitermachen – Torvane erkennt Ollama automatisch.'; } }
     : { label: 'Erneut versuchen', run: installOllama });
 }
 async function startOllama() {

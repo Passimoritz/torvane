@@ -202,7 +202,7 @@ function openaiTarget(cfg, fallbackBase) {
     return { url: `${root}/chat/completions?api-version=${encodeURIComponent(ver)}`, headers };
   }
   if (cfg.apiKey) headers.Authorization = `Bearer ${cfg.apiKey}`;
-  if (cfg.provider === 'openrouter') { headers['HTTP-Referer'] = 'https://github.com/Passimoritz/vigil'; headers['X-Title'] = 'Vigil'; }
+  if (cfg.provider === 'openrouter') { headers['HTTP-Referer'] = 'https://github.com/Passimoritz/torvane'; headers['X-Title'] = 'Torvane'; }
   return { url: `${base}/chat/completions`, headers };
 }
 const openaiUsage = (u = {}) => ({ inputTokens: u.prompt_tokens || 0, outputTokens: u.completion_tokens || 0, cachedTokens: (u.prompt_tokens_details && u.prompt_tokens_details.cached_tokens) || 0 });

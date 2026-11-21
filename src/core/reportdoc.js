@@ -265,7 +265,7 @@ function toHtml(result, opts = {}) {
 </style></head><body><div class="page">
 
 <section class="cover">
-  <div class="brand">${SHIELD}<div>Vigil<small>Sicherheits-Prüfung</small></div>${logo}</div>
+  <div class="brand">${SHIELD}<div>Torvane<small>Sicherheits-Prüfung</small></div>${logo}</div>
   <h1>${esc(title)}</h1>
   <div class="sub">${opts.company ? esc(opts.company) + ' · ' : ''}Erstellt am ${esc(fmtDate(meta.at))}</div>
   ${b.coverText ? `<p class="cover-text">${esc(b.coverText)}</p>` : ''}
@@ -331,7 +331,7 @@ function toHtml(result, opts = {}) {
     <div class="box"><h4>Was die Stufen bedeuten</h4><dl>${SEV.map((sv) => `<dt><span class="st" style="background:${SEV_COLOR[sv]}"></span>${SEV_LABEL[sv]}</dt><dd>${esc(SEV_HELP[sv])}</dd>`).join('')}</dl></div>
   </div>
   ${result.errors && result.errors.length ? `<div class="box" style="margin-top:14px"><h4>Hinweise zum Lauf</h4><ul class="notes">${result.errors.slice(0, 30).map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>` : ''}
-  <div class="end">Erstellt mit Vigil · ${esc(fmtDate(meta.at))} · Gefundene Zugangsdaten sind in diesem Bericht gekürzt.</div>${b.footerText ? `<div class="end">${esc(b.footerText)}</div>` : ''}
+  <div class="end">Erstellt mit Torvane · ${esc(fmtDate(meta.at))} · Gefundene Zugangsdaten sind in diesem Bericht gekürzt.</div>${b.footerText ? `<div class="end">${esc(b.footerText)}</div>` : ''}
 </main></div>
 <script>
 (function () {
@@ -392,7 +392,7 @@ function toMarkdown(result, opts = {}) {
     L.push('');
   }
   if (result.errors && result.errors.length) { L.push('<details><summary>Hinweise zum Lauf</summary>', ''); result.errors.forEach((e) => L.push(`- ${e}`)); L.push('', '</details>', ''); }
-  L.push('---', '_Erstellt mit Vigil – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme._');
+  L.push('---', '_Erstellt mit Torvane – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme._');
   if (b.footerText) L.push('', b.footerText);
   return L.join('\n');
 }

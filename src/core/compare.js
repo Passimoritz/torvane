@@ -58,7 +58,7 @@ function toCompareHtml(diff, meta = {}) {
 <div class="runs"><div><b>Vorher:</b> ${who(meta.a)}</div><div><b>Nachher:</b> ${who(meta.b)}</div></div></header>
 <div class="sum"><span><b>${diff.added.length}</b> neu</span><span><b>${diff.fixed.length}</b> behoben</span><span><b>${diff.unchanged.length}</b> unverändert</span><span class="muted">offen vorher ${diff.totals.before} · nachher ${diff.totals.after}</span></div>
 <div class="grid">${col('Neu', diff.added, 'added')}${col('Behoben', diff.fixed, 'fixed')}${col('Unverändert', diff.unchanged, 'unchanged')}</div>
-<footer>Erstellt mit Vigil · ${esc(fmt(new Date().toISOString()))}</footer>
+<footer>Erstellt mit Torvane · ${esc(fmt(new Date().toISOString()))}</footer>
 </body></html>`;
 }
 
@@ -76,7 +76,7 @@ function toCompareMarkdown(diff, meta = {}) {
     list.forEach((f) => L.push(`| ${SEV_LABEL[f.severity]} | ${cell(clean(f.title))} | \`${cell(f.location)}\` |`));
     L.push('');
   }
-  L.push('---', '_Erstellt mit Vigil – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme._');
+  L.push('---', '_Erstellt mit Torvane – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme._');
   return L.join('\n');
 }
 

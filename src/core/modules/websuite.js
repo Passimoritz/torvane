@@ -21,7 +21,7 @@ const netc = require('./webnet');
 
 const W = (m, o) => normalizeFinding({ confidence: 'high', ...o, sourceModule: m }, m);
 const MAX_JS = 3 * 1024 * 1024;
-const UA = 'Vigil-Audit/0.2 (+authorized,passive)';
+const UA = 'Torvane-Audit/0.2 (+authorized,passive)';
 const hostOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return ''; } };
 const isIp = (h) => /^\d+\.\d+\.\d+\.\d+$/.test(h) || h.includes(':');
 

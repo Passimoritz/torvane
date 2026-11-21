@@ -1,6 +1,6 @@
 # Fuer das pre-commit-Framework (https://pre-commit.com):
 #   repos:
-#     - repo: https://github.com/Passimoritz/vigil
+#     - repo: https://github.com/Passimoritz/torvane
 #       rev: main
 #       hooks: [{ id: torvane }]
 # Ohne Framework: im eigenen Repository "node <pfad>/src/cli.js --install-hook" ausfuehren.

@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 4/9: Verlauf und eigene Regeln.
+// Torvane-Oberfläche, Teil 4/9: Verlauf und eigene Regeln.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Scan-Verlauf -------------------------------------------------------

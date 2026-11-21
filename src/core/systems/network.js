@@ -24,7 +24,7 @@ function httpGet(url, { timeoutMs = 5000 } = {}) {
     let done = false;
     const fin = (v) => { if (!done) { done = true; resolve(v); } };
     try {
-      const req = mod.get(u, { timeout: timeoutMs, rejectUnauthorized: false, headers: { 'User-Agent': 'Vigil-Audit' } }, (res) => {
+      const req = mod.get(u, { timeout: timeoutMs, rejectUnauthorized: false, headers: { 'User-Agent': 'Torvane-Audit' } }, (res) => {
         let body = '';
         res.setEncoding('utf8');
         res.on('data', (d) => { body += d; if (body.length > 65536) res.destroy(); });

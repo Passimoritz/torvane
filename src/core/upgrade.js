@@ -30,7 +30,7 @@ const ghRepo = (url) => {
 const httpsOnly = (u) => (/^https:\/\/[^\s]+$/i.test(String(u || '')) ? String(u) : null);
 
 async function getJson(url, { fetchImpl = fetch, signal, headers = {} } = {}) {
-  const r = await fetchImpl(url, { headers: { Accept: 'application/json', 'User-Agent': 'Vigil-Security-Audit', ...headers }, signal: signal || AbortSignal.timeout(15000) });
+  const r = await fetchImpl(url, { headers: { Accept: 'application/json', 'User-Agent': 'Torvane-Security-Audit', ...headers }, signal: signal || AbortSignal.timeout(15000) });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }

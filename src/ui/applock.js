@@ -18,7 +18,7 @@
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
     const box = el('div', 'width:min(360px,90vw);padding:28px;border-radius:14px;background:#111722;border:1px solid #263042;color:#e6e9ef;font:14px "Segoe UI",sans-serif;display:flex;flex-direction:column;gap:12px;');
-    const h = el('h2', 'margin:0;font-size:18px;', 'Vigil ist gesperrt');
+    const h = el('h2', 'margin:0;font-size:18px;', 'Torvane ist gesperrt');
     const p = el('p', 'margin:0;color:#8b919d;', 'Passwort eingeben, um fortzufahren.');
     const input = el('input', 'padding:9px 10px;border-radius:8px;border:1px solid #2c3648;background:#0a0e15;color:inherit;font:inherit;');
     input.type = 'password'; input.id = 'appLockPw'; input.autocomplete = 'current-password'; input.setAttribute('aria-label', 'Passwort');

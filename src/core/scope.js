@@ -50,7 +50,7 @@ function enforceScope(targets, allowlist, { interactive = false } = {}) {
     if (!host) { errors.push(`${t.value}: Adresse nicht lesbar.`); continue; }
     if (isAllowlisted(host, allowlist)) { out.push({ ...t, authorized: true }); continue; }
     if (interactive && t.authorized) { out.push({ ...t, authorized: true }); allow.push(host); continue; }
-    errors.push(`${t.value}: nicht freigegeben. ${interactive ? 'Bestätige, dass du das Ziel prüfen darfst.' : 'Erst in Vigil unter Einstellungen › Freigegebene Ziele eintragen.'}`);
+    errors.push(`${t.value}: nicht freigegeben. ${interactive ? 'Bestätige, dass du das Ziel prüfen darfst.' : 'Erst in Torvane unter Einstellungen › Freigegebene Ziele eintragen.'}`);
   }
   return { ok: errors.length === 0, targets: out, allow: [...new Set(allow)], errors };
 }

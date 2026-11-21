@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; media-src 'none'; manifest-src 'none'; base-uri 'none'; form-action 'none';" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vigil</title>
+  <title>Torvane</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -14,7 +14,7 @@
   <aside class="sidebar" aria-label="Navigation">
     <div class="brand">
       <span class="logo-tile"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/><path d="M28.5 25h7v24l-3.5 7-3.5-7z"/></svg></span>
-      <span class="brand-name" data-brand="name">Vigil</span>
+      <span class="brand-name" data-brand="name">Torvane</span>
       <span class="brand-tag" data-brand="tagline">Sicherheitsprüfung</span>
     </div>
 
@@ -54,7 +54,7 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M13 7a2 2 0 1 0 4 0a2 2 0 1 0-4 0M7 17a2 2 0 1 0 4 0a2 2 0 1 0-4 0" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span class="nav-label">Einstellungen</span>
     </button>
-    <div class="side-foot"><span id="sbIntel"></span><span>v<span id="sbVersion">0.2.0</span></span></div>
+    <div class="side-foot"><span id="sbIntel"></span><span>v<span id="sbVersion">0.3.0</span></span></div>
   </aside>
 
   <main class="main">
@@ -63,8 +63,8 @@
   <section id="scanView" class="view" aria-labelledby="scanTitle">
     <header class="page-head">
       <div>
-        <h1 id="scanTitle">Was soll Vigil prüfen?</h1>
-        <p class="page-sub">Ordner hineinziehen, Adresse eintippen oder unten eine Art wählen. Vigil prüft nur, was dir gehört – zerstörungsfrei.</p>
+        <h1 id="scanTitle">Was soll Torvane prüfen?</h1>
+        <p class="page-sub">Ordner hineinziehen, Adresse eintippen oder unten eine Art wählen. Torvane prüft nur, was dir gehört – zerstörungsfrei.</p>
       </div>
     </header>
     <nav class="flow" id="flowScan" aria-label="Ablauf der Prüfung"></nav>
@@ -83,7 +83,7 @@
           <header class="step-head">
             <span class="step-num" aria-hidden="true">1</span>
             <h2 id="stepTargetTitle">Ziel wählen</h2>
-            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Vigil nur zerstörungsfrei: Zertifikat, Sicherheits-Header, Cookies, CORS und offen liegende Pfade. Keine Angriffe, keine Last-Tests.</span></button>
+            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Torvane nur zerstörungsfrei: Zertifikat, Sicherheits-Header, Cookies, CORS und offen liegende Pfade. Keine Angriffe, keine Last-Tests.</span></button>
           </header>
 
           <div class="omni">
@@ -97,8 +97,8 @@
               <label class="check"><input type="checkbox" id="authChk" /> <span id="authLabel">Ich bin berechtigt, diesen Server zu prüfen.</span></label>
               <button type="button" id="authYes" class="btn tiny primary">Ja – hinzufügen</button>
             </div>
-            <p id="webNote" class="note" hidden>Webadressen und Server prüft Vigil nur zerstörungsfrei: Zertifikat, Sicherheits-Header, Cookies, CORS und offen liegende Pfade. Keine Angriffe, keine Last-Tests.</p>
-            <p id="imageNote" class="note" hidden>Container-Images prüft Vigil mit <b>trivy</b> (Pakete, CVEs, Fehlkonfigurationen). trivy muss installiert sein; mit Präfix <code>image:</code> wird immer als Image erkannt.</p>
+            <p id="webNote" class="note" hidden>Webadressen und Server prüft Torvane nur zerstörungsfrei: Zertifikat, Sicherheits-Header, Cookies, CORS und offen liegende Pfade. Keine Angriffe, keine Last-Tests.</p>
+            <p id="imageNote" class="note" hidden>Container-Images prüft Torvane mit <b>trivy</b> (Pakete, CVEs, Fehlkonfigurationen). trivy muss installiert sein; mit Präfix <code>image:</code> wird immer als Image erkannt.</p>
           </div>
 
           <div id="targets" class="targets" hidden>
@@ -143,7 +143,7 @@
                   <button type="button" class="fbtn active" data-kf="all">Alle</button>
                   <button type="button" class="fbtn" data-kf="trusted">Vertraut</button>
                 </span>
-                <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">„Vertraut“ heißt: Vigil prüft diese Webadresse bzw. diesen Server ohne erneute Rückfrage. Mit „Vertrauen entziehen“ fragt Vigil beim nächsten Mal wieder nach. „Ausblenden“ entfernt ein Ziel nur aus dieser Liste – Befunde und Verlauf bleiben erhalten.</span></button>
+                <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">„Vertraut“ heißt: Torvane prüft diese Webadresse bzw. diesen Server ohne erneute Rückfrage. Mit „Vertrauen entziehen“ fragt Torvane beim nächsten Mal wieder nach. „Ausblenden“ entfernt ein Ziel nur aus dieser Liste – Befunde und Verlauf bleiben erhalten.</span></button>
               </div>
               <ul id="knownList" class="known-list"></ul>
             </div>
@@ -243,7 +243,7 @@
               </div>
               <p id="cloudStatus" class="model-status hint" aria-live="polite"></p>
             </div>
-            <p class="note">Code geht an den Anbieter. Erkannte Secrets schwärzt Vigil vorher. Für sensible Projekte ist <b>Lokal</b> die bessere Wahl.</p>
+            <p class="note">Code geht an den Anbieter. Erkannte Secrets schwärzt Torvane vorher. Für sensible Projekte ist <b>Lokal</b> die bessere Wahl.</p>
           </div>
         </section>
       </div>
@@ -254,7 +254,7 @@
           <header class="step-head">
             <span class="step-num" aria-hidden="true">3</span>
             <h2 id="stepRunTitle">Prüfen</h2>
-            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip"><b>Regeln &amp; Datenbanken</b> finden Secrets, verwundbare Pakete und Fehlkonfigurationen. <b>Die KI</b> sucht Logik- und Zugriffsfehler und prüft ihre Funde gegen. <b>Vigil fasst zusammen</b>: keine Doppelungen, mit konkreter Lösung, Verlauf über alle Läufe.</span></button>
+            <button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip"><b>Regeln &amp; Datenbanken</b> finden Secrets, verwundbare Pakete und Fehlkonfigurationen. <b>Die KI</b> sucht Logik- und Zugriffsfehler und prüft ihre Funde gegen. <b>Torvane fasst zusammen</b>: keine Doppelungen, mit konkreter Lösung, Verlauf über alle Läufe.</span></button>
           </header>
           <ul class="ready" id="readyList" aria-label="Checkliste vor dem Start">
             <li id="readyTarget"><span class="ready-dot" aria-hidden="true"></span><span class="ready-text">Ziel hinzufügen</span></li>
@@ -680,7 +680,7 @@
             <label class="switch"><input type="checkbox" id="cveChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Nur Geändertes neu prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil merkt sich die KI-Ergebnisse je Datei. Unveränderte Dateien kommen beim nächsten Lauf aus dem Zwischenspeicher – das spart meist den Großteil an Zeit und Kosten.</span></button></span><span id="cacheInfo" class="set-status"></span></div>
+            <div class="set-label"><span class="set-title"><b>Nur Geändertes neu prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane merkt sich die KI-Ergebnisse je Datei. Unveränderte Dateien kommen beim nächsten Lauf aus dem Zwischenspeicher – das spart meist den Großteil an Zeit und Kosten.</span></button></span><span id="cacheInfo" class="set-status"></span></div>
             <span class="set-ctrl"><button id="cacheClearBtn" type="button" class="btn tiny ghost">Leeren</button><label class="switch"><input type="checkbox" id="incrChk" /><span></span></label></span>
           </div>
           <div class="set-row">
@@ -696,7 +696,7 @@
             <input id="consensusModelInput" type="text" class="set-input" placeholder="z. B. llama3.1:8b" spellcheck="false" />
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Monatliches KI-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Obergrenze für Cloud-KI pro Kalendermonat (0 = aus). Ist sie erreicht, fragt Vigil vor jedem Lauf nach und sperrt Einzelaufrufe.</span></button></span><span id="budgetInfo" class="set-status"></span></div>
+            <div class="set-label"><span class="set-title"><b>Monatliches KI-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Obergrenze für Cloud-KI pro Kalendermonat (0 = aus). Ist sie erreicht, fragt Torvane vor jedem Lauf nach und sperrt Einzelaufrufe.</span></button></span><span id="budgetInfo" class="set-status"></span></div>
             <label class="cost-limit"><input id="monthlyBudgetInput" aria-label="Monatliches KI-Budget" type="number" min="0" step="1" /> <span>$</span></label>
           </div>
           <div class="set-row">
@@ -708,7 +708,7 @@
             <span class="set-ctrl"><input id="lookupMaxInput" type="number" min="1" max="10" step="1" class="set-input tiny-num" aria-label="Höchstzahl Abfragen je Block" /><label class="switch"><input type="checkbox" id="lookupChk" /><span></span></label></span>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Große Projekte: Datei-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil ordnet Dateien nach Risiko (Routen, Anmeldung, Eingaben, Shell, SQL …). Optional gehen nur die wichtigsten N Dateien an die KI (0 = alle).</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Große Projekte: Datei-Budget</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane ordnet Dateien nach Risiko (Routen, Anmeldung, Eingaben, Shell, SQL …). Optional gehen nur die wichtigsten N Dateien an die KI (0 = alle).</span></button></span></div>
             <input id="fileBudgetInput" type="number" min="0" step="10" class="set-input tiny-num" aria-label="Höchstzahl Dateien für die KI" />
           </div>
           <div class="set-row">
@@ -716,11 +716,11 @@
             <input id="embedModelInput" aria-label="Lokale Embeddings zum Ordnen" type="text" class="set-input" placeholder="z. B. nomic-embed-text" spellcheck="false" />
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Zusammenfassung per KI</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Nach jedem Lauf ein Absatz in Alltagssprache über das Ergebnis. Aus: Vigil schreibt ihn regelbasiert.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Zusammenfassung per KI</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Nach jedem Lauf ein Absatz in Alltagssprache über das Ergebnis. Aus: Torvane schreibt ihn regelbasiert.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="runSumChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>KI auch für Webadressen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gibt die Serverantwort (Header und Seitenanfang) an die gewählte KI. Mit Cloud-KI verlässt sie deinen Rechner und kostet Geld. Aus: Webadressen und Server prüft Vigil ohne KI.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>KI auch für Webadressen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Gibt die Serverantwort (Header und Seitenanfang) an die gewählte KI. Mit Cloud-KI verlässt sie deinen Rechner und kostet Geld. Aus: Webadressen und Server prüft Torvane ohne KI.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="aiWebChk" /><span></span></label>
           </div>
         </section>
@@ -754,7 +754,7 @@
         </section>
 
         <section class="card set-block" id="set-scope">
-          <div class="block-head"><h2>Freigegebene Ziele</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Vigil nur, wenn sie hier stehen oder du sie beim Hinzufügen bestätigst. <code>example.com</code> gilt auch für Subdomains, <code>*.example.com</code> nur für Subdomains. Die REST-API darf nur Ziele von dieser Liste prüfen.</span></button></div>
+          <div class="block-head"><h2>Freigegebene Ziele</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Webadressen und Server prüft Torvane nur, wenn sie hier stehen oder du sie beim Hinzufügen bestätigst. <code>example.com</code> gilt auch für Subdomains, <code>*.example.com</code> nur für Subdomains. Die REST-API darf nur Ziele von dieser Liste prüfen.</span></button></div>
           <textarea id="allowlistInput" rows="4" spellcheck="false" placeholder="eine Domain oder IP pro Zeile, z. B.&#10;meine-seite.example&#10;192.168.1.20"></textarea>
         </section>
 
@@ -771,15 +771,15 @@
         </section>
 
         <section class="card set-block" id="set-feeds">
-          <div class="block-head"><h2>Erkennungsdaten – automatisch aktuell</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil holt sich neue Erkennungsdaten selbst, ganz ohne App-Update: beim Start und danach alle 6 Stunden, spätestens einmal am Tag. Es werden nur Daten geladen, nie Programmcode. Jede Quelle wird vor der Nutzung geprüft; schlägt ein Download fehl, bleibt die letzte gute Fassung aktiv.</span></button></div>
+          <div class="block-head"><h2>Erkennungsdaten – automatisch aktuell</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane holt sich neue Erkennungsdaten selbst, ganz ohne App-Update: beim Start und danach alle 6 Stunden, spätestens einmal am Tag. Es werden nur Daten geladen, nie Programmcode. Jede Quelle wird vor der Nutzung geprüft; schlägt ein Download fehl, bleibt die letzte gute Fassung aktiv.</span></button></div>
           <ul class="feed-list" id="feedList"><li class="muted small">Lade Stand …</li></ul>
           <div class="row-inline"><button id="feedsSyncBtn" type="button" class="btn">Jetzt alles aktualisieren</button><span id="feedsSyncStatus" class="hint"></span></div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Neue Lücken in geprüften Paketen melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Alle 6 Stunden gleicht Vigil die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Neue Lücken in geprüften Paketen melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Alle 6 Stunden gleicht Torvane die Pakete aus gespeicherten Prüfungen mit neuen OSV-Meldungen (u. a. GitHub Advisory Database) und den Sicherheitshinweisen des BSI ab – ohne neuen Scan. Neues erscheint in der Übersicht und als Windows-Benachrichtigung.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="watchCvesChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Neue Zertifikate für eigene Domains melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Prüft für nachgewiesene eigene Domains die öffentlichen Certificate-Transparency-Logs (crt.sh). Taucht ein bisher unbekanntes Zertifikat auf, meldet Vigil es.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Neue Zertifikate für eigene Domains melden</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Prüft für nachgewiesene eigene Domains die öffentlichen Certificate-Transparency-Logs (crt.sh). Taucht ein bisher unbekanntes Zertifikat auf, meldet Torvane es.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="watchCtChk" /><span></span></label>
           </div>
           <div class="set-row">
@@ -787,13 +787,13 @@
             <label class="switch"><input type="checkbox" id="osvOfflineChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Eigene YARA-Regeln</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Ist YARA installiert, prüft Vigil Dateien zusätzlich mit allen .yar-Dateien aus diesem Ordner und den geladenen YARA-Regeln.</span></button></span><span id="yaraStatus" class="set-status"></span></div>
+            <div class="set-label"><span class="set-title"><b>Eigene YARA-Regeln</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Ist YARA installiert, prüft Torvane Dateien zusätzlich mit allen .yar-Dateien aus diesem Ordner und den geladenen YARA-Regeln.</span></button></span><span id="yaraStatus" class="set-status"></span></div>
             <button id="yaraFolderBtn" type="button" class="btn">Ordner öffnen</button>
           </div>
         </section>
 
         <section class="card set-block" id="set-login">
-          <div class="block-head"><h2>Login-Prüfung</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil meldet sich mit einem <b>Testkonto deiner eigenen Webseite</b> an und prüft: Anmeldung nur über HTTPS, neue Sitzung nach dem Login, geschützte Cookies, ob die Anmeldung existierende Konten verrät und ob Abmelden die Sitzung wirklich beendet. Danach geht es den angemeldeten Bereich durch. Nur für nachgewiesene eigene Domains, keine Passwort-Rateversuche. Nutze nie ein echtes Kunden- oder Admin-Konto.</span></button></div>
+          <div class="block-head"><h2>Login-Prüfung</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane meldet sich mit einem <b>Testkonto deiner eigenen Webseite</b> an und prüft: Anmeldung nur über HTTPS, neue Sitzung nach dem Login, geschützte Cookies, ob die Anmeldung existierende Konten verrät und ob Abmelden die Sitzung wirklich beendet. Danach geht es den angemeldeten Bereich durch. Nur für nachgewiesene eigene Domains, keine Passwort-Rateversuche. Nutze nie ein echtes Kunden- oder Admin-Konto.</span></button></div>
           <div class="api-row">
             <input id="wlUrl" type="text" placeholder="Anmelde-Adresse, z. B. https://meine-seite.de/login" aria-label="Anmelde-Adresse" />
             <input id="wlUser" type="text" placeholder="Benutzername oder E-Mail des Testkontos" aria-label="Benutzername des Testkontos" autocomplete="off" />
@@ -807,7 +807,7 @@
         <section class="card set-block" id="set-malware">
           <h2>Schadsoftware &amp; Webseiten-Durchgang</h2>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Programme und Dateien auf Schadsoftware prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Microsoft Defender prüft das Ziel, ohne etwas zu löschen. Dazu prüft Vigil die digitale Signatur jeder Programmdatei. Makros in Office-Dateien und Skripte in PDFs erkennt Vigil immer.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Programme und Dateien auf Schadsoftware prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Microsoft Defender prüft das Ziel, ohne etwas zu löschen. Dazu prüft Torvane die digitale Signatur jeder Programmdatei. Makros in Office-Dateien und Skripte in PDFs erkennt Torvane immer.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="malwareChk" /><span></span></label>
           </div>
           <div class="set-row">
@@ -819,13 +819,13 @@
             <label class="switch"><input type="checkbox" id="crawlChk" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>USB-Laufwerke beim Einstecken prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Erkennt Vigil einen neuen Wechseldatenträger, fragt es per Benachrichtigung nach. Erst nach deinem Klick kommt das Laufwerk in die Prüfliste – geprüft wird nur lesend.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>USB-Laufwerke beim Einstecken prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Erkennt Torvane einen neuen Wechseldatenträger, fragt es per Benachrichtigung nach. Erst nach deinem Klick kommt das Laufwerk in die Prüfliste – geprüft wird nur lesend.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="usbChk" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-matrix">
-          <div class="block-head"><h2>API-Rechtematrix (BOLA/IDOR)</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil holt mit dem Token von Nutzer A dessen Objekt und versucht denselben GET-Aufruf ohne Anmeldung und mit dem Token von Nutzer B. Nur GET, nur verifizierte Domains, nur mit Test-Konten deiner eigenen Anwendung.</span></button></div>
+          <div class="block-head"><h2>API-Rechtematrix (BOLA/IDOR)</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane holt mit dem Token von Nutzer A dessen Objekt und versucht denselben GET-Aufruf ohne Anmeldung und mit dem Token von Nutzer B. Nur GET, nur verifizierte Domains, nur mit Test-Konten deiner eigenen Anwendung.</span></button></div>
           <div class="api-row">
             <input id="amHost" type="text" placeholder="Host, z. B. app.example.com" />
             <input id="amResource" type="text" placeholder="Objekt-ID von Nutzer A, z. B. 1042" />
@@ -837,7 +837,7 @@
         </section>
 
         <section class="card set-block" id="set-schedules">
-          <div class="block-head"><h2>Geplante Prüfungen</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil prüft täglich oder wöchentlich von selbst und meldet nur neue Befunde: als Windows-Benachrichtigung und auf Wunsch an einen Webhook (Slack, Teams, Discord oder eigene Adresse). Der Webhook bekommt nur Schwere, Titel und Ort. Webadressen und Server müssen bereits freigegeben sein, unbeaufsichtigt fragt Vigil nicht nach. Verpasste Läufe werden beim nächsten Start nachgeholt.</span></button></div>
+          <div class="block-head"><h2>Geplante Prüfungen</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane prüft täglich oder wöchentlich von selbst und meldet nur neue Befunde: als Windows-Benachrichtigung und auf Wunsch an einen Webhook (Slack, Teams, Discord oder eigene Adresse). Der Webhook bekommt nur Schwere, Titel und Ort. Webadressen und Server müssen bereits freigegeben sein, unbeaufsichtigt fragt Torvane nicht nach. Verpasste Läufe werden beim nächsten Start nachgeholt.</span></button></div>
           <div id="schedList" class="sched-list"></div>
           <div class="sched-form">
             <input id="schedName" class="set-input" type="text" maxlength="80" placeholder="Name, z. B. Eigene Webseite" autocomplete="off" />
@@ -852,17 +852,17 @@
             <div class="row-inline"><button id="schedAdd" type="button" class="btn">Prüfung planen</button></div>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Beim Schließen im Hintergrund weiterlaufen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Das Fenster verschwindet in den Infobereich, geplante Prüfungen laufen weiter. Ohne das läuft ein Plan nur, solange Vigil offen ist.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Beim Schließen im Hintergrund weiterlaufen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Das Fenster verschwindet in den Infobereich, geplante Prüfungen laufen weiter. Ohne das läuft ein Plan nur, solange Torvane offen ist.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="schedBackground" /><span></span></label>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Mit Windows starten</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil startet beim Anmelden ohne Fenster im Hintergrund.</span></button></span></div>
+            <div class="set-label"><span class="set-title"><b>Mit Windows starten</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane startet beim Anmelden ohne Fenster im Hintergrund.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="schedLogin" /><span></span></label>
           </div>
         </section>
 
         <section class="card set-block" id="set-greenbone">
-          <div class="block-head"><h2>Greenbone OpenVAS</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zusätzlicher Netzwerk-Scanner mit täglich aktualisierten Tests. Vigil richtet die kostenlose Greenbone Community Edition auf Wunsch ein: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das belegt mindestens 40 GB auf der Festplatte. Arbeitsspeicher braucht Greenbone nur während eines Scans (4 bis 8 GB), danach wird es wieder beendet. Ein Scan kann pro Host deutlich über eine Stunde dauern und ist im Netz sichtbar. Geprüft werden nur freigegebene Ziele, ohne Passwort-Rateversuche, Standard-Zugänge und Denial-of-Service-Tests.</span></button></div>
+          <div class="block-head"><h2>Greenbone OpenVAS</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zusätzlicher Netzwerk-Scanner mit täglich aktualisierten Tests. Torvane richtet die kostenlose Greenbone Community Edition auf Wunsch ein: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das belegt mindestens 40 GB auf der Festplatte. Arbeitsspeicher braucht Greenbone nur während eines Scans (4 bis 8 GB), danach wird es wieder beendet. Ein Scan kann pro Host deutlich über eine Stunde dauern und ist im Netz sichtbar. Geprüft werden nur freigegebene Ziele, ohne Passwort-Rateversuche, Standard-Zugänge und Denial-of-Service-Tests.</span></button></div>
           <div id="gbProgress" class="gb-progress" hidden aria-live="polite"></div>
           <div class="row-inline"><button id="gbAuto" type="button" class="btn">Einrichten</button><button id="gbPause" type="button" class="btn" hidden>Pausieren</button><button id="gbCancel" type="button" class="btn" hidden>Abbrechen</button><span id="gbAutoStatus" class="small muted" aria-live="polite"></span></div>
           <div class="set-row">
@@ -876,7 +876,7 @@
           <h2>Externe Sicherheits-Tools</h2>
           <div id="toolHealth" class="tool-health" aria-live="polite"></div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Werkzeuge automatisch aktualisieren</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Einmal am Tag von den offiziellen Quellen, mit Prüfsumme. Läuft eine neue Datei nicht, kommt die alte zurück. Für nmap fragt Windows einmal nach Administratorrechten. Vigil selbst wird aktualisiert, wenn es aus einer unveränderten Git-Kopie läuft.</span></button></span><span id="toolUpdateStatus" class="tool-update-status set-status" aria-live="polite"></span></div>
+            <div class="set-label"><span class="set-title"><b>Werkzeuge automatisch aktualisieren</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Einmal am Tag von den offiziellen Quellen, mit Prüfsumme. Läuft eine neue Datei nicht, kommt die alte zurück. Für nmap fragt Windows einmal nach Administratorrechten. Torvane selbst wird aktualisiert, wenn es aus einer unveränderten Git-Kopie läuft.</span></button></span><span id="toolUpdateStatus" class="tool-update-status set-status" aria-live="polite"></span></div>
             <button id="toolUpdateNow" type="button" class="btn">Jetzt prüfen</button>
             <label class="switch"><input type="checkbox" id="toolUpdateChk" /><span></span></label>
           </div>
@@ -887,7 +887,7 @@
         </section>
 
         <section class="card set-block" id="set-systems">
-          <div class="block-head"><h2>Systeme &amp; Konten</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zugänge für die System-Prüfungen auf der Startseite. Vigil nutzt sie nur lesend: feste Abfragen, keine Änderungen, keine Anmelde-Rateversuche. Schlüssel und Tokens werden verschlüsselt gespeichert und nie wieder angezeigt. „-“ eintragen und speichern entfernt einen gespeicherten Wert.</span></button></div>
+          <div class="block-head"><h2>Systeme &amp; Konten</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Zugänge für die System-Prüfungen auf der Startseite. Torvane nutzt sie nur lesend: feste Abfragen, keine Änderungen, keine Anmelde-Rateversuche. Schlüssel und Tokens werden verschlüsselt gespeichert und nie wieder angezeigt. „-“ eintragen und speichern entfernt einen gespeicherten Wert.</span></button></div>
           <div class="set-row">
             <div class="set-label"><span class="set-title"><b>Verwaltungs-Ports im lokalen Netz prüfen</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Für „Geräte im Netz“: zusätzlich je Gerät ein Verbindungsversuch zu wenigen Verwaltungs-Ports (z. B. Telnet, Weboberfläche). Nur private Adressen im eigenen Subnetz, kein Port-Scan.</span></button></span></div>
             <label class="switch"><input type="checkbox" id="lanPortChk" aria-label="Verwaltungs-Ports im lokalen Netz prüfen" /><span></span></label>
@@ -947,7 +947,7 @@
             </span>
           </div>
           <div class="set-row">
-            <div class="set-label"><span class="set-title"><b>Absturzberichte</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Stürzt Vigil ab, landet ein Bericht nur auf diesem PC – nichts wird übertragen. Bei Bedarf kannst du ihn selbst weitergeben.</span></button></span><span id="crashInfo" class="set-status"></span></div>
+            <div class="set-label"><span class="set-title"><b>Absturzberichte</b><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Stürzt Torvane ab, landet ein Bericht nur auf diesem PC – nichts wird übertragen. Bei Bedarf kannst du ihn selbst weitergeben.</span></button></span><span id="crashInfo" class="set-status"></span></div>
             <button id="crashOpenBtn" type="button" class="btn tiny">Ordner öffnen</button>
           </div>
           <div class="set-row">
@@ -1013,7 +1013,7 @@
         </section>
 
         <section class="card set-block" id="set-data">
-          <div class="block-head"><h2>Gespeicherte Befunde</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Vigil merkt sich Befunde über alle Läufe (Status, zuerst und zuletzt gesehen), um Neues, Behobenes und Wiederkehrendes zu erkennen.</span></button></div>
+          <div class="block-head"><h2>Gespeicherte Befunde</h2><button type="button" class="tip" aria-label="Erklärung"><span class="tip-ico" aria-hidden="true">i</span><span class="tip-body" role="tooltip">Torvane merkt sich Befunde über alle Läufe (Status, zuerst und zuletzt gesehen), um Neues, Behobenes und Wiederkehrendes zu erkennen.</span></button></div>
           <div class="row-inline"><button id="clearStoreBtn" type="button" class="btn danger">Befund-Speicher leeren</button><span id="clearStoreStatus" class="hint"></span></div>
           <p class="hint" id="encInfo"></p>
           <div id="appLockBox"></div>
@@ -1055,8 +1055,8 @@
     <div class="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
     <section class="ob-step" data-step="0">
       <span class="logo-tile ob-logo"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 13h10l4 9-4 9H8l4-9z"/><rect x="20" y="19" width="24" height="6" rx="1.5"/><path d="M42 12l14 10-14 10z"/><path d="M28.5 25h7v24l-3.5 7-3.5-7z"/></svg></span>
-      <h2 id="obTitle">Willkommen bei Vigil</h2>
-      <p class="ob-lead">Vigil sucht Sicherheitslücken in deinen eigenen Projekten, Webseiten, Servern und Cloud-Konten – und erklärt in Klartext, was zu tun ist.</p>
+      <h2 id="obTitle">Willkommen bei Torvane</h2>
+      <p class="ob-lead">Torvane sucht Sicherheitslücken in deinen eigenen Projekten, Webseiten, Servern und Cloud-Konten – und erklärt in Klartext, was zu tun ist.</p>
       <ul class="ob-list">
         <li><b>Feste Regeln und Datenbanken</b> finden Bekanntes sicher: Zugangsdaten im Code, verwundbare Pakete, Fehlkonfigurationen.</li>
         <li><b>Eine KI</b> sucht zusätzlich nach Logikfehlern und prüft ihre Funde selbst gegen.</li>
@@ -1065,7 +1065,7 @@
     </section>
     <section class="ob-step" data-step="1" hidden>
       <h2>Welche KI soll mithelfen?</h2>
-      <p class="ob-lead">Lässt sich später jederzeit ändern. Für Webseiten, Server und Container braucht Vigil gar keine KI.</p>
+      <p class="ob-lead">Lässt sich später jederzeit ändern. Für Webseiten, Server und Container braucht Torvane gar keine KI.</p>
       <div class="ob-choices">
         <button type="button" class="ob-choice" data-mode="local"><b>Lokal auf diesem PC</b><span>Kostenlos und privat – der Code verlässt den Rechner nicht. Braucht Ollama und etwas Geduld.</span><em id="obLocalState"></em></button>
         <button type="button" class="ob-choice" data-mode="cloud"><b>Cloud-KI</b><span>Claude, OpenAI oder Gemini: schneller und genauer, kostet meist wenige Cent je Prüfung. Braucht einen API-Schlüssel.</span></button>
@@ -1073,7 +1073,7 @@
     </section>
     <section class="ob-step" data-step="2" hidden>
       <h2>Los geht’s</h2>
-      <p class="ob-lead">Am schnellsten siehst du, was Vigil kann, am mitgelieferten Übungsprojekt – es steckt voller absichtlicher Lücken.</p>
+      <p class="ob-lead">Am schnellsten siehst du, was Torvane kann, am mitgelieferten Übungsprojekt – es steckt voller absichtlicher Lücken.</p>
       <div class="ob-choices">
         <button type="button" class="ob-choice" id="obDemo"><b>Beispiel-Lauf ansehen</b><span>Prüft das Übungsprojekt in wenigen Sekunden mit den festen Regeln, ganz ohne KI.</span></button>
         <button type="button" class="ob-choice" id="obFolder"><b>Eigenen Projektordner wählen</b><span>Danach nur noch auf „Prüfung starten“ klicken.</span></button>
@@ -1103,7 +1103,7 @@
 <dialog id="gbAsk" class="gb-ask" aria-labelledby="gbAskTitle">
   <div class="gb-ask-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2.2 2.2L15.5 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   <h2 id="gbAskTitle">Greenbone OpenVAS einrichten?</h2>
-  <p>Damit bekommt Vigil viele zusätzliche, täglich aktualisierte Netzwerk-Tests.</p>
+  <p>Damit bekommt Torvane viele zusätzliche, täglich aktualisierte Netzwerk-Tests.</p>
   <dl class="gb-facts">
     <dt>Download</dt><dd>rund 12 GB</dd>
     <dt>Festplatte</dt><dd>mindestens 40 GB frei</dd>

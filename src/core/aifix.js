@@ -1,6 +1,6 @@
 'use strict';
 
-// KI-Hilfen auf Knopfdruck (nichts davon aendert Dateien – Vigil SCHLAEGT nur vor):
+// KI-Hilfen auf Knopfdruck (nichts davon aendert Dateien – Torvane SCHLAEGT nur vor):
 //  - generatePatch:  konkreter Fix als unified diff fuer die betroffene Datei
 //  - explainFinding: Erklaerung je Stufe (Laie / Entwickler / Experte), zwischengespeichert
 //  - summarizeRun:   ein Absatz in Alltagssprache ueber den ganzen Lauf (KI oder Regeln)
@@ -234,12 +234,12 @@ function ruleSummary(result, config = {}) {
   const parts = [];
   const sevList = SEVS.filter((s) => c[s] && s !== 'info').map((s) => `${c[s]} ${E ? s : SEV_DE[s]}`).join(', ');
   if (!open.length) {
-    parts.push(E ? `Vigil checked ${files ? files + ' file(s)' : 'the targets'} and found no open findings in this run.` : `Vigil hat ${files ? files + ' Datei(en)' : 'die Ziele'} geprüft und in diesem Lauf keine offenen Befunde gefunden.`);
+    parts.push(E ? `Torvane checked ${files ? files + ' file(s)' : 'the targets'} and found no open findings in this run.` : `Torvane hat ${files ? files + ' Datei(en)' : 'die Ziele'} geprüft und in diesem Lauf keine offenen Befunde gefunden.`);
     parts.push(E ? 'That is a good sign, but not a guarantee – keep checking regularly, especially after changes.' : 'Das ist ein gutes Zeichen, aber keine Garantie – prüfe regelmäßig weiter, besonders nach Änderungen.');
   } else {
     parts.push(E
-      ? `Vigil checked ${files ? files + ' file(s)' : 'the targets'} and found ${open.length} open finding(s)${sevList ? ` (${sevList})` : ''}.`
-      : `Vigil hat ${files ? files + ' Datei(en)' : 'die Ziele'} geprüft und ${open.length} offene(n) Befund(e) gefunden${sevList ? ` (${sevList})` : ''}.`);
+      ? `Torvane checked ${files ? files + ' file(s)' : 'the targets'} and found ${open.length} open finding(s)${sevList ? ` (${sevList})` : ''}.`
+      : `Torvane hat ${files ? files + ' Datei(en)' : 'die Ziele'} geprüft und ${open.length} offene(n) Befund(e) gefunden${sevList ? ` (${sevList})` : ''}.`);
     if (toxic) parts.push(E ? `${toxic} attack path(s) combine several weaknesses into a complete route for an attacker – fixing one link breaks it.` : `${toxic} Angriffsweg(e) verbinden mehrere Schwächen zu einem kompletten Weg für Angreifer – schon eine Behebung unterbricht ihn.`);
     if (kev) parts.push(E ? `${kev} affected package(s) contain vulnerabilities that are actively exploited in the wild.` : `${kev} betroffene(s) Paket(e) enthalten Lücken, die bereits aktiv ausgenutzt werden.`);
     if (top) parts.push(E ? `Most urgent: “${titleIn(top, config)}”${step ? ` – ${titleIn({ title: step }, config).replace(/\.$/, '')}` : ''}.` : `Am dringendsten: „${titleIn(top, config)}“${step ? ` – ${String(step).replace(/\.$/, '')}` : ''}.`);

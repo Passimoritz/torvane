@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Vigil – defensives Sicherheits-Audit für eigene Projekte, Webseiten, Server und Cloud-Konten">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Torvane – defensives Sicherheits-Audit für eigene Projekte, Webseiten, Server und Cloud-Konten">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1220"/>
@@ -21,7 +21,7 @@
     <path fill="#f2b23a" d="M272 252 L392 252 L512 560 L632 252 L752 252 L752 500 C752 660 652 776 512 852 C372 776 272 660 272 500 Z"/>
   </g>
   <g font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
-    <text x="330" y="138" font-size="76" font-weight="800" fill="#ffffff" letter-spacing="-1">Vigil</text>
+    <text x="330" y="138" font-size="76" font-weight="800" fill="#ffffff" letter-spacing="-1">Torvane</text>
     <text x="332" y="184" font-size="26" fill="#c7d2e3">Defensives Sicherheits-Audit für alles, was dir gehört</text>
     <g font-size="17" font-weight="600">
       <rect x="332" y="210" width="96" height="34" rx="17" fill="#f2b23a" fill-opacity=".14" stroke="#f2b23a" stroke-opacity=".5"/>

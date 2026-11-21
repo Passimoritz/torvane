@@ -1,7 +1,7 @@
 'use strict';
 
 // Wechseldatentraeger erkennen (Windows): neue Laufwerksbuchstaben vom Typ "Wechseldatentraeger"
-// (DriveType 2). Vigil fragt danach per Benachrichtigung, ob geprueft werden soll – geprueft wird
+// (DriveType 2). Torvane fragt danach per Benachrichtigung, ob geprueft werden soll – geprueft wird
 // erst nach dem Klick. Standardmaessig AUS (Einstellungen › Prüfungen).
 
 const fs = require('fs');

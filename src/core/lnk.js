@@ -82,7 +82,7 @@ function analyzeLnk(buf, label) {
         signs.length ? `Auffällig: ${signs.join(', ')}.` : '',
       ].filter(Boolean).join(' '),
       impact: 'Ein Doppelklick führt die Befehle mit den Rechten des Benutzers aus – ein beliebter Weg, Schadsoftware per E-Mail-Anhang oder in ZIP/ISO-Dateien zu verteilen.',
-      remediation: 'Verknüpfung nicht öffnen. In den Eigenschaften (Rechtsklick → Eigenschaften → Ziel) sieht man nur die ersten 260 Zeichen – Vigil zeigt den ganzen Befehl.',
+      remediation: 'Verknüpfung nicht öffnen. In den Eigenschaften (Rechtsklick → Eigenschaften → Ziel) sieht man nur die ersten 260 Zeichen – Torvane zeigt den ganzen Befehl.',
       location: where, sourceModule: 'lnk-audit',
     }, 'lnk-audit'));
   } else if (signs.length && args) {

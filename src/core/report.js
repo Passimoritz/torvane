@@ -75,7 +75,7 @@ ${top.length ? `<ol>${top.map((f) => `<li><b>${esc(plain(f))}</b><br><span class
 <ol>${top.length ? top.slice(0, 3).map((f) => `<li>${esc((f.steps && f.steps[0]) || f.remediation || 'Beheben lassen')}</li>`).join('') : '<li>Regelmäßig weiter prüfen (z. B. monatlich) und neue Befunde zeitnah beheben.</li>'}${c.medium ? `<li>${c.medium} mittlere Befunde im normalen Entwicklungsablauf abarbeiten.</li>` : ''}</ol>
 <h2>Normen auf einen Blick</h2>
 <table>${comp.map((k) => `<tr><td>${esc(k.name)}</td><td>${k.fail ? `<b style="color:#b3123c">${k.fail} Anforderung(en) mit dringenden Befunden</b>` : k.warn ? `<span style="color:#c48a00">${k.warn} Anforderung(en) mit offenen Befunden</span>` : '<span style="color:#2b7a3b">keine offenen Befunde</span>'}</td></tr>`).join('')}</table>
-<footer>Erstellt mit Vigil – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme. Technische Details im vollständigen Bericht.${b.footerText ? `<br>${esc(b.footerText)}` : ''}</footer>
+<footer>Erstellt mit Torvane – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme. Technische Details im vollständigen Bericht.${b.footerText ? `<br>${esc(b.footerText)}` : ''}</footer>
 </body></html>`;
 }
 
@@ -105,7 +105,7 @@ function toSarif(result, toolVersion = '0.1.0') {
       rules.set(ruleId, {
         id: ruleId,
         name: (f.category || 'Other').replace(/\s+/g, ''),
-        shortDescription: { text: `Vigil-Kategorie: ${f.category || 'Other'}` },
+        shortDescription: { text: `Torvane-Kategorie: ${f.category || 'Other'}` },
         defaultConfiguration: { level: sevToLevel(f.severity) },
       });
     }
@@ -142,7 +142,7 @@ function toSarif(result, toolVersion = '0.1.0') {
     runs: [{
       tool: {
         driver: {
-          name: 'Vigil',
+          name: 'Torvane',
           informationUri: 'https://github.com/',
           version: toolVersion,
           rules: [...rules.values()],

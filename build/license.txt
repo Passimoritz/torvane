@@ -1,4 +1,4 @@
-﻿Vigil – Lizenz (MIT)
+﻿Torvane – Lizenz (MIT)
 
 Copyright (c) 2026 Passimoritz
 
@@ -14,5 +14,5 @@ BEREITGESTELLT. IN KEINEM FALL HAFTEN DIE AUTOREN FÜR ANSPRÜCHE, SCHÄDEN ODER
 SONSTIGE VERPFLICHTUNGEN AUS DER NUTZUNG DER SOFTWARE.
 
 Wichtiger Hinweis zur Nutzung:
-Vigil ist ein defensives Prüfwerkzeug. Prüfe ausschließlich eigene Systeme oder
+Torvane ist ein defensives Prüfwerkzeug. Prüfe ausschließlich eigene Systeme oder
 solche, für die du eine ausdrückliche Erlaubnis hast.

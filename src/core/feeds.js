@@ -1,6 +1,6 @@
 'use strict';
 
-// Tagesaktuelle Erkennung ohne App-Update: Vigil laedt oeffentliche Erkennungsdaten selbst nach.
+// Tagesaktuelle Erkennung ohne App-Update: Torvane laedt oeffentliche Erkennungsdaten selbst nach.
 //
 //  live bei jedem Lauf   OSV.dev (Schwachstellen aller Paket-Oekosysteme), Defender-Signaturen (Windows)
 //  taeglich (intel.js)   CISA KEV (aktiv ausgenutzt), FIRST EPSS (Ausnutzungs-Wahrscheinlichkeit)
@@ -147,7 +147,7 @@ const FEEDS = [
     parse: (text) => { if (!/^rules:/m.test(text)) throw new Error('kein Semgrep-Regelsatz'); const n = (text.match(/^\s*-\s+id:/gm) || []).length; if (n < 20) throw new Error(`nur ${n} Regeln – Format unerwartet`); return text; },
     count: (d) => (d.match(/^\s*-\s+id:/gm) || []).length,
   },
-  // nuclei aktualisiert seine Vorlagen selbst (nuclei -update-templates); Vigil stoesst das nur an
+  // nuclei aktualisiert seine Vorlagen selbst (nuclei -update-templates); Torvane stoesst das nur an
   { id: 'nuclei-templates', label: 'nuclei-Vorlagen (vom Werkzeug selbst aktualisiert)', unit: 'Vorlagen', tool: true, when: (ctx) => !!(ctx.updaters && ctx.updaters['nuclei-templates']) },
 ];
 
@@ -190,7 +190,7 @@ function loadPins(dir) { try { const p = JSON.parse(fs.readFileSync(path.join(di
 
 async function fetchLimited(url, maxBytes, fetchImpl, { binary = false, raw = false, timeoutMs = 60000 } = {}) {
   if (!ALLOWED.some((p) => url.startsWith(p))) throw new Error('Quelle nicht erlaubt');
-  const r = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs), headers: { 'User-Agent': 'Vigil-Feeds/1' }, redirect: 'error' });
+  const r = await fetchImpl(url, { signal: AbortSignal.timeout(timeoutMs), headers: { 'User-Agent': 'Torvane-Feeds/1' }, redirect: 'error' });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const buf = Buffer.from(await r.arrayBuffer());
   if (buf.length > maxBytes) throw new Error('zu groß');

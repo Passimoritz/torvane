@@ -88,7 +88,7 @@ function cspSuggestion(origin, currentCsp, data) {
     ruleId: 'csp-suggestion', severity: 'info', category: 'Config', confidence: 'medium',
     title: 'Vorschlag für eine Content-Security-Policy aus den beobachteten Quellen', location: origin,
     evidence: external.length ? `Fremde Quellen: ${list(external)}` : 'Nur eigene Quellen',
-    description: `Vigil hat aus den tatsächlich geladenen Skripten, Styles, Bildern, Schriften und Verbindungen eine passende Richtlinie zusammengestellt. ${note}`,
+    description: `Torvane hat aus den tatsächlich geladenen Skripten, Styles, Bildern, Schriften und Verbindungen eine passende Richtlinie zusammengestellt. ${note}`,
     remediation: 'Zuerst als "Content-Security-Policy-Report-Only" setzen und einige Tage beobachten, dann als "Content-Security-Policy" scharf schalten.',
     patch: `Content-Security-Policy-Report-Only: ${policy}\n\nContent-Security-Policy: ${policy}`,
     snippets: { nginx: `add_header Content-Security-Policy "${policy}" always;`, apache: `Header always set Content-Security-Policy "${policy}"`, express: `app.use((req, res, next) => { res.setHeader('Content-Security-Policy', ${JSON.stringify(policy)}); next(); });` },
@@ -119,7 +119,7 @@ function sriSnippet(origin, scripts, fetched) {
     ruleId: 'sri-snippet', severity: 'info', category: 'Dependencies',
     title: lines.length ? `Fertige Integritäts-Hashes für ${lines.length} externe(s) Skript(e)` : 'Externe Skripte ohne feste Version – keine Integritäts-Hashes möglich', location: origin,
     evidence: list(ext.map(hostOf)),
-    description: `Vigil hat die externen Skripte einmal geladen und daraus SHA-384-Prüfsummen berechnet. Mit dem integrity-Attribut führt der Browser ein Skript nur aus, wenn es genau diesem Stand entspricht.${dynamic.length ? ` Nicht berücksichtigt (Adresse ohne feste Version, der Inhalt ändert sich): ${list(uniq(dynamic))}.` : ''}`,
+    description: `Torvane hat die externen Skripte einmal geladen und daraus SHA-384-Prüfsummen berechnet. Mit dem integrity-Attribut führt der Browser ein Skript nur aus, wenn es genau diesem Stand entspricht.${dynamic.length ? ` Nicht berücksichtigt (Adresse ohne feste Version, der Inhalt ändert sich): ${list(uniq(dynamic))}.` : ''}`,
     remediation: 'Die Script-Tags durch die Fassungen mit integrity ersetzen. Bei jedem Versionswechsel des Skripts den Hash neu erzeugen; Skripte ohne feste Version besser selbst hosten.',
     ...(lines.length ? { patch: lines.join('\n') } : {}),
   })];
@@ -257,7 +257,7 @@ function observatory(url, h, { https, redirectsToHttps = null, scripts = [], ori
     ruleId: 'observatory-grade', severity: 'info', category: 'Config',
     title: `Header-Bewertung nach Mozilla Observatory: Note ${grade} (${score} Punkte)`, location: url,
     evidence: `${score}/100`,
-    description: items.length ? 'Vigil hat die Antwort-Header nach den Kriterien des Mozilla Observatory bewertet. Die Abzüge stehen in der Liste der Schritte.' : 'Vigil hat die Antwort-Header nach den Kriterien des Mozilla Observatory bewertet. Es gibt keine Abzüge.',
+    description: items.length ? 'Torvane hat die Antwort-Header nach den Kriterien des Mozilla Observatory bewertet. Die Abzüge stehen in der Liste der Schritte.' : 'Torvane hat die Antwort-Header nach den Kriterien des Mozilla Observatory bewertet. Es gibt keine Abzüge.',
     ...(items.length ? { steps: items } : {}),
     remediation: items.length ? 'Die einzelnen Header-Befunde dieser Prüfung beheben – jede behobene Stelle hebt die Note.' : 'Kein Handlungsbedarf.',
   })];

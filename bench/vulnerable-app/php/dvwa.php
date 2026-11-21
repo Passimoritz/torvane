@@ -1,5 +1,5 @@
 <?php
-// ABSICHTLICH UNSICHER – Uebungscode fuer den Vigil-Benchmark. Nicht verwenden!
+// ABSICHTLICH UNSICHER – Uebungscode fuer den Torvane-Benchmark. Nicht verwenden!
 // Eigene kleine Beispiele nach typischen Mustern aus DVWA (keine Kopie des Projekts).
 
 // SQL-Injection: Benutzer-ID direkt in die Abfrage

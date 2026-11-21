@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 10/10: Geplante Prüfungen, Greenbone-Anbindung, Zustand der aktiven Werkzeuge.
+// Torvane-Oberfläche, Teil 10/10: Geplante Prüfungen, Greenbone-Anbindung, Zustand der aktiven Werkzeuge.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Zustand der Werkzeuge -----------------------------------------------------------
@@ -152,7 +152,7 @@ function bindGreenbone() {
   $('gbCancel').onclick = async () => { await window.vigil.greenboneSetupCancel(); renderGreenbone(); };
   $('gbPause').onclick = async () => { await window.vigil.greenboneSetupPause(); renderGreenbone(); };
   $('gbRemove').onclick = async () => {
-    if (!confirm('Greenbone entfernen? Die WSL-Umgebung von Vigil wird gelöscht und der Speicher freigegeben. Andere WSL-Umgebungen bleiben unberührt.')) return;
+    if (!confirm('Greenbone entfernen? Die WSL-Umgebung von Torvane wird gelöscht und der Speicher freigegeben. Andere WSL-Umgebungen bleiben unberührt.')) return;
     const r = await window.vigil.greenboneRemove();
     toast(r && r.ok ? 'Greenbone entfernt.' : (r && r.error) || 'Nicht entfernt.', r && r.ok ? 'ok' : 'err');
     renderGreenbone();

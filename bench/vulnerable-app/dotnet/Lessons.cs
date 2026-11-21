@@ -1,4 +1,4 @@
-// ABSICHTLICH UNSICHER – Uebungscode fuer den Vigil-Benchmark. Nicht verwenden!
+// ABSICHTLICH UNSICHER – Uebungscode fuer den Torvane-Benchmark. Nicht verwenden!
 // Eigene kleine Beispiele nach typischen Mustern aus OWASP WebGoat / WebGoat.NET (keine Kopie).
 using System;
 using System.Data.SqlClient;

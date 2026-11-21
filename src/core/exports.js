@@ -97,7 +97,7 @@ function toXlsx(result, opts = {}) {
 function coreProps(title) {
   const now = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xml(title)}</dc:title><dc:creator>Vigil</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created></cp:coreProperties>`;
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xml(title)}</dc:title><dc:creator>Torvane</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created></cp:coreProperties>`;
 }
 
 // --- Word (.docx) ---------------------------------------------------------------------
@@ -163,10 +163,10 @@ function toDocx(result, opts = {}) {
   B.push(h(2, L('Was die Stufen bedeuten')));
   SEV.forEach((sv) => B.push(p([run(L(SEV_LABEL[sv]) + ': ', { b: true }), run(L(SEV_HELP[sv]))])));
   if (result.errors && result.errors.length) { B.push(h(2, L('Hinweise zum Lauf'))); result.errors.slice(0, 30).forEach((e) => B.push(p('• ' + e))); }
-  B.push(p([run(L('Erstellt mit Vigil – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme.') + (b.footerText ? '\n' + b.footerText : ''), { color: '64748B', sz: 18 })]));
+  B.push(p([run(L('Erstellt mit Torvane – zerstörungsfreie Prüfung eigener bzw. freigegebener Systeme.') + (b.footerText ? '\n' + b.footerText : ''), { color: '64748B', sz: 18 })]));
 
   const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
-  const footer = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${W}><w:p><w:pPr><w:jc w:val="center"/></w:pPr>${run(`Vigil · ${L('Sicherheitsbericht')}${b.footerText ? ' · ' + b.footerText : ''} · `, { color: '94A3B8', sz: 16 })}<w:r><w:rPr><w:color w:val="94A3B8"/><w:sz w:val="16"/></w:rPr><w:fldSimple w:instr="PAGE"><w:r><w:t>1</w:t></w:r></w:fldSimple></w:r></w:p></w:ftr>`;
+  const footer = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${W}><w:p><w:pPr><w:jc w:val="center"/></w:pPr>${run(`Torvane · ${L('Sicherheitsbericht')}${b.footerText ? ' · ' + b.footerText : ''} · `, { color: '94A3B8', sz: 16 })}<w:r><w:rPr><w:color w:val="94A3B8"/><w:sz w:val="16"/></w:rPr><w:fldSimple w:instr="PAGE"><w:r><w:t>1</w:t></w:r></w:fldSimple></w:r></w:p></w:ftr>`;
   const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document ${W}><w:body>${B.join('')}<w:sectPr><w:footerReference w:type="default" r:id="rId2"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1077" w:bottom="1134" w:left="1077" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
   const style = (id, name, o) => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="${o.before}" w:after="${o.after}"/>${o.outline != null ? `<w:outlineLvl w:val="${o.outline}"/>` : ''}</w:pPr><w:rPr><w:b/><w:color w:val="${o.color}"/><w:sz w:val="${o.sz}"/></w:rPr></w:style>`;
@@ -230,17 +230,17 @@ function toOpenVex(result, opts = {}) {
   const doc = {
     '@context': 'https://openvex.dev/ns/v0.2.0',
     '@id': `https://openvex.dev/docs/vigil/${uuidFrom(now + JSON.stringify(vexCandidates(result).map((f) => f.id)))}`,
-    author: opts.company || 'Vigil',
+    author: opts.company || 'Torvane',
     role: 'Document Creator',
     timestamp: now,
     version: 1,
-    tooling: 'Vigil',
+    tooling: 'Torvane',
     statements: vexCandidates(result).map((f) => {
       const p = productOf(f, opts);
       const note = String(f.statusNote || f.note || '').trim();
       const st = { vulnerability: { name: vulnId(f), description: clean(f.title) }, products: [{ '@id': p.id, ...(p.purl ? { identifiers: { purl: p.purl } } : {}) }], timestamp: f.statusChangedAt || now };
-      if (f.status === 'FALSE_POSITIVE') return { ...st, status: 'not_affected', justification: justification(note).openvex, impact_statement: note || 'Marked as false positive in Vigil.' };
-      return { ...st, status: 'affected', action_statement: note ? `Risk accepted: ${note}` : 'Risk accepted in Vigil – no fix planned.' };
+      if (f.status === 'FALSE_POSITIVE') return { ...st, status: 'not_affected', justification: justification(note).openvex, impact_statement: note || 'Marked as false positive in Torvane.' };
+      return { ...st, status: 'affected', action_statement: note ? `Risk accepted: ${note}` : 'Risk accepted in Torvane – no fix planned.' };
     }),
   };
   return JSON.stringify(doc, null, 2);
@@ -252,10 +252,10 @@ function toCycloneDxVex(result, opts = {}) {
     if (!comps.has(p.id)) comps.set(p.id, { 'bom-ref': p.id, type: p.type, name: p.name, ...(p.version ? { version: String(p.version) } : {}), ...(p.purl ? { purl: p.purl } : {}) });
     const note = String(f.statusNote || f.note || '').trim();
     const analysis = f.status === 'FALSE_POSITIVE'
-      ? { state: 'false_positive', justification: justification(note).cdx, detail: note || 'Marked as false positive in Vigil.' }
-      : { state: 'exploitable', response: ['will_not_fix'], detail: note ? `Risk accepted: ${note}` : 'Risk accepted in Vigil.' };
+      ? { state: 'false_positive', justification: justification(note).cdx, detail: note || 'Marked as false positive in Torvane.' }
+      : { state: 'exploitable', response: ['will_not_fix'], detail: note ? `Risk accepted: ${note}` : 'Risk accepted in Torvane.' };
     return {
-      'bom-ref': `vuln-${String(f.id || uuidFrom(f.title + f.location)).slice(0, 24)}`, id: vulnId(f), source: { name: /^(CVE|GHSA)/i.test(f.ruleId || '') ? (/^CVE/i.test(f.ruleId) ? 'NVD' : 'GitHub') : 'Vigil' },
+      'bom-ref': `vuln-${String(f.id || uuidFrom(f.title + f.location)).slice(0, 24)}`, id: vulnId(f), source: { name: /^(CVE|GHSA)/i.test(f.ruleId || '') ? (/^CVE/i.test(f.ruleId) ? 'NVD' : 'GitHub') : 'Torvane' },
       ...(f.cwe ? { cwes: [Number(String(f.cwe).replace(/\D/g, ''))].filter(Boolean) } : {}), description: clean(f.title),
       ratings: [{ severity: f.severity === 'info' ? 'info' : f.severity, ...(f.cvss != null ? { score: Number(f.cvss), method: 'CVSSv31' } : {}) }],
       analysis, affects: [{ ref: p.id }],
@@ -263,7 +263,7 @@ function toCycloneDxVex(result, opts = {}) {
   });
   return JSON.stringify({
     bomFormat: 'CycloneDX', specVersion: '1.5', serialNumber: `urn:uuid:${uuidFrom(Date.now() + ':' + vulns.length)}`, version: 1,
-    metadata: { timestamp: new Date().toISOString(), tools: { components: [{ type: 'application', name: 'Vigil', author: 'Vigil' }] }, ...(opts.company ? { supplier: { name: opts.company } } : {}) },
+    metadata: { timestamp: new Date().toISOString(), tools: { components: [{ type: 'application', name: 'Torvane', author: 'Torvane' }] }, ...(opts.company ? { supplier: { name: opts.company } } : {}) },
     components: [...comps.values()], vulnerabilities: vulns,
   }, null, 2);
 }
@@ -273,12 +273,12 @@ function toCycloneDxSbom(packages) {
   const seen = new Set();
   const components = (packages || []).filter((p) => p && p.name).map((p) => ({ type: 'library', name: String(p.name), ...(p.version ? { version: String(p.version) } : {}), purl: purlOf(p) || undefined, 'bom-ref': purlOf(p) || `${p.name}@${p.version || ''}` }))
     .filter((c) => (seen.has(c['bom-ref']) ? false : seen.add(c['bom-ref'])));
-  return JSON.stringify({ bomFormat: 'CycloneDX', specVersion: '1.5', serialNumber: `urn:uuid:${crypto.randomUUID()}`, version: 1, metadata: { timestamp: new Date().toISOString(), tools: { components: [{ type: 'application', name: 'Vigil' }] } }, components }, null, 2);
+  return JSON.stringify({ bomFormat: 'CycloneDX', specVersion: '1.5', serialNumber: `urn:uuid:${crypto.randomUUID()}`, version: 1, metadata: { timestamp: new Date().toISOString(), tools: { components: [{ type: 'application', name: 'Torvane' }] } }, components }, null, 2);
 }
 
 // --- README-Abzeichen ------------------------------------------------------------------
 const GRADE_COLOR = { A: '#2f855a', B: '#4c9a2a', C: '#b7791f', D: '#d9480f', E: '#c0123c', F: '#9f1239' };
-function badgeSvg({ grade = 'A', date = new Date().toISOString().slice(0, 10), label = 'Vigil security' } = {}) {
+function badgeSvg({ grade = 'A', date = new Date().toISOString().slice(0, 10), label = 'Torvane security' } = {}) {
   const right = `${grade} · ${date}`;
   // Breite grob ueber die Zeichenzahl (Verdana 11px ~ 6.5px je Zeichen)
   const wl = Math.round(label.length * 6.4 + 14), wr = Math.round(right.length * 6.6 + 14), w = wl + wr;
@@ -289,7 +289,7 @@ function badgeSvg({ grade = 'A', date = new Date().toISOString().slice(0, 10), l
 <g clip-path="url(#r)"><rect width="${wl}" height="20" fill="#0f1b2d"/><rect x="${wl}" width="${wr}" height="20" fill="${color}"/><rect width="${w}" height="20" fill="url(#s)"/></g>
 <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11"><text x="${wl / 2}" y="14">${xml(label)}</text><text x="${wl + wr / 2}" y="14" font-weight="bold">${xml(right)}</text></g></svg>`;
 }
-function badgeMarkdown(fileName, { grade, date, label = 'Vigil security' } = {}) {
+function badgeMarkdown(fileName, { grade, date, label = 'Torvane security' } = {}) {
   return `![${label}: ${grade} (${date})](${String(fileName || 'vigil-badge.svg').replace(/[()\s]/g, (c) => encodeURIComponent(c))})`;
 }
 
@@ -299,7 +299,7 @@ function toGitlabSast(result, version = '0.2.0') {
   const now = new Date().toISOString().replace(/\.\d+Z$/, '');
   const vulns = (result.findings || []).filter(isOpen).map((f) => {
     const { file, line } = splitLoc(f.location);
-    const ids = [{ type: 'vigil_rule', name: `Vigil ${f.ruleId || f.category || 'finding'}`, value: String(f.ruleId || f.category || 'finding') }];
+    const ids = [{ type: 'vigil_rule', name: `Torvane ${f.ruleId || f.category || 'finding'}`, value: String(f.ruleId || f.category || 'finding') }];
     if (f.cwe) ids.push({ type: 'cwe', name: f.cwe, value: String(f.cwe).replace(/\D/g, ''), url: `https://cwe.mitre.org/data/definitions/${String(f.cwe).replace(/\D/g, '')}.html` });
     if (/^CVE-/i.test(f.ruleId || '')) ids.push({ type: 'cve', name: f.ruleId, value: f.ruleId, url: `https://nvd.nist.gov/vuln/detail/${f.ruleId}` });
     if (f.owasp) ids.push({ type: 'owasp', name: OWASP[f.owasp] || f.owasp, value: f.owasp });
@@ -307,11 +307,11 @@ function toGitlabSast(result, version = '0.2.0') {
       id: uuidFrom(f.id || `${f.ruleId}|${f.location}|${f.title}`), category: 'sast', name: clean(f.title).slice(0, 255),
       description: [f.description, f.impact].filter(Boolean).join('\n\n') || clean(f.title), severity: GL_SEV[f.severity] || 'Unknown',
       solution: [fixText(f), ...(Array.isArray(f.steps) ? f.steps : [])].filter(Boolean).join('\n') || undefined,
-      scanner: { id: 'vigil', name: 'Vigil' }, identifiers: ids,
+      scanner: { id: 'vigil', name: 'Torvane' }, identifiers: ids,
       location: { file: file || 'unknown', ...(line ? { start_line: line, end_line: line } : {}) },
     };
   });
-  const tool = { id: 'vigil', name: 'Vigil', version, vendor: { name: 'Vigil' } };
+  const tool = { id: 'vigil', name: 'Torvane', version, vendor: { name: 'Torvane' } };
   return JSON.stringify({ version: '15.0.7', scan: { analyzer: tool, scanner: tool, type: 'sast', start_time: now, end_time: now, status: 'success' }, vulnerabilities: vulns }, null, 2);
 }
 function toJunit(result) {
@@ -326,8 +326,8 @@ function toJunit(result) {
   const errors = open.filter((f) => f.severity === 'critical' || f.severity === 'high').length;
   if (!cases.length) cases.push('    <testcase classname="vigil" name="Keine offenen Befunde / no open findings"/>');
   return `<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Vigil" tests="${Math.max(1, open.length)}" failures="${open.length - errors}" errors="${errors}">
-  <testsuite name="Vigil security audit" tests="${Math.max(1, open.length)}" failures="${open.length - errors}" errors="${errors}" timestamp="${new Date().toISOString().replace(/\.\d+Z$/, '')}">
+<testsuites name="Torvane" tests="${Math.max(1, open.length)}" failures="${open.length - errors}" errors="${errors}">
+  <testsuite name="Torvane security audit" tests="${Math.max(1, open.length)}" failures="${open.length - errors}" errors="${errors}" timestamp="${new Date().toISOString().replace(/\.\d+Z$/, '')}">
 ${cases.join('\n')}
   </testsuite>
 </testsuites>

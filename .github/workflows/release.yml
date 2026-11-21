@@ -2,7 +2,7 @@
 #
 # Ablauf bei einem Tag "v*":
 #   1. Tests, dann App ungepackt bauen (win-unpacked)
-#   2. SignPath signiert Vigil.exe und die mitgelieferten EXE/DLL-Dateien
+#   2. SignPath signiert Torvane.exe und die mitgelieferten EXE/DLL-Dateien
 #   3. Installer und portable Version aus den signierten Dateien bauen
 #   4. SignPath signiert Installer und portable EXE
 #   5. Signierte Dateien als GitHub-Release veroeffentlichen
@@ -48,7 +48,7 @@ jobs:
         id: unpacked
         uses: actions/upload-artifact@v4
         with:
-          name: vigil-unpacked
+          name: torvane-unpacked
           path: dist/win-unpacked
 
       - name: App-Dateien signieren (SignPath)
@@ -78,10 +78,10 @@ jobs:
         id: installers
         uses: actions/upload-artifact@v4
         with:
-          name: vigil-installers
+          name: torvane-installers
           path: |
-            dist/Vigil-Setup-*.exe
-            dist/Vigil-Portable-*.exe
+            dist/Torvane-Setup-*.exe
+            dist/Torvane-Portable-*.exe
 
       - name: Installer signieren (SignPath)
         if: env.SIGN == 'true'
@@ -101,7 +101,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release | Out-Null
-          Copy-Item dist/Vigil-Setup-*.exe, dist/Vigil-Portable-*.exe release/
+          Copy-Item dist/Torvane-Setup-*.exe, dist/Torvane-Portable-*.exe release/
 
       - name: Stückliste (SBOM) und Prüfsummen
         shell: pwsh

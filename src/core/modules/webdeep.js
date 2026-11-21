@@ -140,7 +140,7 @@ async function probe(guard, targets, { jar, signal } = {}) {
     // 1. Reflexion: wird ein Testwert mit Sonderzeichen unveraendert in die Seite geschrieben?
     const mark = `vgl${Math.random().toString(36).slice(2, 8)}`;
     const r1 = await request(guard, withParam(t.url, t.param, `${mark}"'<b>${mark}`), { headers: H(), signal });
-    if (r1.ok && /html/i.test(r1.headers.get('content-type') || '') && r1.body.includes(`<b>${mark}`)) out.push(W(M, { ruleId: 'probe-xss-reflected', severity: 'high', category: 'XSS', title: `Eingabe wird ungefiltert in die Seite geschrieben (XSS) – „${t.param}“`, description: `Vigil hat einen harmlosen Testwert mit HTML-Zeichen in „${t.param}“ gesendet. Er kam unverändert in der Seite zurück. Damit lässt sich über einen präparierten Link Skriptcode im Browser von Besuchern ausführen.`, impact: 'Sitzungen übernehmen, Eingaben mitlesen, die Seite im Namen des Opfers bedienen.', remediation: 'Alle Ausgaben kontextgerecht maskieren (Template-Engine mit Auto-Escape) und eine Content-Security-Policy setzen.', location: loc, evidence: `Antwort enthält <b>${mark}` }));
+    if (r1.ok && /html/i.test(r1.headers.get('content-type') || '') && r1.body.includes(`<b>${mark}`)) out.push(W(M, { ruleId: 'probe-xss-reflected', severity: 'high', category: 'XSS', title: `Eingabe wird ungefiltert in die Seite geschrieben (XSS) – „${t.param}“`, description: `Torvane hat einen harmlosen Testwert mit HTML-Zeichen in „${t.param}“ gesendet. Er kam unverändert in der Seite zurück. Damit lässt sich über einen präparierten Link Skriptcode im Browser von Besuchern ausführen.`, impact: 'Sitzungen übernehmen, Eingaben mitlesen, die Seite im Namen des Opfers bedienen.', remediation: 'Alle Ausgaben kontextgerecht maskieren (Template-Engine mit Auto-Escape) und eine Content-Security-Policy setzen.', location: loc, evidence: `Antwort enthält <b>${mark}` }));
     // 2. SQL: erzeugt ein einzelnes Anfuehrungszeichen eine Datenbank-Fehlermeldung?
     if (!SQL_ERR.test(base.body)) {
       const orig = new URL(t.url).searchParams.get(t.param) || '1';
@@ -205,14 +205,14 @@ async function loginAudit(cfg, guard, { signal, onProgress = () => {} } = {}) {
   if (!page.ok) return { findings: out, notes: [`Login-Prüfung: Anmeldeseite nicht erreichbar (${page.error}).`] };
   jar.take(page);
   const form = parseForms(page.body, cfg.loginUrl).find((f) => f.inputs.some((i) => i.type === 'password'));
-  if (!form) return { findings: out, notes: ['Login-Prüfung: kein Anmeldeformular mit Passwortfeld gefunden. Anmeldungen per JavaScript/API (z. B. Single-Page-Apps) prüft Vigil noch nicht automatisch.'] };
+  if (!form) return { findings: out, notes: ['Login-Prüfung: kein Anmeldeformular mit Passwortfeld gefunden. Anmeldungen per JavaScript/API (z. B. Single-Page-Apps) prüft Torvane noch nicht automatisch.'] };
   if (/^http:/i.test(cfg.loginUrl) || /^http:/i.test(form.action)) out.push(W(M, { ruleId: 'form-password-http', severity: 'critical', category: 'Transport', title: 'Anmeldung ohne HTTPS', description: 'Anmeldeseite oder Formularziel nutzen HTTP. Passwörter lassen sich unterwegs mitlesen.', remediation: 'Ausschließlich HTTPS verwenden.', location: cfg.loginUrl }));
   const before = jar.clone();
   onProgress({ phase: 'webscan', message: 'Login-Prüfung: Anmeldung mit dem Testkonto …' });
   const { body, userName, passName } = buildLoginBody(form, cfg.username, cfg.password, cfg);
   if (!userName || !passName) return { findings: out, notes: ['Login-Prüfung: Benutzer- oder Passwortfeld nicht eindeutig erkannt – Feldnamen in den Einstellungen angeben.'] };
   const res = await postForm(guard, form.action, body, jar, signal, cfg.loginUrl);
-  if (res.offsite) return { findings: out, notes: [`Login-Prüfung abgebrochen: Die Anmeldung führt zu einem anderen Host (${new URL(res.finalUrl).host}). Vigil schickt das Testkonto nur an die freigegebene Domain.`] };
+  if (res.offsite) return { findings: out, notes: [`Login-Prüfung abgebrochen: Die Anmeldung führt zu einem anderen Host (${new URL(res.finalUrl).host}). Torvane schickt das Testkonto nur an die freigegebene Domain.`] };
   const changed = [...jar.c.values()].filter((k) => !before.c.has(k.name) || before.c.get(k.name).value !== k.value);
   const ok = res.ok && res.status < 400 && !looksLoggedOut(res.body) && (changed.length > 0 || res.finalUrl !== form.action);
   if (!ok) return { findings: out, notes: [`Login-Prüfung: Anmeldung mit dem Testkonto hat nicht geklappt (Status ${res.status || res.error}). Zugangsdaten und Anmelde-Adresse prüfen.`] };

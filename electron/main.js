@@ -21,10 +21,10 @@ const { runApiMatrix } = require('../src/core/modules/apimatrix');
 const { verifyOwnership, hostOf: scopeHost } = require('../src/core/scope');
 
 // --- Threat-Intel (CISA KEV + EPSS), taeglich im Hintergrund aktualisiert ---
-// Version ohne Installation: Die portable EXE (bzw. eine Datei "portable" neben Vigil.exe)
+// Version ohne Installation: Die portable EXE (bzw. eine Datei "portable" neben Torvane.exe)
 // speichert alle Daten im Ordner "VigilData" daneben statt im Benutzerprofil.
 const PORTABLE_DIR = process.env.PORTABLE_EXECUTABLE_DIR || (fs.existsSync(path.join(path.dirname(process.execPath), 'portable')) ? path.dirname(process.execPath) : '');
-// Die Oberflaeche ist schlicht: Ohne Grafikbeschleunigung belegt Vigil rund 100 MB weniger Arbeitsspeicher
+// Die Oberflaeche ist schlicht: Ohne Grafikbeschleunigung belegt Torvane rund 100 MB weniger Arbeitsspeicher
 app.disableHardwareAcceleration();
 // Visuelle Regression: feste Skalierung und auch verdeckt weiterzeichnen (sonst veraltete Aufnahmen)
 // Automatische Tests: auch im verdeckten Fenster und unter Last nicht drosseln
@@ -42,6 +42,9 @@ if (process.env.VIGIL_VISUAL_DIR) {
 // Tests laufen mit eigenem, leerem Datenordner
 if (process.env.VIGIL_E2E_DATA) { fs.mkdirSync(process.env.VIGIL_E2E_DATA, { recursive: true }); app.setPath('userData', process.env.VIGIL_E2E_DATA); }
 else if (PORTABLE_DIR) { try { const d = path.join(PORTABLE_DIR, 'VigilData'); fs.mkdirSync(d, { recursive: true }); app.setPath('userData', d); } catch { /* dann Standardort */ } }
+// Umbenennung Vigil -> Torvane: Gibt es den neuen Datenordner noch nicht, aber den alten ("Vigil" bzw. "vigil"),
+// bleibt der alte in Benutzung – Einstellungen, Zugangsdaten, Verlauf und Befunde gehen so nicht verloren.
+else { try { const def = app.getPath('userData'); const old = ['Vigil', 'vigil'].map((n) => path.join(app.getPath('appData'), n)).find((p) => fs.existsSync(p)); if (old && !fs.existsSync(def)) app.setPath('userData', old); } catch { /* Standardordner */ } }
 
 // Absturzberichte nur lokal: Minidumps (crashReporter ohne Upload) plus eine lesbare
 // JSON-Datei je Fehler im Ordner "crash-reports". Es wird nichts uebertragen.
@@ -145,7 +148,7 @@ function runWatch() {
     if (fresh.length) {
       const lang = c.lang === 'de' ? 'de' : 'en';
       const tr = (s) => (lang === 'en' ? require('../src/core/findings-i18n').translate(s) : s);
-      notify(lang === 'en' ? `Vigil: ${fresh.length} new security notice(s)` : `Vigil: ${fresh.length} neue Sicherheitshinweis(e)`, tr(fresh[0].title), () => { focusWindow(); if (win && !win.isDestroyed()) win.webContents.send('watch:open'); });
+      notify(lang === 'en' ? `Torvane: ${fresh.length} new security notice(s)` : `Torvane: ${fresh.length} neue Sicherheitshinweis(e)`, tr(fresh[0].title), () => { focusWindow(); if (win && !win.isDestroyed()) win.webContents.send('watch:open'); });
       if (win && !win.isDestroyed()) win.webContents.send('watch:update', { count: fresh.length });
     }
     return { ok: true, added: fresh.length, notes };
@@ -163,9 +166,9 @@ function ensureTray() {
     const { Tray, Menu } = require('electron');
     const de = loadConfig().lang === 'de';
     tray = new Tray(iconPath());
-    tray.setToolTip('Vigil');
+    tray.setToolTip('Torvane');
     tray.setContextMenu(Menu.buildFromTemplate([
-      { label: de ? 'Vigil öffnen' : 'Open Vigil', click: () => focusWindow() },
+      { label: de ? 'Torvane öffnen' : 'Open Torvane', click: () => focusWindow() },
       { label: de ? 'Beenden' : 'Quit', click: () => { appQuitting = true; app.quit(); } },
     ]));
     tray.on('click', () => focusWindow());
@@ -208,7 +211,7 @@ async function runSchedule(id) {
   const hook = dec(s.webhookEnc || '');
   const fail = async (error) => {
     patchSchedule(id, { lastStatus: { ok: false, at: new Date().toISOString(), error: String(error).slice(0, 300) } });
-    notify(de ? `Vigil: „${s.name}“ nicht gelaufen` : `Vigil: "${s.name}" did not run`, String(error), focusWindow);
+    notify(de ? `Torvane: „${s.name}“ nicht gelaufen` : `Torvane: "${s.name}" did not run`, String(error), focusWindow);
     if (hook) await schedule.sendWebhook(hook, schedule.webhookPayload(hook, { name: s.name, alerts: [], error: String(error).slice(0, 300) }));
     return { ok: false, error };
   };
@@ -230,7 +233,7 @@ async function runSchedule(id) {
     const status = { ok: true, at: new Date().toISOString(), total: (out.result.findings || []).length, alerts: alerts.length };
     if (alerts.length) {
       const tr = (t) => (de ? t : require('../src/core/findings-i18n').translate(t));
-      notify(de ? `Vigil: ${alerts.length} neue(r) Befund(e) – ${s.name}` : `Vigil: ${alerts.length} new finding(s) – ${s.name}`, tr(alerts[0].title), focusWindow);
+      notify(de ? `Torvane: ${alerts.length} neue(r) Befund(e) – ${s.name}` : `Torvane: ${alerts.length} new finding(s) – ${s.name}`, tr(alerts[0].title), focusWindow);
       if (hook) { const w = await schedule.sendWebhook(hook, schedule.webhookPayload(hook, { name: s.name, alerts })); if (!w.ok) status.webhookError = w.error; }
     }
     patchSchedule(id, { lastStatus: status });
@@ -383,8 +386,8 @@ function runToolUpdates(force = false) {
     onDone: (st) => {
       const list = st.results || [];
       const bad = list.filter((r) => r.status === 'rolled-back' || r.status === 'failed');
-      if (bad.length) notify(de ? 'Vigil: Werkzeug nicht aktualisiert' : 'Vigil: tool not updated', bad.map((r) => r.id).join(', '), focusWindow);
-      if (list.some((r) => r.restart)) notify(de ? 'Neue Vigil-Version geladen' : 'New Vigil version downloaded', de ? 'Sie ist beim nächsten Start aktiv.' : 'It becomes active at the next start.', focusWindow);
+      if (bad.length) notify(de ? 'Torvane: Werkzeug nicht aktualisiert' : 'Torvane: tool not updated', bad.map((r) => r.id).join(', '), focusWindow);
+      if (list.some((r) => r.restart)) notify(de ? 'Neue Torvane-Version geladen' : 'New Torvane version downloaded', de ? 'Sie ist beim nächsten Start aktiv.' : 'It becomes active at the next start.', focusWindow);
     },
   }).catch((e) => ({ error: e.message })).finally(() => { toolUpdating = null; if (win && !win.isDestroyed()) win.webContents.send('tools:updated'); });
   if (win && !win.isDestroyed()) win.webContents.send('tools:updated');
@@ -404,7 +407,7 @@ function applyUsbWatch(cfg) {
       isEnabled: () => !!loadConfig().usbAutoScan,
       onNew: (drive) => {
         const de = loadConfig().lang === 'de';
-        notify(de ? `Wechseldatenträger ${drive} erkannt` : `Removable drive ${drive} detected`, de ? 'Klicken, um das Laufwerk mit Vigil zu prüfen (nur lesend).' : 'Click to check the drive with Vigil (read-only).', () => { focusWindow(); if (win && !win.isDestroyed()) win.webContents.send('usb:scan', drive); });
+        notify(de ? `Wechseldatenträger ${drive} erkannt` : `Removable drive ${drive} detected`, de ? 'Klicken, um das Laufwerk mit Torvane zu prüfen (nur lesend).' : 'Click to check the drive with Torvane (read-only).', () => { focusWindow(); if (win && !win.isDestroyed()) win.webContents.send('usb:scan', drive); });
       },
     });
     usbWatcher.start();
@@ -544,7 +547,7 @@ async function renderPdf(html, withFooter = true) {
     const data = await w.webContents.printToPDF({
       printBackground: true, pageSize: 'A4', preferCSSPageSize: true, displayHeaderFooter: withFooter,
       headerTemplate: '<div></div>',
-      footerTemplate: '<div style="width:100%;font:8.5px Segoe UI,sans-serif;color:#94a3b8;padding:0 14mm;display:flex;justify-content:space-between"><span>Vigil · ' + (en ? 'Security report' : 'Sicherheitsbericht') + (foot ? ' · ' + foot : '') + '</span><span>' + (en ? 'Page' : 'Seite') + ' <span class="pageNumber"></span> ' + (en ? 'of' : 'von') + ' <span class="totalPages"></span></span></div>',
+      footerTemplate: '<div style="width:100%;font:8.5px Segoe UI,sans-serif;color:#94a3b8;padding:0 14mm;display:flex;justify-content:space-between"><span>Torvane · ' + (en ? 'Security report' : 'Sicherheitsbericht') + (foot ? ' · ' + foot : '') + '</span><span>' + (en ? 'Page' : 'Seite') + ' <span class="pageNumber"></span> ' + (en ? 'of' : 'von') + ' <span class="totalPages"></span></span></div>',
     });
     return data;
   } finally { try { w.destroy(); } catch { /* egal */ } try { fs.unlinkSync(tmp); } catch { /* egal */ } }
@@ -757,7 +760,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     backgroundColor: '#0a0e15',
-    title: 'Vigil',
+    title: 'Torvane',
     icon: iconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -876,7 +879,7 @@ app.whenReady().then(() => {
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('will-quit', () => { ollama.stop(); try { if (orchestrator) orchestrator.shutdown(); } catch { /* egal */ } }); // nur den von Vigil gestarteten Dienst beenden
+app.on('will-quit', () => { ollama.stop(); try { if (orchestrator) orchestrator.shutdown(); } catch { /* egal */ } }); // nur den von Torvane gestarteten Dienst beenden
 
 // --- IPC ----------------------------------------------------------------
 ipcMain.handle('meta:providers', () => {
@@ -1074,7 +1077,7 @@ const budgetMsg = (s) => `Monatliches KI-Budget ausgeschöpft: ${s.spent.toFixed
 ipcMain.handle('budget:stats', () => { const c = loadConfig(); return budget.stats(budget.load(SPEND_PATH()), Number(c.monthlyBudgetUsd) || 0); });
 
 // --- KI-Hilfen auf Knopfdruck (Patch, Erklaerstufen, Bedrohungsmodell, Upgrade) --------
-// Alles nur Vorschlaege: Vigil schreibt keine Datei, der Nutzer kopiert/uebernimmt selbst.
+// Alles nur Vorschlaege: Torvane schreibt keine Datei, der Nutzer kopiert/uebernimmt selbst.
 const aifix = require('../src/core/aifix');
 const findingOf = (f) => { const x = f && typeof f === 'object' ? f : {}; const s = (k, n = 3000) => String(x[k] == null ? '' : x[k]).slice(0, n); return { id: s('id', 100), title: s('title', 300), severity: s('severity', 20), location: s('location', 500), category: s('category', 40), cwe: s('cwe', 40), description: s('description'), impact: s('impact'), reachability: s('reachability'), remediation: s('remediation') }; };
 async function onDemand(kind, fn) {
@@ -1438,7 +1441,7 @@ async function auditPackage() {
   if (sbom.length) parts.push({ name: 'sbom.cdx.json', data: exportsFmt.toCycloneDxSbom(sbom) });
   if ((res.findings || []).some((f) => f.status === 'FALSE_POSITIVE' || f.status === 'ACCEPTED_RISK')) parts.push({ name: 'vex.openvex.json', data: exportsFmt.toOpenVex(res, reportOpts()) });
   const keys = loadConfig().signReports ? signingKeys(true) : null;
-  return signing.buildAuditPackage(parts, keys, { title: 'Vigil audit package' });
+  return signing.buildAuditPackage(parts, keys, { title: 'Torvane audit package' });
 }
 
 // Tests speichern ohne Dialog
@@ -1472,9 +1475,9 @@ async function saveReportFile(format) {
     if (format === 'badge') {
       const s = require('../src/core/reportdoc').stats((reportResult().findings || []).filter((f) => !f.suppressed && !['FALSE_POSITIVE', 'ACCEPTED_RISK', 'RESOLVED'].includes(f.status)));
       const date = new Date(lastResult.meta && lastResult.meta.at || Date.now()).toISOString().slice(0, 10);
-      const svg = exportsFmt.badgeSvg({ grade: s.grade, date, label: reportEnglish() ? 'Vigil security' : 'Vigil Sicherheit' });
+      const svg = exportsFmt.badgeSvg({ grade: s.grade, date, label: reportEnglish() ? 'Torvane security' : 'Torvane Sicherheit' });
       fs.writeFileSync(r.filePath, svg, 'utf8');
-      return { ...done(Buffer.from(svg, 'utf8')), markdown: exportsFmt.badgeMarkdown(path.basename(r.filePath), { grade: s.grade, date, label: reportEnglish() ? 'Vigil security' : 'Vigil Sicherheit' }) };
+      return { ...done(Buffer.from(svg, 'utf8')), markdown: exportsFmt.badgeMarkdown(path.basename(r.filePath), { grade: s.grade, date, label: reportEnglish() ? 'Torvane security' : 'Torvane Sicherheit' }) };
     }
     if (format === 'auditzip') { const buf = await auditPackage(); fs.writeFileSync(r.filePath, buf); return { ok: true, path: r.filePath, signed: !!loadConfig().signReports }; }
     if (ext === 'pdf') { await saveReportPdf(r.filePath, exec ? 'exec' : 'full'); return done(fs.readFileSync(r.filePath)); }
@@ -1503,7 +1506,7 @@ function resultOfRun(runId) {
   const list = loadHistory();
   const at = Date.parse(run.finishedAt || run.startedAt || run.createdAt);
   const hit = list.find((e) => e.runId === runId) || list.find((e) => !e.runId && Math.abs(Date.parse(e.at) - at) < 120000);
-  if (!hit) throw new Error(reportEnglish() ? 'The report of this run is no longer stored (Vigil keeps the last 50).' : 'Der Bericht dieses Laufs ist nicht mehr gespeichert (Vigil behält die letzten 50).');
+  if (!hit) throw new Error(reportEnglish() ? 'The report of this run is no longer stored (Torvane keeps the last 50).' : 'Der Bericht dieses Laufs ist nicht mehr gespeichert (Torvane behält die letzten 50).');
   return { result: secure.readJson(path.join(HISTORY_DIR(), hit.id + '.json'), dataCipher).data, targets: run.targets || [] };
 }
 let exportBusy = false;

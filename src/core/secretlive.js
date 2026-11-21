@@ -51,7 +51,7 @@ async function probe(provider, key, extra, fetchImpl, signal) {
   try {
     await throttle('secret-live-' + provider, 1000);
     if (provider === 'GitHub') {
-      const r = await go('https://api.github.com/user', { headers: { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json', 'User-Agent': 'Vigil-secret-check' } });
+      const r = await go('https://api.github.com/user', { headers: { Authorization: `Bearer ${key}`, Accept: 'application/vnd.github+json', 'User-Agent': 'Torvane-secret-check' } });
       return r.status === 200 ? 'active' : r.status === 401 ? 'inactive' : 'unknown';
     }
     if (provider === 'Slack') {

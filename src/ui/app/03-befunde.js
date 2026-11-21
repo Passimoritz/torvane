@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 3/9: Bedrohungsmodell, Befund-Detail, KI-Hilfe, Lösungsteil, Befund-Status.
+// Torvane-Oberfläche, Teil 3/9: Bedrohungsmodell, Befund-Detail, KI-Hilfe, Lösungsteil, Befund-Status.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- STRIDE-Bedrohungsmodell ---------------------------------------------------
@@ -291,7 +291,7 @@ function hydrateDetail(root, f) {
 }
 
 // --- KI-Hilfe im Detail: Erklaerstufen, Fix als Diff, Upgrade-Hinweise ------------------
-// Alles sind Vorschlaege: Vigil aendert keine Datei – Kopieren und Uebernehmen macht der Nutzer.
+// Alles sind Vorschlaege: Torvane aendert keine Datei – Kopieren und Uebernehmen macht der Nutzer.
 const LEVEL_LABEL = { lay: 'Laie', dev: 'Entwickler', expert: 'Experte' };
 state.aiHelp = state.aiHelp || {};
 const findingPayload = (f) => ({ id: f.id, title: f.title, severity: f.severity, location: f.location, category: f.category, cwe: f.cwe, description: f.description, impact: f.impact, reachability: f.reachability, remediation: f.remediation });
@@ -307,7 +307,7 @@ function aiHelpBlock(f) {
     <div class="patch-row">
       ${codeFix ? '<button type="button" class="btn small gen-patch">Fix generieren</button>' : ''}
       ${pkg ? '<button type="button" class="btn small upg-btn">Upgrade-Hinweise</button>' : ''}
-      ${codeFix || pkg ? '<span class="muted small">Nur Vorschläge – Vigil ändert keine Datei.</span>' : ''}
+      ${codeFix || pkg ? '<span class="muted small">Nur Vorschläge – Torvane ändert keine Datei.</span>' : ''}
     </div>
     <div class="patch-out" aria-live="polite" hidden></div>
     <div class="upg-out" aria-live="polite" hidden></div>
@@ -471,7 +471,7 @@ function renderFindings() {
   if (!keyed.length) {
     box.innerHTML = state.lastFindings.length
       ? '<div class="empty"><b>Keine Treffer</b>Filter oder Suche anpassen.</div>'
-      : '<div class="empty"><b>Alles sauber</b>Vigil hat in diesem Lauf nichts gefunden.</div>';
+      : '<div class="empty"><b>Alles sauber</b>Torvane hat in diesem Lauf nichts gefunden.</div>';
     state.selected = null;
     renderDetail();
     return;

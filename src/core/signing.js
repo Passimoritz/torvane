@@ -35,7 +35,7 @@ function canonical(v) {
 // files: [{ name, data }]
 function buildManifest(files, meta = {}) {
   return {
-    format: FORMAT, tool: 'Vigil', createdAt: meta.createdAt || new Date().toISOString(), ...(meta.title ? { title: String(meta.title) } : {}),
+    format: FORMAT, tool: 'Torvane', createdAt: meta.createdAt || new Date().toISOString(), ...(meta.title ? { title: String(meta.title) } : {}),
     files: files.map((f) => { const b = toBuf(f.data); return { name: safeName(f.name), size: b.length, sha256: sha256(b) }; }),
   };
 }

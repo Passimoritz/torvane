@@ -51,7 +51,7 @@ async function rawGet(url, method, extSignal) {
   const t = setTimeout(() => ctrl.abort(), TIMEOUT);
   const signal = extSignal ? AbortSignal.any([ctrl.signal, extSignal]) : ctrl.signal;
   try {
-    const res = await fetch(url, { method, redirect: 'follow', signal, headers: { 'User-Agent': 'Vigil-Audit/0.2 (+authorized,passive)' } });
+    const res = await fetch(url, { method, redirect: 'follow', signal, headers: { 'User-Agent': 'Torvane-Audit/0.2 (+authorized,passive)' } });
     noteStatus(url, res.status);
     let body = '';
     if (method === 'GET') {

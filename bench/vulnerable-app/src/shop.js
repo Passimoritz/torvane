@@ -1,4 +1,4 @@
-// ABSICHTLICH UNSICHER – Uebungscode fuer den Vigil-Benchmark. Nicht verwenden!
+// ABSICHTLICH UNSICHER – Uebungscode fuer den Torvane-Benchmark. Nicht verwenden!
 // Eigene kleine Beispiele nach typischen Mustern aus OWASP Juice Shop (keine Kopie des Projekts).
 const express = require('express');
 const crypto = require('crypto');

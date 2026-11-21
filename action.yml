@@ -3,7 +3,7 @@
 #
 #   - uses: actions/checkout@v4
 #     with: { fetch-depth: 0 }          # fuer pr-comments: Vergleich mit dem Basis-Commit
-#   - uses: Passimoritz/vigil@main
+#   - uses: Passimoritz/torvane@main
 #     with: { fail-on: high, pr-comments: 'true' }
 #
 # Rechte im Workflow: contents: read, security-events: write (SARIF), pull-requests: write (Kommentare).

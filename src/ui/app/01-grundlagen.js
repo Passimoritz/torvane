@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 1/9: Zustand, Hilfsfunktionen, Ziele, bekannte Ziele, Drag & Drop, Start der Analyse.
+// Torvane-Oberfläche, Teil 1/9: Zustand, Hilfsfunktionen, Ziele, bekannte Ziele, Drag & Drop, Start der Analyse.
 // Die Oberfläche ist auf mehrere klassische Skripte in src/ui/app/ verteilt (Reihenfolge siehe index.html).
 
 const $ = (id) => document.getElementById(id);
@@ -98,7 +98,7 @@ function renderKnown() {
 async function untrustKnown(k) {
   const entries = (state.config.allowlist || []).filter((e) => k.host && allowMatches(e, k.host));
   const what = entries.length ? `Freigabe ${entries.join(', ')}` : 'Domain-Nachweis';
-  if (!confirm(`${k.name} nicht mehr vertrauen?\n\nEntfernt: ${what}.${k.verified ? '\nDer Domain-Nachweis wird ebenfalls zurückgenommen – tiefe Prüfungen brauchen dann einen neuen Nachweis.' : ''}\nBeim nächsten Prüfen fragt Vigil wieder nach der Berechtigung.`)) return;
+  if (!confirm(`${k.name} nicht mehr vertrauen?\n\nEntfernt: ${what}.${k.verified ? '\nDer Domain-Nachweis wird ebenfalls zurückgenommen – tiefe Prüfungen brauchen dann einen neuen Nachweis.' : ''}\nBeim nächsten Prüfen fragt Torvane wieder nach der Berechtigung.`)) return;
   state.config.allowlist = (state.config.allowlist || []).filter((e) => !entries.includes(e));
   await saveCfg();
   if (k.id && k.verified) { try { await window.vigil.setTargetMeta(k.id, { ownershipVerified: false }); } catch { /* egal */ } }

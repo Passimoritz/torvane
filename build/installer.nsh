@@ -1,9 +1,9 @@
-﻿; Vigil – eigene Installer-Teile (eingebunden ueber "nsis.include" in package.json)
+﻿; Torvane – eigene Installer-Teile (eingebunden ueber "nsis.include" in package.json)
 ;
-; 1. Wartungsseite: Ist Vigil schon installiert, fragt der Installer zuerst, was passieren soll:
+; 1. Wartungsseite: Ist Torvane schon installiert, fragt der Installer zuerst, was passieren soll:
 ;    Reparieren / Aktualisieren (Einstellungen und Ergebnisse bleiben) oder Entfernen.
-; 2. Schneller Abschluss: "Vigil jetzt starten" uebergibt den Start an cmd.exe (unsichtbar), damit das Setup
-;    nicht auf die Windows-Pruefung der neuen Vigil.exe wartet (sonst viele Sekunden nach "Fertig stellen").
+; 2. Schneller Abschluss: "Torvane jetzt starten" uebergibt den Start an cmd.exe (unsichtbar), damit das Setup
+;    nicht auf die Windows-Pruefung der neuen Torvane.exe wartet (sonst viele Sekunden nach "Fertig stellen").
 ; Die Datei muss als UTF-8 MIT BOM gespeichert sein, sonst liest NSIS die Umlaute falsch.
 
 !ifndef BUILD_UNINSTALLER
@@ -49,7 +49,7 @@
     ${EndIf}
     ${VersionCompare} "${VERSION}" "$vgOldVersion" $vgCmp
 
-    !insertmacro MUI_HEADER_TEXT "Vigil ist bereits installiert" "Version $vgOldVersion in $vgOldDir"
+    !insertmacro MUI_HEADER_TEXT "Torvane ist bereits installiert" "Version $vgOldVersion in $vgOldDir"
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
@@ -76,7 +76,7 @@
     ${NSD_CreateLabel} 24u 47u 90% 20u "Einstellungen, Zugangsdaten, Verlauf und Ergebnisse bleiben erhalten. Der Ordner bleibt derselbe."
     Pop $0
 
-    ${NSD_CreateRadioButton} 10u 72u 95% 12u "&Entfernen – Vigil deinstallieren"
+    ${NSD_CreateRadioButton} 10u 72u 95% 12u "&Entfernen – Torvane deinstallieren"
     Pop $vgRadioRemove
     ${NSD_CreateLabel} 24u 85u 90% 20u "Startet die Deinstallation. Deine Daten (Einstellungen, Ergebnisse) bleiben dabei auf dem Rechner, bis du sie selbst löschst."
     Pop $0
@@ -100,14 +100,14 @@
   FunctionEnd
   !macroend
 
-  ; Eigene Fertig-Seite: startet Vigil direkt, das Setup schliesst sofort
+  ; Eigene Fertig-Seite: startet Torvane direkt, das Setup schliesst sofort
   !macro customFinishPage
     Function vgStartApp
       ${If} ${UAC_IsInnerInstance}
-        ; Setup laeuft mit Adminrechten: Vigil trotzdem als normaler Benutzer starten
+        ; Setup laeuft mit Adminrechten: Torvane trotzdem als normaler Benutzer starten
         ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" ""
       ${Else}
-        ; Nicht direkt starten: Beim ersten Start einer neuen, unsignierten Vigil.exe prueft Windows
+        ; Nicht direkt starten: Beim ersten Start einer neuen, unsignierten Torvane.exe prueft Windows
         ; (Smart App Control / Defender) die Datei, und der startende Prozess – das Setup – wartet so
         ; lange. Deshalb uebernimmt das signierte cmd.exe unsichtbar den Start, das Setup schliesst sofort.
         ; Die Pruefung durch Windows findet trotzdem ganz normal statt.
@@ -115,7 +115,7 @@
       ${EndIf}
     FunctionEnd
     !define MUI_FINISHPAGE_RUN
-    !define MUI_FINISHPAGE_RUN_TEXT "Vigil jetzt starten"
+    !define MUI_FINISHPAGE_RUN_TEXT "Torvane jetzt starten"
     !define MUI_FINISHPAGE_RUN_FUNCTION "vgStartApp"
     !insertmacro MUI_PAGE_FINISH
   !macroend

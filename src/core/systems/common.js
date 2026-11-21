@@ -40,7 +40,7 @@ async function http(url, { method = 'GET', headers = {}, body, signal, fetchImpl
   const onAbort = () => ctl.abort();
   if (signal) signal.addEventListener('abort', onAbort, { once: true });
   try {
-    const r = await f(url, { method, headers: { 'User-Agent': 'Vigil-Audit', ...headers }, body, signal: ctl.signal });
+    const r = await f(url, { method, headers: { 'User-Agent': 'Torvane-Audit', ...headers }, body, signal: ctl.signal });
     const text = await r.text();
     const hdr = (k) => (r.headers && typeof r.headers.get === 'function' ? r.headers.get(k) : null);
     return { ok: r.ok, status: r.status, data: json(text), text: String(text).slice(0, 2e6), header: hdr };

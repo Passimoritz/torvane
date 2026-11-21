@@ -249,7 +249,7 @@ function archiveFindings({ label, unsafe = [], bomb = false, names = [], kind = 
   if (bomb) out.push(F({
     ruleId: 'archive-bomb', severity: 'medium', confidence: 'medium',
     title: `Archiv entpackt sich auf ein Vielfaches: ${path.basename(label)}`,
-    description: 'Das Archiv ist extrem stark komprimiert (Zip-Bombe). Vigil hat es deshalb nicht entpackt.',
+    description: 'Das Archiv ist extrem stark komprimiert (Zip-Bombe). Torvane hat es deshalb nicht entpackt.',
     impact: 'Beim Entpacken kann die Festplatte volllaufen oder ein Virenscanner aussteigen.',
     remediation: 'Nicht entpacken; Herkunft prüfen.',
     location: label,

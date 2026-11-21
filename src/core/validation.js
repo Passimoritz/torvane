@@ -10,7 +10,7 @@ const FINDING_STATUSES = ['OPEN', 'IN_PROGRESS', 'ACCEPTED_RISK', 'FALSE_POSITIV
 const TARGET_TYPES = ['path', 'url', 'endpoint', 'image', 'system'];
 const SYSTEM_KINDS = ['windows', 'docker', 'aws', 'azure', 'gcp', 'winapps', 'browserext', 'backup', 'macos', 'router', 'lan', 'linuxssh', 'dbdirect', 'k8s', 'iam', 'cicd', 'm365', 'hosting', 'hibp'];
 
-// Einheitliches Befund-Format (Vigil-Schreibweise der Spec "UnifiedFinding").
+// Einheitliches Befund-Format (Torvane-Schreibweise der Spec "UnifiedFinding").
 const UnifiedFindingSchema = z.object({
   source: z.string().min(1),
   ruleId: z.string().min(1).max(200),
@@ -52,7 +52,7 @@ const ScanRequestSchema = z.object({
 
 const StatusUpdateSchema = z.object({ status: z.enum(FINDING_STATUSES), note: z.string().max(500).optional(), expiresInDays: z.number().int().min(1).max(3650).optional() });
 
-// --- Rohausgaben externer Scanner (nur die Felder, die Vigil liest) --------
+// --- Rohausgaben externer Scanner (nur die Felder, die Torvane liest) --------
 const TrivyOutputSchema = z.object({
   Results: z.array(z.object({
     Target: z.string().optional(),

@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 2/9: Kosten-/Zeit-Vorschau, Prüflauf, Fortschritt, Ergebnisseite.
+// Torvane-Oberfläche, Teil 2/9: Kosten-/Zeit-Vorschau, Prüflauf, Fortschritt, Ergebnisseite.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Kosten-/Token-Vorschau vor dem Start -----------------------------------
@@ -86,7 +86,7 @@ async function refreshEstimate() {
     </div>
     <div class="est-split muted small">${fmtK(c.inputTokens)} Eingang · ${fmtK(c.outputTokens)} Ausgang${c.truncated ? ' · große Projekte werden gekürzt' : ''}</div>
     <div class="est-split muted small">${c.timeMeasured ? 'Dauer aus deinen bisherigen Läufen gelernt' : 'Dauer vorsichtig geschätzt – wird nach dem ersten Lauf mit diesem Modell genauer'}</div>
-    ${warn ? `<div class="est-warn">Über deiner Kostengrenze von ${fmtUsd(state.config.costWarnUsd ?? 2)} – Vigil fragt vor dem Start nach.</div>` : ''}
+    ${warn ? `<div class="est-warn">Über deiner Kostengrenze von ${fmtUsd(state.config.costWarnUsd ?? 2)} – Torvane fragt vor dem Start nach.</div>` : ''}
     <button type="button" class="est-switch" id="estSwitch">${modeName(o.depth)}-Modus: ${esc(otherPrice)} – umstellen</button>`;
   $('estSwitch').onclick = () => { state.config.analysisDepth = o.depth; saveCfg(); refreshEstimate(); toast(`${modeName(o.depth)}-Modus aktiv`, 'ok'); };
 }
@@ -386,7 +386,7 @@ const plural = (n, one, many) => (n === 1 ? one : many);
 function renderVerdict() {
   const c = visibleCounts();
   const total = SEV_ORDER.reduce((n, s) => n + c[s], 0);
-  let kind = 'ok', head = 'Keine Probleme gefunden.', sub = 'Vigil hat nichts Auffälliges entdeckt – gute Arbeit.';
+  let kind = 'ok', head = 'Keine Probleme gefunden.', sub = 'Torvane hat nichts Auffälliges entdeckt – gute Arbeit.';
   if (total > 0) {
     sub = 'Fang oben in der Liste an – dort steht das Dringendste. Eine Stufe anklicken filtert die Liste.';
     if (c.critical) { kind = 'crit'; head = `${c.critical} kritische${c.high ? ` und ${c.high} hohe` : ''} ${plural(c.critical + c.high, 'Lücke', 'Lücken')} – bitte zuerst beheben.`; }
@@ -438,10 +438,10 @@ function renderFilters() {
 }
 
 // Befundtexte kommen deutsch aus den Pruefmodulen; in der englischen Oberflaeche uebersetzen
-const wantEnglish = () => state.config && state.config.lang !== 'de' && !!window.VigilFindingsI18n;
+const wantEnglish = () => state.config && state.config.lang !== 'de' && !!window.TorvaneFindingsI18n;
 function renderResult(result) {
   state.rawResult = result;
-  if (wantEnglish()) result = window.VigilFindingsI18n.localizeResult(result);
+  if (wantEnglish()) result = window.TorvaneFindingsI18n.localizeResult(result);
   state.lastFindings = result.findings || [];
   state.lastResult = result;
   state.filter = 'all'; state.query = ''; state.onlyNew = false; state.onlyProven = false; state.showSuppressed = false;

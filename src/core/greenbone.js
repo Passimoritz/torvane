@@ -1,7 +1,7 @@
 'use strict';
 
 // Optionale Anbindung an die Greenbone Community Edition (OpenVAS) im Docker-Container.
-// Vigil baut die Schwachstellentests nicht nach, sondern steuert den Scanner ueber dessen Protokoll (GMP)
+// Torvane baut die Schwachstellentests nicht nach, sondern steuert den Scanner ueber dessen Protokoll (GMP)
 // und uebernimmt die Ergebnisse als normale Befunde.
 //
 // Zugriff: gvm-cli im Dienst "gvm-tools" der offiziellen compose.yaml, ueber den Unix-Socket von gvmd,

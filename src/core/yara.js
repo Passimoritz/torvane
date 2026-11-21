@@ -1,6 +1,6 @@
 'use strict';
 
-// Optionale YARA-Pruefung: Ist das Werkzeug "yara" (bzw. yara64) installiert, prueft Vigil das
+// Optionale YARA-Pruefung: Ist das Werkzeug "yara" (bzw. yara64) installiert, prueft Torvane das
 // Ziel mit den eigenen Regeln aus dem Regel-Ordner und den per Feed geladenen Regeln. YARA liest
 // die Dateien nur – nichts wird ausgefuehrt. Fehlt yara oder gibt es keine Regeln: still ueberspringen.
 

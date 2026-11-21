@@ -7,7 +7,7 @@
 //  dns-mail-drift      SPF, DMARC, DKIM, CAA, verwaiste CNAMEs (inkl. Subdomains aus CT-Logs)
 //
 // Ein WafGuard bricht ab, sobald das Ziel drosselt (3x 429/503/403 in Folge) – so sperrt
-// Vigil weder sich selbst aus, noch belastet es fremde Schutzsysteme.
+// Torvane weder sich selbst aus, noch belastet es fremde Schutzsysteme.
 
 const crypto = require('crypto');
 const dns = require('dns').promises;
@@ -16,7 +16,7 @@ const { throttle } = require('../ratelimit');
 
 const TIMEOUT = 10000;
 const MAX_BODY = 300 * 1024;
-const UA = 'Vigil-Audit/0.2 (+authorized,passive)';
+const UA = 'Torvane-Audit/0.2 (+authorized,passive)';
 
 class Throttled extends Error { constructor(host) { super(`Ziel ${host} drosselt Anfragen (WAF/Rate-Limit) – Web-Prüfung abgebrochen.`); this.throttled = true; } }
 

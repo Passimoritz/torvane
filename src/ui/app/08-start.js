@@ -1,6 +1,6 @@
 'use strict';
 
-// Vigil-Oberfläche, Teil 8/9: Init, Tastenkürzel, Einführung.
+// Torvane-Oberfläche, Teil 8/9: Init, Tastenkürzel, Einführung.
 // Klassisches Skript – teilt den globalen Gueltigkeitsbereich mit den anderen Teilen in src/ui/app/.
 
 // --- Init ---------------------------------------------------------------
@@ -116,7 +116,7 @@ async function init() {
   $('cacheClearBtn').onclick = async () => { await window.vigil.aiCacheClear(); $('cacheInfo').textContent = ''; toast('KI-Zwischenspeicher geleert – der nächste Lauf prüft alles neu', 'ok'); };
   // Port-Pruefung im lokalen Netz nur nach ausdruecklicher Bestaetigung einschalten
   if ($('lanPortChk')) $('lanPortChk').addEventListener('change', (e) => {
-    if (e.target.checked && !confirm('Vigil baut dann zu jedem gefundenen Gerät im eigenen Netz kurze Verbindungen zu wenigen Verwaltungs-Ports auf (z. B. Telnet, Weboberfläche, Fernwartung).\nNur private Adressen im eigenen Subnetz, keine Anmeldeversuche, kein Port-Scan. Prüfe nur Netze, die dir gehören.\nEinschalten?')) e.target.checked = false;
+    if (e.target.checked && !confirm('Torvane baut dann zu jedem gefundenen Gerät im eigenen Netz kurze Verbindungen zu wenigen Verwaltungs-Ports auf (z. B. Telnet, Weboberfläche, Fernwartung).\nNur private Adressen im eigenen Subnetz, keine Anmeldeversuche, kein Port-Scan. Prüfe nur Netze, die dir gehören.\nEinschalten?')) e.target.checked = false;
   });
   ['depthSelect', 'validateChk', 'cveChk', 'activeChk', 'domChk', 'malwareChk', 'crawlChk'].forEach((id) => $(id).addEventListener('change', () => { collectSettings(); renderPresets(); }));
   // Einstellungen: vier Bereiche statt einer langen Seite

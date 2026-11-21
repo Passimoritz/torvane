@@ -29,7 +29,7 @@ function createAppLock({ loadConfig, saveConfig, getWindow }) {
   function guardIpc() {
     const orig = ipcMain.handle.bind(ipcMain);
     ipcMain.handle = (channel, fn) => orig(channel, (...args) => {
-      if (state.isLocked() && !OPEN_WHILE_LOCKED.has(channel)) return { ok: false, locked: true, error: 'Vigil ist gesperrt.' };
+      if (state.isLocked() && !OPEN_WHILE_LOCKED.has(channel)) return { ok: false, locked: true, error: 'Torvane ist gesperrt.' };
       return fn(...args);
     });
   }
@@ -61,7 +61,7 @@ function createAppLock({ loadConfig, saveConfig, getWindow }) {
     });
     ipcMain.handle('applock:biometric', async () => {
       if (!settings().enabled || !biometricAvailable()) return { ok: false };
-      try { await systemPreferences.promptTouchID('Vigil entsperren'); state.unlock(); notify(); return { ok: true }; } catch { return { ok: false }; }
+      try { await systemPreferences.promptTouchID('Torvane entsperren'); state.unlock(); notify(); return { ok: true }; } catch { return { ok: false }; }
     });
     ipcMain.handle('applock:lock', () => ({ ok: lockNow() }));
     // enable / change / disable – always needs the current password once a lock exists

@@ -34,7 +34,7 @@ if (env.VIGIL_SIGN_ENDPOINT && env.VIGIL_SIGN_ACCOUNT && env.VIGIL_SIGN_PROFILE 
 // Electron-Fuses (ueber das in electron-builder eingebaute @electron/fuses, offline verfuegbar):
 // im fertigen Programm lassen sich keine Node-Schalter mehr einschleusen und nur die geprueften
 // Dateien aus app.asar laden. Details: docs/THREAT_MODEL.md ("Build hardening").
-//  - runAsNode off                          ELECTRON_RUN_AS_NODE macht aus Vigil.exe kein node.exe
+//  - runAsNode off                          ELECTRON_RUN_AS_NODE macht aus Torvane.exe kein node.exe
 //  - enableNodeOptionsEnvironmentVariable   NODE_OPTIONS / NODE_EXTRA_CA_CERTS werden ignoriert
 //  - enableNodeCliInspectArguments off      kein --inspect-Debugger von aussen
 //  - enableEmbeddedAsarIntegrityValidation  app.asar wird beim Laden gegen den eingebetteten Hash geprueft

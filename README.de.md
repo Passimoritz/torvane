@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner-de.svg" alt="Vigil – defensives Sicherheits-Audit für alles, was dir gehört" width="100%">
+  <img src="docs/images/banner-de.svg" alt="Torvane – defensives Sicherheits-Audit für alles, was dir gehört" width="100%">
 </p>
 
 <p align="center">
@@ -11,12 +11,14 @@
   <img alt="Plattform: Windows" src="https://img.shields.io/badge/Plattform-Windows-0f1b2d">
   <img alt="Electron 45" src="https://img.shields.io/badge/Electron-45-47848f">
   <img alt="KI: lokal oder Cloud" src="https://img.shields.io/badge/KI-Ollama%20%7C%20Claude%20%7C%20OpenAI%20%7C%20Gemini-2b3a55">
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-719%20Kern%20%2B%2065%20Oberfl%C3%A4che-2ea44f">
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/Version-0.3.0-4f8cff">
 </p>
 
-Vigil ist eine Desktop-App, die **deine eigenen** Projekte, Webseiten, Server, Container, Cloud-Konten und Dateien auf Sicherheitsprobleme prüft – und in Klartext erklärt, was los ist und wie du es behebst.
+> **Aus Vigil wird Torvane.** Gleiche App, gleiche Daten. Mit dem neuen Namen kommen eine neue Oberfläche, deutlich weniger Fehlalarme und ein Ablauf für Entwickler (Projektdatei, pre-commit, GitHub Action). Einstellungen und Ergebnisse bleiben, wo sie sind. Alles Neue steht im [Changelog](CHANGELOG.md).
 
-Vigil kombiniert **feste Regeln und tagesaktuelle Schwachstellen-Datenbanken** (die Bekanntes zuverlässig finden) mit einer **KI-Prüfung** (lokal über Ollama oder mit Claude, OpenAI, Gemini bzw. jedem OpenAI-kompatiblen Dienst), die Logik- und Zugriffsfehler sucht – und jeden Fund in einer Gegenprüfung **belegen** muss. Alles läuft **zerstörungsfrei**: keine Angriffe, keine Last-Tests, keine Passwort-Rateversuche.
+Torvane ist eine Desktop-App, die **deine eigenen** Projekte, Webseiten, Server, Container, Cloud-Konten und Dateien auf Sicherheitsprobleme prüft – und in Klartext erklärt, was los ist und wie du es behebst.
+
+Torvane kombiniert **feste Regeln und tagesaktuelle Schwachstellen-Datenbanken** (die Bekanntes zuverlässig finden) mit einer **KI-Prüfung** (lokal über Ollama oder mit Claude, OpenAI, Gemini bzw. jedem OpenAI-kompatiblen Dienst), die Logik- und Zugriffsfehler sucht – und jeden Fund in einer Gegenprüfung **belegen** muss. Alles läuft **zerstörungsfrei**: keine Angriffe, keine Last-Tests, keine Passwort-Rateversuche.
 
 <p align="center">
   <img src="docs/images/results-de.png" alt="Ergebnis mit Sicherheitsnote, Filter nach Schwere und einem Befund mit Lösung" width="100%">
@@ -32,16 +34,16 @@ Vigil kombiniert **feste Regeln und tagesaktuelle Schwachstellen-Datenbanken** (
 - **Kennt deinen Verlauf** – Befunde werden über alle Läufe verfolgt: neu, behoben, wieder da, Fehlalarm, Risiko akzeptiert – dazu Trend, Baseline und Paketsuche (SBOM).
 - **Berichte für alle** – einseitiger Kurzbericht für die Geschäftsführung (PDF), ausführlicher Bericht als PDF/HTML/Markdown, SARIF und JSON für CI.
 - **Kosten und Dauer vorab** – du siehst geschätzte Kosten und Dauer vor dem ersten Token; die Schätzung lernt aus deinen echten Läufen.
+- **Wenige Fehlalarme** – gemessen an 22 sauberen echten Projekten: von über 10.000 Treffern auf eine Handvoll. Allgemeine Muster bleiben still, Test- und Fremdcode wird gekennzeichnet, und jede Regel hat eine gemessene Trefferquote.
+- **Für Entwickler gemacht** – Projektdatei `torvane.yml`, Ausnahmen mit Begründung direkt im Code, pre-commit-Hook, GitHub Action mit SARIF und Kommentaren im Pull Request, Prüfen beim Speichern.
 
 ## Bilder
 
-| Neue Prüfung | Übersicht |
+| Neue Prüfung | Einstellungen |
 | --- | --- |
-| <img src="docs/images/scan-de.png" alt="Neue Prüfung: Ziele, KI-Wahl und Kostenvorschau" width="100%"> | <img src="docs/images/overview-de.png" alt="Übersicht über alle Prüfungen mit Wert, Schwere und Trend" width="100%"> |
-| **Befund-Details** | **Einstellungen** |
-| <img src="docs/images/overview-detail-de.png" alt="Detail-Fenster eines Befunds mit Erklärung und Lösung" width="100%"> | <img src="docs/images/settings-de.png" alt="Einstellungen in vier Bereichen: Allgemein, Prüfungen, Web & Login, Erweitert" width="100%"> |
+| <img src="docs/images/scan-de.png" alt="Neue Prüfung: Ziel wählen, lokale oder Cloud-KI, Kosten und Dauer vor dem Start" width="100%"> | <img src="docs/images/settings-de.png" alt="Einstellungen mit Profilen (schnell, ausgewogen, maximale Tiefe), Darstellung und Sprache" width="100%"> |
 
-## So arbeitet Vigil
+## So arbeitet Torvane
 
 <p align="center">
   <img src="docs/images/how-it-works-de.svg" alt="Sammeln → feste Regeln → KI-Analyse → Gegenprüfung → zusammenführen" width="100%">
@@ -53,7 +55,7 @@ Vigil kombiniert **feste Regeln und tagesaktuelle Schwachstellen-Datenbanken** (
 4. **Gegenprüfung** – ein zweiter KI-Schritt versucht, jeden reinen KI-Fund am konkreten Code-Ausschnitt zu widerlegen.
 5. **Zusammenführen & Bericht** – Doppelungen werden vereint, jeder Befund bekommt ein Kontext-Risiko (CVSS, KEV, EPSS, Erreichbarkeit) und eine Lösung; mehrere Schwächen können zu einem *Angriffsweg* verknüpft werden.
 
-## Was Vigil prüft
+## Was Torvane prüft
 
 | Bereich | Beispiele |
 | --- | --- |
@@ -68,47 +70,49 @@ Vigil kombiniert **feste Regeln und tagesaktuelle Schwachstellen-Datenbanken** (
 
 ## Dauerhaft aktuell
 
-- **Geplante Prüfungen:** täglich oder wöchentlich, gemeldet werden nur neue Befunde (Windows-Benachrichtigung, Webhook für Slack, Teams, Discord). Verpasste Läufe werden nachgeholt. Unbeaufsichtigt prüft Vigil nur freigegebene Ziele.
-- **Greenbone OpenVAS:** Ab 8 GB Arbeitsspeicher und mit vorhandenem WSL bietet Vigil beim ersten Start an, die kostenlose Greenbone Community Edition einzurichten: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das lädt mehrere GB und belegt mindestens 40 GB. Arbeitsspeicher braucht Greenbone nur während eines Scans. Prüfungen freigegebener Server dauern damit deutlich länger. Unter *Neue Prüfung* lässt es sich für eine einzelne Prüfung zu- oder abwählen; unter *Einstellungen → Prüfungen* lässt es sich abbrechen, ganz abschalten oder entfernen.
-- **Linux-Pakete:** Bei der SSH-Prüfung gleicht Vigil installierte Pakete mit OSV ab (Debian, Ubuntu, Rocky, AlmaLinux). Es gehen nur Paketnamen und Versionen an osv.dev.
+- **Geplante Prüfungen:** täglich oder wöchentlich, gemeldet werden nur neue Befunde (Windows-Benachrichtigung, Webhook für Slack, Teams, Discord). Verpasste Läufe werden nachgeholt. Unbeaufsichtigt prüft Torvane nur freigegebene Ziele.
+- **Greenbone OpenVAS:** Ab 8 GB Arbeitsspeicher und mit vorhandenem WSL bietet Torvane beim ersten Start an, die kostenlose Greenbone Community Edition einzurichten: in einer eigenen WSL-Umgebung mit Docker Engine, ohne Docker Desktop. Das lädt mehrere GB und belegt mindestens 40 GB. Arbeitsspeicher braucht Greenbone nur während eines Scans. Prüfungen freigegebener Server dauern damit deutlich länger. Unter *Neue Prüfung* lässt es sich für eine einzelne Prüfung zu- oder abwählen; unter *Einstellungen → Prüfungen* lässt es sich abbrechen, ganz abschalten oder entfernen.
+- **Linux-Pakete:** Bei der SSH-Prüfung gleicht Torvane installierte Pakete mit OSV ab (Debian, Ubuntu, Rocky, AlmaLinux). Es gehen nur Paketnamen und Versionen an osv.dev.
 - **Support-Enden:** kommen täglich von endoflife.date; die eingebauten Werte sind nur noch die Reserve.
 - **Pausieren:** Eine pausierte oder durch Schließen unterbrochene Prüfung macht später dort weiter. Fertige Schritte und KI-Blöcke bleiben erhalten, nur der gerade laufende Schritt beginnt neu. Auch die Greenbone-Einrichtung lässt sich pausieren und setzt beim nächsten Start fort.
 - **Export:** Die Übersicht exportiert die gefilterten Befunde oder den Bericht eines einzelnen Laufs, in denselben Formaten wie der Reiter Ergebnis.
-- **Werkzeuge:** Vigil aktualisiert installierte Werkzeuge täglich von den offiziellen Quellen, mit Prüfsumme und automatischer Rückkehr zur alten Datei, falls die neue nicht läuft. Für nmap fragt Windows einmal nach Administratorrechten. Eine unveränderte Git-Kopie von Vigil spult sich selbst vor. Abschaltbar in den Einstellungen.
+- **Werkzeuge:** Torvane aktualisiert installierte Werkzeuge täglich von den offiziellen Quellen, mit Prüfsumme und automatischer Rückkehr zur alten Datei, falls die neue nicht läuft. Für nmap fragt Windows einmal nach Administratorrechten. Eine unveränderte Git-Kopie von Torvane spult sich selbst vor. Abschaltbar in den Einstellungen.
 
 ## Sicher von Grund auf
 
-Vigil ist für Systeme gedacht, **die dir gehören oder die du ausdrücklich prüfen darfst**.
+Torvane ist für Systeme gedacht, **die dir gehören oder die du ausdrücklich prüfen darfst**.
 
-- Webadressen und Server prüft Vigil nur, wenn sie auf der **Freigabeliste** stehen oder du die Berechtigung beim Hinzufügen bestätigst. `example.com` gilt auch für Subdomains, `*.example.com` nur für Subdomains.
+- Webadressen und Server prüft Torvane nur, wenn sie auf der **Freigabeliste** stehen oder du die Berechtigung beim Hinzufügen bestätigst. `example.com` gilt auch für Subdomains, `*.example.com` nur für Subdomains.
 - Tiefe Web-Prüfungen laufen nur für **nachgewiesene Domains** (DNS-TXT `_sec-audit-verify.<domain>` oder `/.well-known/sec-audit.txt` mit dem Token aus der Übersicht) oder interne Adressen.
 - Alle Web-Checks sind passiv und gedrosselt (höchstens 2 parallel, mindestens 400 ms Abstand je Host). Drosselt ein Ziel (3× 429/503/403), bricht das Modul ab, damit deine IP nicht gesperrt wird.
 - Keine Angriffs-Payloads, keine Brute-Force-Versuche, keine Last-Tests, und Formulare werden nie abgeschickt – die Login-Prüfung nutzt nur dein Testkonto auf deinem eigenen Host.
 - Externe Tools laufen über `spawn` mit Argument-Arrays, ohne Shell. Eingaben und Tool-Ausgaben werden mit **Zod** geprüft.
-- Vigil schlägt Patches vor, wendet sie aber nie selbst an.
+- Torvane schlägt Patches vor, wendet sie aber nie selbst an.
 
 ## Befund-Lebenszyklus
 
-Vigil merkt sich jeden Befund über alle Läufe (lokal in `findings-store.json` im App-Datenordner). Der Fingerabdruck ist `SHA-256(Ziel:Scanner:Regel-ID:Ort)`.
+Torvane merkt sich jeden Befund über alle Läufe (lokal in `findings-store.json` im App-Datenordner). Der Fingerabdruck ist `SHA-256(Ziel:Scanner:Regel-ID:Ort)`.
 
 | Status | Bedeutung |
 | --- | --- |
 | Offen / In Arbeit | aktiv; bei jedem Fund wird „zuletzt gesehen“ aktualisiert |
-| Fehlalarm / Risiko akzeptiert | ausgeblendet; bleibt so, auch wenn der Befund wieder auftaucht. Vigil lernt daraus und weist die KI beim nächsten Lauf darauf hin |
+| Fehlalarm / Risiko akzeptiert | ausgeblendet; bleibt so, auch wenn der Befund wieder auftaucht. Torvane lernt daraus und weist die KI beim nächsten Lauf darauf hin |
 | Behoben | von Hand oder automatisch, wenn ein vollständig gelaufener Scanner den Befund nicht mehr findet |
 
-Taucht ein behobener Befund wieder auf, steht er erneut auf „Offen“ und ist als **Regression** markiert. KI-Befunde werden nie automatisch geschlossen. Bei Secrets speichert Vigil nur eine geschwärzte Fundstelle, nie den Klartext. In der Übersicht lassen sich Befunde, Ziele und Läufe auch löschen.
+Taucht ein behobener Befund wieder auf, steht er erneut auf „Offen“ und ist als **Regression** markiert. KI-Befunde werden nie automatisch geschlossen. Bei Secrets speichert Torvane nur eine geschwärzte Fundstelle, nie den Klartext. In der Übersicht lassen sich Befunde, Ziele und Läufe auch löschen.
 
 ## Loslegen
 
-**Voraussetzungen:** Windows 10/11, [Git](https://git-scm.com) und [Node.js](https://nodejs.org) 20 oder neuer. Einen Installer gibt es nicht: Vigil läuft aus dem Quellcode. Optional: [Ollama](https://ollama.com) für kostenlose, private KI auf dem eigenen Rechner, oder ein API-Schlüssel für Claude, OpenAI oder Gemini.
+**Voraussetzungen:** Windows 10/11, [Git](https://git-scm.com) und [Node.js](https://nodejs.org) 20 oder neuer. Einen Installer gibt es nicht: Torvane läuft aus dem Quellcode. Optional: [Ollama](https://ollama.com) für kostenlose, private KI auf dem eigenen Rechner, oder ein API-Schlüssel für Claude, OpenAI oder Gemini.
 
 ```bash
-git clone https://github.com/Passimoritz/vigil.git
-cd vigil
+git clone https://github.com/Passimoritz/torvane.git
+cd torvane
 npm install
 npm start
 ```
+
+Schon mit Vigil unterwegs? Dann ist nichts zu tun: Torvane nutzt den vorhandenen Datenordner (`%APPDATA%\vigil`) weiter, und `git pull` funktioniert, weil GitHub die alte Adresse weiterleitet.
 
 Beim ersten Start erscheint eine kurze Einführung. **Beispiel-Lauf ansehen** prüft das mitgelieferte, absichtlich unsichere Übungsprojekt in wenigen Sekunden – ganz ohne KI.
 
@@ -116,7 +120,7 @@ Die Sprache stellst du unter *Einstellungen → Allgemein* auf Deutsch um (Stand
 
 API-Schlüssel kannst du in der App eintragen (verschlüsselt gespeichert) oder in eine `.env`-Datei schreiben – siehe [`.env.example`](.env.example).
 
-> **Warum kein Installer?** Vigil hat keine Code-Signatur, und Windows Smart App Control blockiert unsignierte Installer. Beim Start aus dem Quellcode läuft deine eigene Kopie des Codes in Electron. Smart App Control bleibt an, prüft den Code von Vigil in diesem Fall aber nicht, und ob es Electron zulässt, entscheidet Windows. Zum Aktualisieren `git pull` und `npm install` ausführen. Die Option „Mit Windows starten“ wirkt in dieser Betriebsart nicht. Zum Stand der Signatur siehe [SIGNING.md](SIGNING.md).
+> **Warum kein Installer?** Torvane hat keine Code-Signatur, und Windows Smart App Control blockiert unsignierte Installer. Beim Start aus dem Quellcode läuft deine eigene Kopie des Codes in Electron. Smart App Control bleibt an, prüft den Code von Torvane in diesem Fall aber nicht, und ob es Electron zulässt, entscheidet Windows. Zum Aktualisieren `git pull` und `npm install` ausführen. Die Option „Mit Windows starten“ wirkt in dieser Betriebsart nicht. Zum Stand der Signatur siehe [SIGNING.md](SIGNING.md).
 
 ### Kommandozeile
 
@@ -124,7 +128,33 @@ API-Schlüssel kannst du in der App eintragen (verschlüsselt gespeichert) oder 
 node src/cli.js --provider ollama --model qwen2.5-coder:7b --out bericht.html ./mein-projekt
 node src/cli.js --provider anthropic --url https://meine-seite.example
 node src/cli.js --image nginx:1.25
+node src/cli.js --rules-only --fail-on high --format sarif --out torvane.sarif .   # CI: ohne KI, Exit-Code 2 bei Befunden
 ```
+
+### Im eigenen Projekt und in CI
+
+- **Projektdatei** `torvane.yml` (oder `vigil.yml`) im Projektordner: `testDirs`, `vendorDirs`, `generatedDirs`, `ignore`, `disabledRules`, `severity`, `failOn`. Test-, Fremd- und erzeugter Code wird gekennzeichnet statt Alarm zu schlagen.
+- **Ausnahmen im Code**, immer mit Begründung: `// torvane-ignore: secret-jwt Testtoken für die Anmeldung`. Für eine ganze Datei gilt `torvane-ignore-file: <regeln> <grund>` in den ersten zehn Zeilen.
+- **pre-commit:** im eigenen Repository `node src/cli.js --install-hook` ausführen, oder mit dem Framework [pre-commit](https://pre-commit.com):
+  ```yaml
+  repos:
+    - repo: https://github.com/Passimoritz/torvane
+      rev: v0.3.0
+      hooks: [{ id: torvane }]
+  ```
+- **GitHub Action:** nur Regeln, Befunde als SARIF im Code-Scanning, auf Wunsch als Kommentar im Pull Request:
+  ```yaml
+  - uses: actions/checkout@v4
+    with: { fetch-depth: 0 }
+  - uses: Passimoritz/torvane@v0.3.0
+    with: { fail-on: high, pr-comments: 'true' }
+  ```
+- **Weitere Schalter:**
+  - `--staged`: nur gestagte Dateien
+  - `--watch`: prüfen beim Speichern
+  - `--pr-review`: nur geänderte Zeilen gegenüber dem Basis-Branch
+  - `--issues`: Befunde als Issue-Entwürfe
+  - `--sbom`: Paketliste als CycloneDX oder SPDX
 
 ### Lokale REST-API
 
@@ -164,6 +194,16 @@ test/         Kern- und Oberflächen-Tests
 ```
 
 Neuer KI-Anbieter: in `src/core/providers.js` einen Eintrag und einen Aufruf ergänzen – der Rest bleibt gleich.
+
+## Server-Variante
+
+**Torvane Server** bringt dieselben Prüfungen in den Browser, auf Linux, Windows Server oder Docker. Davor sitzt eine gehärtete Anmeldung nur mit Passwort:
+
+- Argon2id und optional zweiter Faktor
+- Sitzungen mit strengen Cookies und CSRF-Schutz
+- Dienst in einer Sandbox
+
+Torvane Server nutzt diese App unverändert und wird in einem eigenen Repository gepflegt.
 
 ## Signieren, Lizenz
 

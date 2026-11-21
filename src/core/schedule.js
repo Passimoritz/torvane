@@ -64,7 +64,7 @@ function validWebhook(url) {
 function webhookPayload(url, { name, alerts, error }) {
   const lines = alerts.slice(0, 10).map((f) => `[${f.severity}] ${f.title}${f.location ? ` (${f.location})` : ''}`.slice(0, 300));
   const more = alerts.length > 10 ? `\n… und ${alerts.length - 10} weitere` : '';
-  const text = error ? `Vigil – ${name}: ${error}` : `Vigil – ${name}: ${alerts.length} neue(r) Befund(e)\n${lines.join('\n')}${more}`;
+  const text = error ? `Torvane – ${name}: ${error}` : `Torvane – ${name}: ${alerts.length} neue(r) Befund(e)\n${lines.join('\n')}${more}`;
   let host = '';
   try { host = new URL(url).hostname; } catch { /* unten generisch */ }
   if (/(^|\.)discord(app)?\.com$/.test(host)) return { content: text.slice(0, 1900) };

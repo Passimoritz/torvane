@@ -10,7 +10,7 @@
 (function (root, factory) {
   const api = factory(typeof module === 'object' && module.exports ? require('./findings-en') : root.VIGIL_FINDINGS_EN);
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.VigilFindingsI18n = api;
+  else root.TorvaneFindingsI18n = api;
 })(typeof self !== 'undefined' ? self : this, (PAIRS) => {
   const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
   const exact = new Map();

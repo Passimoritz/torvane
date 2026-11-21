@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/banner.svg" alt="Vigil – defensive security audit for everything you own" width="100%">
+  <img src="docs/images/banner.svg" alt="Torvane – defensive security audit for everything you own" width="100%">
 </p>
 
 <p align="center">
@@ -11,10 +11,12 @@
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0f1b2d">
   <img alt="Electron 45" src="https://img.shields.io/badge/Electron-45-47848f">
   <img alt="AI: local or cloud" src="https://img.shields.io/badge/AI-Ollama%20%7C%20Claude%20%7C%20OpenAI%20%7C%20Gemini-2b3a55">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-719%20core%20%2B%2065%20UI-2ea44f">
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-4f8cff">
 </p>
 
-Vigil is a desktop app that checks **your own** code, websites, servers, containers, cloud accounts and files for security problems – and explains in plain language what is wrong and how to fix it.
+> **Vigil is now Torvane.** Same app, same data – the new name comes with a new interface, far fewer false alarms and a developer workflow (project file, pre-commit, GitHub Action). Your settings and results stay where they were. See the [changelog](CHANGELOG.md).
+
+Torvane is a desktop app that checks **your own** code, websites, servers, containers, cloud accounts and files for security problems – and explains in plain language what is wrong and how to fix it.
 
 It combines **fixed rules and live vulnerability databases** (which find known problems reliably) with an **AI review** (local via Ollama, or Claude, OpenAI, Gemini or any OpenAI-compatible service) that looks for logic and access flaws – and then has to **prove** every finding in a second cross-check. Everything is **non-destructive**: no attacks, no load tests, no password guessing.
 
@@ -32,14 +34,14 @@ It combines **fixed rules and live vulnerability databases** (which find known p
 - **Knows your history** – findings are tracked across runs: new, fixed, back again, false positive, accepted risk, plus trend, baseline and package search (SBOM).
 - **Reports for everyone** – one-page executive summary (PDF), full PDF/HTML/Markdown report, SARIF and JSON for CI.
 - **Cost and time up front** – you see the estimated cost and duration before the first token; the estimate learns from your real runs.
+- **Few false alarms** – measured on 22 clean real-world projects: from over 10,000 hits down to a handful. Generic patterns stay quiet, test and vendored code is labelled, and every rule has a measured hit rate.
+- **Built for developers** – a `torvane.yml` project file, exceptions with a reason right in the code, a pre-commit hook, a GitHub Action with SARIF and pull-request comments, and a watch mode that checks on save.
 
 ## Screenshots
 
-| New scan | Overview |
+| New scan | Settings |
 | --- | --- |
-| <img src="docs/images/scan.png" alt="New scan: targets, AI choice and cost preview" width="100%"> | <img src="docs/images/overview.png" alt="Overview across all scans with score, severity and trend" width="100%"> |
-| **Finding details** | **Settings** |
-| <img src="docs/images/overview-detail.png" alt="Detail drawer of a finding with explanation and fix" width="100%"> | <img src="docs/images/settings.png" alt="Settings grouped into General, Checks, Web & Login and Advanced" width="100%"> |
+| <img src="docs/images/scan.png" alt="New scan: choose a target, local or cloud AI, cost and duration before starting" width="100%"> | <img src="docs/images/settings.png" alt="Settings with profiles (fast, balanced, maximum depth), appearance and language" width="100%"> |
 
 ## How it works
 
@@ -53,7 +55,7 @@ It combines **fixed rules and live vulnerability databases** (which find known p
 4. **Cross-check** – a second AI step tries to refute every AI-only finding on the concrete code snippet.
 5. **Merge & report** – duplicates are merged, each finding gets a context risk score (CVSS, KEV, EPSS, reachability) and a fix; several weaknesses can be linked into an *attack path*.
 
-## What Vigil checks
+## What Torvane checks
 
 | Area | Examples |
 | --- | --- |
@@ -68,39 +70,41 @@ It combines **fixed rules and live vulnerability databases** (which find known p
 
 ## Staying current
 
-- **Scheduled checks:** daily or weekly, reporting only new findings (Windows notification, webhook for Slack, Teams, Discord). Missed runs are caught up. Unattended, Vigil only checks approved targets.
-- **Greenbone OpenVAS:** with at least 8 GB of memory and WSL present, Vigil offers on first start to set up the free Greenbone Community Edition: in a separate WSL environment with Docker Engine, without Docker Desktop. This downloads several GB and takes at least 40 GB of disk. Greenbone only needs memory during a scan. Checks of approved servers take much longer with it. Under *New check* you can include or exclude it for a single check; under *Settings → Checks* you can cancel, switch it off entirely or remove it.
+- **Scheduled checks:** daily or weekly, reporting only new findings (Windows notification, webhook for Slack, Teams, Discord). Missed runs are caught up. Unattended, Torvane only checks approved targets.
+- **Greenbone OpenVAS:** with at least 8 GB of memory and WSL present, Torvane offers on first start to set up the free Greenbone Community Edition: in a separate WSL environment with Docker Engine, without Docker Desktop. This downloads several GB and takes at least 40 GB of disk. Greenbone only needs memory during a scan. Checks of approved servers take much longer with it. Under *New check* you can include or exclude it for a single check; under *Settings → Checks* you can cancel, switch it off entirely or remove it.
 - **Linux packages:** the SSH check compares installed packages with OSV (Debian, Ubuntu, Rocky, AlmaLinux). Only package names and versions go to osv.dev.
 - **End of support:** dates come daily from endoflife.date; the built-in values are only a fallback.
 - **Pause:** A paused check, or one interrupted by closing the app, continues later where it stopped. Finished steps and AI blocks are kept; only the step that was running starts over. Greenbone setup can be paused too and resumes at the next start.
 - **Export:** The overview exports the filtered findings or the report of a single run, in the same formats as the Results tab.
-- **Tools:** Vigil updates installed tools daily from the official sources, with checksums and an automatic return to the old file if the new one does not run. For nmap, Windows asks for administrator rights once. An unmodified Git copy of Vigil fast-forwards itself. Can be switched off in the settings.
+- **Tools:** Torvane updates installed tools daily from the official sources, with checksums and an automatic return to the old file if the new one does not run. For nmap, Windows asks for administrator rights once. An unmodified Git copy of Torvane fast-forwards itself. Can be switched off in the settings.
 
 ## Safe by design
 
-Vigil is meant for systems **you own or are explicitly allowed to test**.
+Torvane is meant for systems **you own or are explicitly allowed to test**.
 
 - Websites and servers are only checked after you confirm you are authorised; deep web checks require a **verified domain** (DNS TXT record or `/.well-known/sec-audit.txt`).
 - All web checks are passive and rate-limited; if a target starts throttling, the check stops.
 - No exploit payloads, no brute force, no load tests, and forms are never submitted – the login check only uses your test account, on your own host.
-- Vigil suggests patches but never applies them.
+- Torvane suggests patches but never applies them.
 
 ## Getting started
 
-**Requirements:** Windows 10/11, [Git](https://git-scm.com) and [Node.js](https://nodejs.org) 20 or newer. There is no installer: Vigil runs from source. Optional: [Ollama](https://ollama.com) for free, private local AI, or an API key for Claude, OpenAI or Gemini.
+**Requirements:** Windows 10/11, [Git](https://git-scm.com) and [Node.js](https://nodejs.org) 20 or newer. There is no installer: Torvane runs from source. Optional: [Ollama](https://ollama.com) for free, private local AI, or an API key for Claude, OpenAI or Gemini.
 
 ```bash
-git clone https://github.com/Passimoritz/vigil.git
-cd vigil
+git clone https://github.com/Passimoritz/torvane.git
+cd torvane
 npm install
 npm start
 ```
+
+Already used Vigil? Nothing to do: Torvane keeps using your existing data folder (`%APPDATA%\vigil`), and `git pull` keeps working because GitHub redirects the old address.
 
 On first start a short introduction appears. **View a sample run** checks the bundled, deliberately vulnerable practice project in a few seconds – no AI needed.
 
 API keys can be entered in the app (stored encrypted) or put into a `.env` file – see [`.env.example`](.env.example).
 
-> **Why no installer?** Vigil has no code signature, and Windows Smart App Control blocks unsigned installers. Started from source, your own copy of the code runs in Electron. Smart App Control stays on, but it does not check Vigil's code in this case, and whether it allows Electron is decided by Windows. To update, run `git pull` and `npm install`. The "Start with Windows" option has no effect in this mode. See [SIGNING.md](SIGNING.md) for the signing status.
+> **Why no installer?** Torvane has no code signature, and Windows Smart App Control blocks unsigned installers. Started from source, your own copy of the code runs in Electron. Smart App Control stays on, but it does not check Torvane's code in this case, and whether it allows Electron is decided by Windows. To update, run `git pull` and `npm install`. The "Start with Windows" option has no effect in this mode. See [SIGNING.md](SIGNING.md) for the signing status.
 
 ### Command line
 
@@ -108,7 +112,28 @@ API keys can be entered in the app (stored encrypted) or put into a `.env` file 
 node src/cli.js --provider ollama --model qwen2.5-coder:7b --out report.html ./my-project
 node src/cli.js --provider anthropic --url https://my-site.example
 node src/cli.js --image nginx:1.25
+node src/cli.js --rules-only --fail-on high --format sarif --out torvane.sarif .   # CI: no AI, exit code 2 on findings
 ```
+
+### In your project and CI
+
+- **Project file** `torvane.yml` (or `vigil.yml`) in the project root: `testDirs`, `vendorDirs`, `generatedDirs`, `ignore`, `disabledRules`, `severity`, `failOn`. Test, vendored and generated code is labelled instead of raising alarms.
+- **Exceptions in the code**, always with a reason: `// torvane-ignore: secret-jwt test token for the login test` – or `torvane-ignore-file: <rules> <reason>` in the first ten lines of a file.
+- **Pre-commit:** `node src/cli.js --install-hook` in your repository, or with the [pre-commit](https://pre-commit.com) framework:
+  ```yaml
+  repos:
+    - repo: https://github.com/Passimoritz/torvane
+      rev: v0.3.0
+      hooks: [{ id: torvane }]
+  ```
+- **GitHub Action:** rules only, findings as SARIF in code scanning, optionally as pull-request comments:
+  ```yaml
+  - uses: actions/checkout@v4
+    with: { fetch-depth: 0 }
+  - uses: Passimoritz/torvane@v0.3.0
+    with: { fail-on: high, pr-comments: 'true' }
+  ```
+- **More:** `--staged` (only staged files), `--watch` (check on save), `--pr-review` (only lines changed against the base branch), `--issues` (findings as issue drafts), `--sbom` (CycloneDX/SPDX).
 
 ### Local REST API
 
@@ -148,7 +173,11 @@ To add an AI provider, add an entry and a call in `src/core/providers.js` – ev
 
 ## Language
 
-Vigil speaks **English (default)** and **German** (*Settings → General*): the interface, all finding texts, the reports (PDF, HTML, Markdown, SARIF) and the AI answers follow the selected language. On the command line use `--lang de` for German output.
+Torvane speaks **English (default)** and **German** (*Settings → General*): the interface, all finding texts, the reports (PDF, HTML, Markdown, SARIF) and the AI answers follow the selected language. On the command line use `--lang de` for German output.
+
+## Server edition
+
+**Torvane Server** runs the same checks in the browser – on Linux, Windows Server or Docker, behind a hardened password-only login (Argon2id, optional two-factor, sessions with strict cookies, CSRF protection, sandboxed service). It reuses this app unchanged and is maintained in a separate repository.
 
 ## Signing, license
 

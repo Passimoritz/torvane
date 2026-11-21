@@ -2,7 +2,7 @@
 
 // Optionaler Offline-Vorrat der OSV-Datenbank – nur fuer die Oekosysteme, die in den gespeicherten
 // SBOMs vorkommen (npm, PyPI, Maven …). Quelle: die offiziellen Komplett-Abzuege
-// https://osv-vulnerabilities.storage.googleapis.com/<Oekosystem>/all.zip. Daraus baut Vigil einen
+// https://osv-vulnerabilities.storage.googleapis.com/<Oekosystem>/all.zip. Daraus baut Torvane einen
 // kompakten Index (Paket -> betroffene Versionsbereiche) und nutzt ihn, wenn OSV.dev nicht
 // erreichbar ist. Standardmaessig AUS (die Abzuege sind gross).
 
