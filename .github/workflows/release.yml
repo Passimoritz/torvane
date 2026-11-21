@@ -42,7 +42,7 @@ jobs:
         run: npm test
 
       - name: App ungepackt bauen
-        run: npx electron-builder --win --dir --config electron-builder.config.js
+        run: npx electron-builder --win --dir --config electron-builder.config.js --publish never
 
       - name: Ungepackte App hochladen (für SignPath)
         id: unpacked
@@ -72,7 +72,7 @@ jobs:
           Move-Item dist/win-unpacked-signed dist/win-unpacked
 
       - name: Installer und portable Version bauen
-        run: npx electron-builder --win nsis portable --prepackaged dist/win-unpacked --config electron-builder.config.js
+        run: npx electron-builder --win nsis portable --prepackaged dist/win-unpacked --config electron-builder.config.js --publish never
 
       - name: Installer hochladen (für SignPath)
         id: installers
@@ -133,7 +133,7 @@ jobs:
       - name: Tests
         run: npm test
       - name: AppImage und .deb bauen
-        run: npm run dist:linux
+        run: npm run dist:linux -- --publish never
       - name: Linux-Pakete ins Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
